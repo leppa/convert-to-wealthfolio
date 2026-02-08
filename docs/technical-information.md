@@ -1,0 +1,159 @@
+<!--
+Copyright (c) 2026 Oleksii Serdiuk
+SPDX-License-Identifier: BSD-3-Clause
+-->
+
+# Technical Information
+
+This document provides technical details about the architecture, design, and implementation of the Convert to Wealthfolio project. It is intended for developers who want to understand the inner workings of the codebase or contribute to the project.
+
+## Project Structure
+
+```text
+├── coverage/                         # Test coverage reports (generated)
+├── dist/                             # Compiled JavaScript (generated)
+├── docs/                             # Documentation and guides
+├── examples/                         # Sample files and documentation
+├── src/                              # Source code
+│   ├── index.ts                      # CLI entry point
+│   ├── core/                         # Core framework
+│   └── formats/                      # Format plugin implementations
+├── tests/                            # Jest unit and integration tests
+├── ChangeLog.md                      # Version release and change history
+├── LICENSE                           # BSD 3-Clause License
+└── README.md                         # Project README
+```
+
+## Architecture
+
+### Core Components
+
+**BaseFormat** (`src/core/BaseFormat.ts`)
+
+- Abstract base class for all format converters
+- Defines interface: `validate()`, `convert()`, `getExpectedSchema()`, etc.
+- Includes `WealthfolioRecord` interface, `ActivityType` enum, and `ActivitySubtype` enum for type-safe output
+- Supports custom CSV parsing options per format
+
+**Converter** (`src/core/Converter.ts`)
+
+- Main orchestrator class
+- Handles CSV parsing and writing
+- Detects input format using registered plugins
+- Manages format plugin registration
+
+### Format Plugins
+
+Format plugins extend `BaseFormat` and implement:
+
+- `getName()` - Returns format name for CLI identification
+- `validate(records)` - Detects if input matches this format
+- `convert(records)` - Converts records to Wealthfolio format
+- `getExpectedSchema()` - Returns expected input columns with optional flags and descriptions
+- `getParseOptions()` (optional) - Provides custom CSV parsing options (e.g., delimiter, casting column values to specific types)
+- `getValidationLineCount()` (optional) - Specifies how many rows to parse for format detection
+
+## Output Format
+
+All converters produce CSV with these columns:
+
+- **date** - Transaction date (ISO format)
+- **symbol** - Asset symbol/ticker
+- **quantity** - Number of shares/units
+- **activityType** - Transaction type (see [Activity Types](#activity-types) below)
+- **unitPrice** - Price per unit
+- **currency** - Currency code (e.g., EUR, GBP, USD)
+- **fee** - Transaction fee
+- **amount** - Total transaction amount
+- **fxRate** - Currency exchange rate to base currency (if applicable)
+- **subtype** - Activity subtype (see [Activity Subtypes](#activity-subtypes) below)
+- **comment** - Additional notes or transaction details
+
+### Activity Types
+
+Supported activity types:
+
+- **BUY** - Purchase of an asset
+- **SELL** - Sale of an asset
+- **DIVIDEND** - Dividend payment
+- **INTEREST** - Interest earned
+- **DEPOSIT** - Cash deposit
+- **WITHDRAWAL** - Cash withdrawal
+- **TRANSFER_IN** - Asset or cash transfer in
+- **TRANSFER_OUT** - Asset or cash transfer out
+- **FEE** - Account or transaction fee
+- **TAX** - Tax withholding or payment
+- **SPLIT** - Stock split or reverse split
+- **CREDIT** - Credit or bonus (cash only)
+- **ADJUSTMENT** - Share or cash adjustment
+
+**Note:** The information above was taken from the Wealthfolio documentation and may be subject to change as v3.x is still in beta. Always refer to the latest Wealthfolio documentation for the most up-to-date information on supported activity types and subtypes.
+
+### Activity Subtypes
+
+Some activity types can have optional subtypes for more detailed categorization. See the Wealthfolio documentation for the latest list of supported subtypes.
+
+## Creating a New Format Plugin
+
+See the [Plugin Development Guide](plugin-development-guide.md) for detailed instructions.
+
+## Testing
+
+Run unit tests with Jest:
+
+```bash
+npm test              # Run all tests once
+npm run test:watch    # Run tests in watch mode
+npm run test:coverage # Generate coverage report
+```
+
+Tests are located in `tests/` and include:
+
+- Format plugin validation and conversion tests
+- Converter integration tests
+- Utility function tests
+
+Coverage reports are generated in the `coverage/` directory.
+
+## Code Style and Conventions
+
+- Use TypeScript with strict type checking
+- Follow standard JavaScript / TypeScript coding conventions
+- Use ESLint and Prettier for code linting and formatting
+- Include JSDoc comments for all public methods and classes
+
+After implementing and testing your changes, make sure to run linting and formatting checks:
+
+```bash
+npm run lint:check # or: npm run lint
+npm run format:check
+```
+
+You can also automatically fix linting and formatting issues with:
+
+```bash
+npm run lint:fix
+npm run format:fix # or: npm run format
+```
+
+## Dependencies
+
+### Runtime Dependencies
+
+These dependencies are required for the converter to run:
+
+- **[Commander.js](https://github.com/tj/commander.js)**: CLI argument parsing
+- **[NodeCSV](https://csv.js.org/)** (**csv-parse** & **csv-stringify**): CSV operations
+
+I try to keep runtime dependencies lean, with no or minimal transitive dependencies, to ensure that the converter remains lightweight and easy to maintain.
+
+### Dev Dependencies
+
+These dependencies are only required for building, development, and testing:
+
+- **[TypeScript](https://www.typescriptlang.org/)**: Type-safe development
+- **[Jest](https://jestjs.io/)**: Testing framework
+- **[ESLint](https://eslint.org/)**: Code linting
+  - **[eslint-plugin-header](https://github.com/tonyganchev/eslint-plugin-header)**: Enforce license header in source files
+  - **[prettier-plugin-organize-imports](https://github.com/simonhaenisch/prettier-plugin-organize-imports)**: Automatically organize imports in a consistent order
+- **[Prettier](https://prettier.io/)**: Code formatting

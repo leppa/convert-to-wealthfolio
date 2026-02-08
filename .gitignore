@@ -1,0 +1,6 @@
+coverage/
+dist/
+node_modules/
+*.log
+# Only ignore CSV files in the root directory
+/*.csv

@@ -1,0 +1,10 @@
+*.log
+*.csv
+.git/
+coverage/
+dist/
+# LICENSE file should stay verbatim
+LICENSE
+node_modules/
+# packagelock.json is generated and should not be re-formatted
+package-lock.json
