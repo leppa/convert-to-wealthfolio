@@ -7,6 +7,7 @@ import js from "@eslint/js";
 import markdown from "@eslint/markdown";
 import header from "@tony.ganchev/eslint-plugin-header";
 import tsParser from "@typescript-eslint/parser";
+import yaml from "eslint-plugin-yml";
 import globals from "globals";
 import typescript from "typescript-eslint";
 
@@ -140,6 +141,20 @@ export default defineConfig([
           },
         },
       ],
+    },
+  },
+  {
+    files: ["**/*.yaml", "**/*.yml"],
+    plugins: {
+      yml: yaml,
+    },
+    extends: [yaml.configs.recommended],
+  },
+  {
+    // Relax some rules for GitHub workflow YAML files
+    files: [".github/workflows/**/*.yml"],
+    rules: {
+      "yml/no-empty-mapping-value": "off",
     },
   },
 ]);

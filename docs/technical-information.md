@@ -156,4 +156,5 @@ These dependencies are only required for building, development, and testing:
 - **[ESLint](https://eslint.org/)**: Code linting
   - **[eslint-plugin-header](https://github.com/tonyganchev/eslint-plugin-header)**: Enforce license header in source files
   - **[prettier-plugin-organize-imports](https://github.com/simonhaenisch/prettier-plugin-organize-imports)**: Automatically organize imports in a consistent order
+  - **[eslint-plugin-yml](https://ota-meshi.github.io/eslint-plugin-yml/)**: Lint YAML files
 - **[Prettier](https://prettier.io/)**: Code formatting
