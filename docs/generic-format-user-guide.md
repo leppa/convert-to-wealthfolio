@@ -35,7 +35,7 @@ These columns enhance your data, but can be omitted:
 | --- | --- | --- |
 | `Fee` | Transaction fee or commission (see [Quantities and Prices](#quantities-and-prices) below) | Not set |
 | `Total` | Total transaction amount (see [Quantities and Prices](#quantities-and-prices) below) | Calculated from `Quantity` × `UnitPrice` |
-| `Currency` | 3-letter currency code (see [Currency Codes](#currency-codes) below) | `EUR` |
+| `Currency` | 3-letter currency code (see [Currency Codes](#currency-codes) below) | either `--default-currency` command line option, or `EUR` |
 | `TransactionSubtype` | More specific transaction classification, varies by transaction type (see [Transaction Types](#transaction-types) below) | Not set |
 | `FXRate` | Foreign exchange rate | Not set |
 | `Comment` | Notes or description | Empty |
@@ -345,7 +345,17 @@ The `Comment` field is useful for adding context to transactions that might be c
 
 For transactions without securities (deposits, withdrawals, interest on cash), leave `Symbol`, `Quantity`, and `UnitPrice` empty, and use `Total` for the amount.
 
-### 5. Use FXRate for foreign currency transactions
+### 5. Specify currency
+
+If your CSV file doesn't include a `Currency` column, the converter will use EUR as the default currency. You can specify a different default currency using the `--default-currency` option:
+
+```bash
+npm start convert input.csv output.csv -- --default-currency GBP
+```
+
+This is useful when all your transactions are in the same currency and you don't want to add a `Currency` column to your CSV file.
+
+### 6. Use FXRate for foreign currency transactions
 
 When dealing with foreign currency transactions:
 
@@ -353,11 +363,11 @@ When dealing with foreign currency transactions:
 - Provide `FXRate` for the exchange rate
 - Wealthfolio will handle currency conversion
 
-### 6. Use Fee column for transaction fees
+### 7. Use Fee column for transaction fees
 
 Transaction fees can be specified in the `Fee` column. Don't include fees in the `Total` amount - Wealthfolio applies the fees separately. If `Total` is not provided, it will be calculated automatically as `Quantity` × `UnitPrice`.
 
-### 7. Test Your CSV
+### 8. Test your CSV
 
 Before importing:
 

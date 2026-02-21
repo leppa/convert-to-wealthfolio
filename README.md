@@ -30,6 +30,7 @@ See the [ChangeLog](ChangeLog.md) for a detailed list of released and upcoming c
 - **Generic**: Flexible CSV format with support for:
   - Standard transaction types (BUY, SELL, DEPOSIT, WITHDRAWAL, DIVIDENDS, etc.)
   - Optional currency, fee, FX rate, and comment fields
+  - Respects the default currency option
   - Comma-delimited format
   - See the [Generic Format User Guide](docs/generic-format-user-guide.md) for details
 
@@ -91,6 +92,20 @@ E.g., specify format as "Generic":
 ```bash
 npm start convert examples/sample-generic.csv output.csv -- --format Generic
 ```
+
+#### Specify the Default Currency
+
+You can specify a default currency code to use when the input CSV doesn't specify a currency for a record. The default is EUR.
+
+Use British Pound as default currency:
+
+```bash
+npm start convert input.csv output.csv -- --default-currency GBP
+```
+
+The currency should be a 3-letter [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217).
+
+**Note:** Some formats may ignore the default currency option and always use their own. Always refer to the documentation for the specific format you're using.
 
 ### List Supported Formats
 

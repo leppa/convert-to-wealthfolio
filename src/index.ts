@@ -4,12 +4,14 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import { Option, program } from "commander";
+import { InvalidArgumentError, Option, program } from "commander";
 import { readFileSync } from "fs";
 import { join } from "path";
 
 import { Converter } from "./core/Converter";
 import formats from "./formats";
+
+const DEFAULT_CURRENCY = "EUR";
 
 // Get package version
 const packageJson = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf-8"));
@@ -34,16 +36,37 @@ program
       "Format to use for conversion (skip autodetection)",
     ).choices(formats.map((f) => f.getName())),
   )
-  .action(async (input: string, output: string, options: { format?: string }) => {
-    try {
-      await converter.convert(input, output, options.format);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error("Conversion failed:", message);
-      process.exit(1);
-    }
-    console.log("Successfully converted:", input);
-  });
+  .addOption(
+    new Option(
+      "-c, --default-currency <currency>",
+      "3-letter ISO 4217 currency code to use when input CSV doesn't specify one",
+    )
+      .argParser((currency) => {
+        if (!currency.match(/^[A-Za-z]{3}$/)) {
+          throw new InvalidArgumentError(
+            `Invalid currency: ${currency}. Use a 3-letter ISO 4217 currency code.`,
+          );
+        }
+        return currency.toUpperCase();
+      })
+      .default(DEFAULT_CURRENCY),
+  )
+  .action(
+    async (
+      input: string,
+      output: string,
+      options: { format?: string; defaultCurrency: string },
+    ) => {
+      try {
+        await converter.convert(input, output, options.defaultCurrency, options.format);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Conversion failed:", message);
+        process.exit(1);
+      }
+      console.log("Successfully converted:", input);
+    },
+  );
 
 program
   .command("list")

@@ -72,9 +72,15 @@ export class Converter {
    *
    * @param inputPath - Path to input CSV file
    * @param outputPath - Path to output CSV file
+   * @param defaultCurrency - Default currency code to use when not specified in records
    * @param formatName - Optional format name to use (skip autodetection)
    */
-  async convert(inputPath: string, outputPath: string, formatName?: string): Promise<void> {
+  async convert(
+    inputPath: string,
+    outputPath: string,
+    defaultCurrency: string,
+    formatName?: string,
+  ): Promise<void> {
     // Read input CSV content
     const fileContent = fs.readFileSync(path.resolve(inputPath), "utf-8");
 
@@ -113,7 +119,7 @@ export class Converter {
 
     // Convert records
     const convertedRecords = format
-      .convert(records)
+      .convert(records, defaultCurrency)
       // Filter all records that don't meet field requirements
       .filter((record, index) => {
         const result = validateRecordFieldRequirements(record);

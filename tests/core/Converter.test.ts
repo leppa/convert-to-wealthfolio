@@ -17,6 +17,8 @@ import {
 import { Converter } from "../../src/core/Converter";
 import { GenericFormat } from "../../src/formats/GenericFormat";
 
+const DEFAULT_CURRENCY = "EUR";
+
 class TestFormat extends BaseFormat {
   private records: WealthfolioRecord[];
 
@@ -58,7 +60,7 @@ describe("Converter", () => {
     it("should convert sample CSV to Wealthfolio format", async () => {
       const inputFile = path.join(fixturesDir, "sample-generic.csv");
 
-      await converter.convert(inputFile, outputFile);
+      await converter.convert(inputFile, outputFile, DEFAULT_CURRENCY);
 
       expect(fs.existsSync(outputFile)).toBe(true);
 
@@ -88,7 +90,7 @@ describe("Converter", () => {
     it("should round numeric values to 8 decimal places", async () => {
       const inputFile = path.join(fixturesDir, "sample-generic.csv");
 
-      await converter.convert(inputFile, outputFile);
+      await converter.convert(inputFile, outputFile, DEFAULT_CURRENCY);
 
       const content = fs.readFileSync(outputFile, "utf-8");
       const lines = content.trim().split("\n");
@@ -110,7 +112,7 @@ describe("Converter", () => {
     it("should handle file paths correctly", async () => {
       const inputFile = path.join(fixturesDir, "sample-generic.csv");
 
-      await converter.convert(inputFile, outputFile);
+      await converter.convert(inputFile, outputFile, DEFAULT_CURRENCY);
 
       expect(fs.existsSync(outputFile)).toBe(true);
     });
@@ -118,7 +120,9 @@ describe("Converter", () => {
     it("should throw error for non-existent input file", async () => {
       const nonExistentFile = path.join(tmpDir, "non-existent.csv");
 
-      await expect(converter.convert(nonExistentFile, outputFile)).rejects.toThrow();
+      await expect(
+        converter.convert(nonExistentFile, outputFile, DEFAULT_CURRENCY),
+      ).rejects.toThrow();
     });
 
     it("should throw error when no format matches", async () => {
@@ -127,16 +131,18 @@ describe("Converter", () => {
       fs.writeFileSync(invalidFile, "NoDate,NoSymbol,NoQuantity\nvalue1,value2,value3");
 
       const emptyConverter = new Converter([]);
-      await expect(emptyConverter.convert(invalidFile, outputFile)).rejects.toThrow(
-        "Cannot detect input format",
-      );
+      await expect(
+        emptyConverter.convert(invalidFile, outputFile, DEFAULT_CURRENCY),
+      ).rejects.toThrow("Cannot detect input format");
     });
 
     it("should throw error for empty input CSV", async () => {
       const emptyFile = path.join(tmpDir, "empty.csv");
       fs.writeFileSync(emptyFile, "");
 
-      await expect(converter.convert(emptyFile, outputFile)).rejects.toThrow("Input CSV is empty");
+      await expect(converter.convert(emptyFile, outputFile, DEFAULT_CURRENCY)).rejects.toThrow(
+        "Input CSV is empty",
+      );
     });
 
     it("should throw error when converter returns zero records", async () => {
@@ -146,9 +152,9 @@ describe("Converter", () => {
         new TestFormat([]), // This plugin will return zero records
       ]);
 
-      await expect(customConverter.convert(inputFile, outputFile)).rejects.toThrow(
-        "No records returned by the format converter",
-      );
+      await expect(
+        customConverter.convert(inputFile, outputFile, DEFAULT_CURRENCY),
+      ).rejects.toThrow("No records returned by the format converter");
     });
 
     it("should skip and warn on records that fail field validation", async () => {
@@ -210,28 +216,45 @@ describe("Converter", () => {
       expect(fs.existsSync(outputFile)).toBe(true);
     });
 
+    it("should use custom default currency when specified", async () => {
+      const inputFile = path.join(fixturesDir, "sample-generic.csv");
+
+      await converter.convert(inputFile, outputFile, "USD");
+
+      expect(fs.existsSync(outputFile)).toBe(true);
+
+      // Read output and verify currency
+      const content = fs.readFileSync(outputFile, "utf-8");
+
+      // The sample-generic.csv has some records with currency and some without
+      // We verify that the output contains USD (from our default)
+      expect(content).toContain("USD");
+    });
+
     it("should throw error when explicit format name not found", async () => {
       const inputFile = path.join(fixturesDir, "sample-generic.csv");
 
-      await expect(converter.convert(inputFile, outputFile, "NonExistent")).rejects.toThrow(
-        "Format 'NonExistent' not found",
-      );
+      await expect(
+        converter.convert(inputFile, outputFile, DEFAULT_CURRENCY, "NonExistent"),
+      ).rejects.toThrow("Format 'NonExistent' not found");
     });
 
     it("should throw error when CSV does not match explicit format", async () => {
       const invalidFile = path.join(tmpDir, "mismatch.csv");
       fs.writeFileSync(invalidFile, "WrongColumn1,WrongColumn2\nvalue1,value2");
 
-      await expect(converter.convert(invalidFile, outputFile, "Generic")).rejects.toThrow(
-        "Input CSV does not match the 'Generic' format",
-      );
+      await expect(
+        converter.convert(invalidFile, outputFile, DEFAULT_CURRENCY, "Generic"),
+      ).rejects.toThrow("Input CSV does not match the 'Generic' format");
     });
 
     it("should handle errors during CSV write", async () => {
       const inputFile = path.join(fixturesDir, "sample-generic.csv");
       const invalidOutputPath = path.join(tmpDir, "missing-dir", "output.csv");
 
-      await expect(converter.convert(inputFile, invalidOutputPath)).rejects.toThrow();
+      await expect(
+        converter.convert(inputFile, invalidOutputPath, DEFAULT_CURRENCY),
+      ).rejects.toThrow();
     });
 
     it("should handle malformed CSV during format detection", async () => {
@@ -239,7 +262,9 @@ describe("Converter", () => {
       fs.writeFileSync(malformedFile, 'Date,Symbol\n"unclosed quote,value');
 
       // This should trigger the catch block in detectFormat
-      await expect(converter.convert(malformedFile, outputFile)).rejects.toThrow();
+      await expect(
+        converter.convert(malformedFile, outputFile, DEFAULT_CURRENCY),
+      ).rejects.toThrow();
     });
 
     it("should serialize metadata and invalid dates in output CSV", async () => {
@@ -250,7 +275,7 @@ describe("Converter", () => {
         quantity: 1,
         activityType: ActivityType.Buy,
         unitPrice: 10.123456789,
-        currency: "EUR",
+        currency: DEFAULT_CURRENCY,
         fee: 0,
         amount: 10.123456789,
         fxRate: 1.25,
@@ -264,7 +289,7 @@ describe("Converter", () => {
         quantity: 2,
         activityType: ActivityType.Buy,
         unitPrice: 20,
-        currency: "EUR",
+        currency: DEFAULT_CURRENCY,
         fee: 0,
         amount: 40,
         fxRate: NaN,

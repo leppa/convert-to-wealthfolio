@@ -22,6 +22,7 @@ Initial release.
   - Plugin system for adding custom format converters.
   - Field validation and error handling to ensure data integrity during
     conversion.
+- Ability to specify default currency when it's not present in the input CSV.
 - Generic format plugin with flexible column arrangement and activity names.
   Mainly as an example, because Wealthfolio's import system is very flexible and
   can handle many formats without needing a custom converter.

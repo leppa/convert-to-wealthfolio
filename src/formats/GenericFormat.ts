@@ -55,7 +55,7 @@ export class GenericFormat extends BaseFormat {
       );
   }
 
-  convert(records: ParsedRecord[]): WealthfolioRecord[] {
+  convert(records: ParsedRecord[], defaultCurrency: string): WealthfolioRecord[] {
     const result: WealthfolioRecord[] = [];
 
     for (let i = 0; i < records.length; i++) {
@@ -103,7 +103,7 @@ export class GenericFormat extends BaseFormat {
         quantity,
         activityType,
         unitPrice,
-        currency: record.currency || "EUR",
+        currency: record.currency || defaultCurrency,
         fee,
         amount,
         fxRate: record.fxrate || NaN,
@@ -293,7 +293,7 @@ export class GenericFormat extends BaseFormat {
       {
         name: "Currency",
         optional: true,
-        description: "defaults to EUR if not provided",
+        description: "defaults to currency specified on the command line or EUR if not provided",
       },
       {
         name: "FXRate",

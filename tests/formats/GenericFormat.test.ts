@@ -6,6 +6,8 @@
 import { ActivitySubtype, ActivityType } from "../../src/core/BaseFormat";
 import { GenericFormat } from "../../src/formats/GenericFormat";
 
+const DEFAULT_CURRENCY = "EUR";
+
 describe("Generic Format", () => {
   let format: GenericFormat;
 
@@ -63,7 +65,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
@@ -72,7 +74,7 @@ describe("Generic Format", () => {
         quantity: 100,
         unitPrice: 150.25,
         amount: 15025,
-        currency: "EUR",
+        currency: DEFAULT_CURRENCY,
         fee: NaN,
       });
       expect(result[0].date).toBeInstanceOf(Date);
@@ -107,7 +109,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
       expect(result).toHaveLength(3);
       expect(result[0].symbol).toBe("AAPL");
@@ -127,7 +129,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
       expect(result[0].symbol).toBe("AAPL");
     });
@@ -144,7 +146,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
       expect(result[0].quantity).toBe(NaN);
       expect(result[0].unitPrice).toBe(NaN);
@@ -163,9 +165,42 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
-      expect(result[0].currency).toBe("EUR");
+      expect(result[0].currency).toBe(DEFAULT_CURRENCY);
+    });
+
+    it("should use custom default currency when specified", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          symbol: "AAPL",
+          quantity: 100,
+          unitprice: 150.25,
+        },
+      ];
+
+      const result = format.convert(records, "GBP");
+
+      expect(result[0].currency).toBe("GBP");
+    });
+
+    it("should use record currency over default currency", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          symbol: "AAPL",
+          quantity: 100,
+          unitprice: 150.25,
+          currency: "USD",
+        },
+      ];
+
+      const result = format.convert(records, "GBP");
+
+      expect(result[0].currency).toBe("USD");
     });
 
     it("should calculate amount when not provided", () => {
@@ -179,7 +214,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
       expect(result[0].amount).toBe(100 * 150.25);
     });
@@ -204,7 +239,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
       expect(result[0].activityType).toBe(ActivityType.Buy);
       expect(result[1].activityType).toBe(ActivityType.Sell);
@@ -250,7 +285,7 @@ describe("Generic Format", () => {
           },
         ];
 
-        const result = format.convert(records);
+        const result = format.convert(records, DEFAULT_CURRENCY);
         expect(result[0].activityType).toBe(expected);
       });
     });
@@ -267,7 +302,9 @@ describe("Generic Format", () => {
         },
       ];
 
-      expect(() => format.convert(records)).toThrow("Unknown activity type: UNKNOWN_TYPE");
+      expect(() => format.convert(records, DEFAULT_CURRENCY)).toThrow(
+        "Unknown activity type: UNKNOWN_TYPE",
+      );
     });
 
     it("should throw error for missing activity type", () => {
@@ -282,7 +319,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      expect(() => format.convert(records)).toThrow("No activity type");
+      expect(() => format.convert(records, DEFAULT_CURRENCY)).toThrow("No activity type");
     });
 
     it("should use total field when provided", () => {
@@ -297,7 +334,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
       expect(result[0].amount).toBe(15000);
     });
@@ -314,7 +351,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
       // For SELL, fee should be deducted (cash credit)
       expect(result[0].amount).toBe(100 * 150.25);
@@ -332,7 +369,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
       // Symbol should be empty string when not provided
       expect(result[0].symbol).toBe("");
@@ -350,7 +387,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
       expect(result[0].quantity).toBe(0);
     });
@@ -367,7 +404,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
       expect(result[0].unitPrice).toBe(0);
     });
@@ -383,7 +420,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
       expect(result[0].fee).toBe(NaN);
     });
@@ -400,7 +437,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
       expect(result[0].quantity).toBe(-10);
       expect(result[0].unitPrice).toBe(-5);
@@ -419,7 +456,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records);
+      const result = format.convert(records, DEFAULT_CURRENCY);
 
       expect(result[0].activityType).toBe(ActivityType.Fee);
       expect(result[0].amount).toBe(10.5);

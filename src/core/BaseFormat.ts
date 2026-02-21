@@ -29,9 +29,13 @@ export abstract class BaseFormat {
    * Convert input records to Wealthfolio format
    *
    * @param records - Parsed CSV records
+   * @param defaultCurrency - Default currency to use when not specified in records
    * @returns Converted records in Wealthfolio format
    */
-  abstract convert(records: Record<string, unknown>[]): WealthfolioRecord[];
+  abstract convert(
+    records: Record<string, unknown>[],
+    defaultCurrency: string,
+  ): WealthfolioRecord[];
 
   /**
    * Get the expected schema for this format

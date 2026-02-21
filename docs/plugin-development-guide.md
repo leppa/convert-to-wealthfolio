@@ -35,7 +35,7 @@ export class MyCustomFormat extends BaseFormat {
     return "mySpecificColumn" in firstRecord;
   }
 
-  convert(records: Record<string, string>[]): WealthfolioRecord[] {
+  convert(records: Record<string, string>[], defaultCurrency: string): WealthfolioRecord[] {
     // Note: All CSV values are strings - convert types as needed during processing. You can also
     // define a more convenient data structure and convert to it by overriding `getParseOptions()`.
     return records.map((record) => ({
@@ -44,7 +44,7 @@ export class MyCustomFormat extends BaseFormat {
       quantity: Math.abs(parseFloat(record.shares)),
       activityType: this.mapActivityType(record.action),
       unitPrice: Math.abs(parseFloat(record.price)),
-      currency: record.currency || "EUR",
+      currency: record.currency || defaultCurrency,
       fee: Math.abs(parseFloat(record.fee)),
       amount: Math.abs(parseFloat(record.total)),
       fxRate: NaN,
@@ -240,6 +240,7 @@ The validation happens automatically after your `convert()` method returns the r
 - **Type safety**: Use `Record<string, string>` or a custom type derived from it for parsed CSV records - all values from CSV are strings by default
 - **Type conversion**: Convert string values to appropriate types (numbers, dates, etc.) during parsing (see [Customizing CSV parse options](#customizing-csv-parse-options))
 - **Format detection**: Make your `validate()` method robust to detect only your CSV format. In other words, try to avoid false positives for other formats.
+- **Default currency**: If your format doesn't include a currency column, use the `defaultCurrency` parameter provided to `convert()` method
 - **Error handling**: Provide clear error messages for invalid input
 - **Documentation**: Document your format requirements and any assumptions
 - **Testing**: Test with sample CSV files before submitting
