@@ -17,6 +17,7 @@ SPDX-License-Identifier: BSD-3-Clause
 - **CLI Interface**: Command-line tool for easy conversion and automation
 - **Plugin Architecture**: Makes it easy to add new format converters by creating new plugins
 - **Format Detection**: Automatically detects input format
+- **Field Validation**: Validates all output records against activity type-specific field requirements
 - **Comprehensive Testing**: Full test coverage to ensure reliability
 - **Minimal Dependencies**: Only uses lean libraries as runtime dependencies with none or minimal transitive dependencies
 

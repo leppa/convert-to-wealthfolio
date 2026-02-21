@@ -215,6 +215,25 @@ enum ActivitySubtype {
 }
 ```
 
+## Field Validation
+
+The converter framework automatically validates all output records using activity type-specific field requirements defined in `src/core/FieldRequirements.ts`. This means:
+
+- **Required fields** are verified for each activity type (e.g., `BUY` requires `symbol`, `quantity`, and `unitPrice`)
+- **Ignored fields** are automatically cleared based on activity type (e.g., `symbol` is cleared for `DEPOSIT` activities)
+- **Invalid records** are filtered out and not written to the output CSV
+- **Detailed warnings** are logged for any validation failures
+
+As a plugin developer, you should:
+
+- Focus on converting your CSV format to `WealthfolioRecord` objects
+- Don't worry about implementing field-level validation - the framework handles it
+- Set fields appropriately even if they might be ignored (the framework will clear them)
+- Use `NaN` for numeric fields that aren't applicable (e.g., `unitPrice` for deposits)
+- Use empty strings for text fields that aren't applicable
+
+The validation happens automatically after your `convert()` method returns the records, so you can trust that only valid records will be written to the output file.
+
 ## Best Practices
 
 - **Add copyright header**: All files must include the BSD 3-Clause copyright header

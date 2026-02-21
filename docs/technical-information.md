@@ -41,6 +41,13 @@ This document provides technical details about the architecture, design, and imp
 - Handles CSV parsing and writing
 - Detects input format using registered plugins
 - Manages format plugin registration
+- Validates and filters records before writing output
+
+**Field Requirements** (`src/core/FieldRequirements.ts`)
+
+- Validates records against activity type-specific field requirements
+- Automatically clears ignored fields based on activity type
+- Filters out invalid records with detailed error reporting
 
 ### Format Plugins
 

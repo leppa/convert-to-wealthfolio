@@ -151,6 +151,57 @@ describe("Converter", () => {
       );
     });
 
+    it("should skip and warn on records that fail field validation", async () => {
+      const invalidRecord: WealthfolioRecord = {
+        date: new Date("2024-01-15"),
+        symbol: "", // Required for Buy
+        quantity: 1,
+        activityType: ActivityType.Buy,
+        unitPrice: 10,
+        currency: "USD",
+        fee: 0,
+        amount: 10,
+        fxRate: NaN,
+        subtype: ActivitySubtype.None,
+        comment: "",
+        metadata: {},
+      };
+      const validRecord: WealthfolioRecord = {
+        date: new Date("2024-01-20"),
+        symbol: "MSFT",
+        quantity: 2,
+        activityType: ActivityType.Buy,
+        unitPrice: 20,
+        currency: "USD",
+        fee: 0,
+        amount: 40,
+        fxRate: NaN,
+        subtype: ActivitySubtype.None,
+        comment: "",
+        metadata: {},
+      };
+
+      const customConverter = new Converter([new TestFormat([invalidRecord, validRecord])]);
+      const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+
+      try {
+        const inputFile = path.join(fixturesDir, "sample-generic.csv");
+        await customConverter.convert(inputFile, outputFile, "Test");
+
+        // The invalid record should be skipped; only the valid one should appear
+        const content = fs.readFileSync(outputFile, "utf-8");
+        const lines = content.trim().split("\n");
+        expect(lines).toHaveLength(2); // header + 1 valid record
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Skipping record"));
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringMatching(/symbol.+Invalid value/),
+          expect.stringMatching(""),
+        );
+      } finally {
+        warnSpy.mockRestore();
+      }
+    });
+
     it("should convert using explicit format name", async () => {
       const inputFile = path.join(fixturesDir, "sample-generic.csv");
 

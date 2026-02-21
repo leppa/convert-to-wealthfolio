@@ -20,6 +20,8 @@ Initial release.
 - Core functionality for the converter:
   - Command-line interface (CLI) for conversion and format information.
   - Plugin system for adding custom format converters.
+  - Field validation and error handling to ensure data integrity during
+    conversion.
 - Generic format plugin with flexible column arrangement and activity names.
   Mainly as an example, because Wealthfolio's import system is very flexible and
   can handle many formats without needing a custom converter.

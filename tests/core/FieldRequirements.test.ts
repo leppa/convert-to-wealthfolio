@@ -1,0 +1,234 @@
+/*!
+ * Copyright (c) 2026 Oleksii Serdiuk
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+import { ActivitySubtype, ActivityType, WealthfolioRecord } from "../../src/core/BaseFormat";
+import {
+  validateRecordFieldRequirements,
+  validateRequiredFieldValue,
+} from "../../src/core/FieldRequirements";
+
+const createRecord = (overrides: Partial<WealthfolioRecord> = {}): WealthfolioRecord => ({
+  date: new Date("2024-01-15"),
+  symbol: "AAPL",
+  quantity: 1,
+  activityType: ActivityType.Buy,
+  unitPrice: 10,
+  currency: "USD",
+  fee: 0,
+  amount: 10,
+  fxRate: NaN,
+  subtype: ActivitySubtype.None,
+  comment: "",
+  metadata: {},
+  ...overrides,
+});
+
+describe("FieldRequirements", () => {
+  describe("validateRequiredFieldValue", () => {
+    it("should validate string values", () => {
+      expect(validateRequiredFieldValue("symbol", "AAPL")).toBe(true);
+      expect(validateRequiredFieldValue("symbol", "")).toBe(false);
+      expect(validateRequiredFieldValue("subtype", ActivitySubtype.None)).toBe(false);
+      expect(validateRequiredFieldValue("subtype", ActivitySubtype.DRIP)).toBe(true);
+    });
+
+    it("should validate number values", () => {
+      expect(validateRequiredFieldValue("amount", 1)).toBe(true);
+      expect(validateRequiredFieldValue("amount", NaN)).toBe(false);
+      expect(validateRequiredFieldValue("amount", Infinity)).toBe(false);
+    });
+
+    it("should validate object values", () => {
+      expect(validateRequiredFieldValue("date", new Date("2024-01-15"))).toBe(true);
+      expect(validateRequiredFieldValue("date", new Date(NaN))).toBe(false);
+      expect(validateRequiredFieldValue("metadata", null)).toBe(false);
+      expect(validateRequiredFieldValue("metadata", {})).toBe(false);
+      expect(validateRequiredFieldValue("metadata", { source: { broker: "Schwab" } })).toBe(true);
+    });
+
+    it("should warn on unexpected types", () => {
+      const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+
+      try {
+        expect(validateRequiredFieldValue("amount", true)).toBe(false);
+        expect(validateRequiredFieldValue("amount", undefined)).toBe(false);
+        expect(warnSpy).toHaveBeenCalled();
+      } finally {
+        warnSpy.mockRestore();
+      }
+    });
+  });
+
+  describe("validateRecordFieldRequirements", () => {
+    it("should flag missing required fields", () => {
+      const record = createRecord({ symbol: "" });
+
+      const result = validateRecordFieldRequirements(record);
+
+      expect(result.valid).toBe(false);
+      expect(result.invalidFields.map((field) => field.name)).toContain("symbol");
+    });
+
+    it("should clear ignored fields when requested", () => {
+      const record = createRecord({
+        activityType: ActivityType.Deposit,
+        symbol: "CASH",
+        quantity: new Date("2024-01-01") as unknown as number,
+        unitPrice: { note: "ignored" } as unknown as number,
+        subtype: ActivitySubtype.DRIP,
+        amount: 100,
+      });
+
+      const result = validateRecordFieldRequirements(record, true);
+
+      expect(result.valid).toBe(true);
+      expect(record.symbol).toBe("");
+      expect(record.quantity).toBeInstanceOf(Date);
+      expect(isNaN((record.quantity as unknown as Date).getTime())).toBe(true);
+      expect(record.unitPrice).toEqual({});
+      expect(record.subtype).toBe("");
+    });
+
+    it("should clear ignored numeric fields", () => {
+      const record = createRecord({
+        activityType: ActivityType.Deposit,
+        symbol: "CASH",
+        quantity: 5,
+        unitPrice: 2,
+        amount: 100,
+      });
+
+      const result = validateRecordFieldRequirements(record, true);
+
+      expect(result.valid).toBe(true);
+      expect(Number.isNaN(record.quantity)).toBe(true);
+      expect(Number.isNaN(record.unitPrice)).toBe(true);
+    });
+
+    it("should keep ignored fields when not requested", () => {
+      const record = createRecord({
+        activityType: ActivityType.Deposit,
+        symbol: "CASH",
+        quantity: 5,
+        unitPrice: 2,
+        subtype: ActivitySubtype.DRIP,
+        amount: 100,
+      });
+
+      const result = validateRecordFieldRequirements(record, false);
+
+      expect(result.valid).toBe(true);
+      expect(record.symbol).toBe("CASH");
+      expect(record.quantity).toBe(5);
+      expect(record.unitPrice).toBe(2);
+      expect(record.subtype).toBe(ActivitySubtype.DRIP);
+    });
+
+    it("should enforce conditional requirements", () => {
+      const record = createRecord({
+        activityType: ActivityType.Dividend,
+        subtype: ActivitySubtype.DividendInKind,
+        unitPrice: NaN,
+        metadata: {},
+        amount: 2,
+      });
+
+      const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+
+      try {
+        const result = validateRecordFieldRequirements(record);
+
+        expect(result.valid).toBe(false);
+        expect(result.invalidFields.map((field) => field.name)).toEqual(
+          expect.arrayContaining(["unitPrice", "metadata"]),
+        );
+        expect(warnSpy).toHaveBeenCalled();
+      } finally {
+        warnSpy.mockRestore();
+      }
+    });
+
+    it("should allow ignored dividend unit price when subtype is not DRIP", () => {
+      const record = createRecord({
+        activityType: ActivityType.Dividend,
+        subtype: ActivitySubtype.OrdinaryDividend,
+        unitPrice: NaN,
+        metadata: {},
+        amount: 2,
+      });
+
+      const result = validateRecordFieldRequirements(record);
+
+      expect(result.valid).toBe(true);
+      expect(Number.isNaN(record.unitPrice)).toBe(true);
+    });
+
+    it("should require unit price for staking rewards", () => {
+      const record = createRecord({
+        activityType: ActivityType.Interest,
+        subtype: ActivitySubtype.StakingReward,
+        unitPrice: NaN,
+        amount: 1,
+      });
+
+      const result = validateRecordFieldRequirements(record);
+
+      expect(result.valid).toBe(false);
+      expect(result.invalidFields.map((field) => field.name)).toContain("unitPrice");
+    });
+
+    it("should allow ignored unit price for non-staking interest", () => {
+      const record = createRecord({
+        activityType: ActivityType.Interest,
+        subtype: ActivitySubtype.Coupon,
+        unitPrice: NaN,
+        amount: 1,
+      });
+
+      const result = validateRecordFieldRequirements(record);
+
+      expect(result.valid).toBe(true);
+      expect(Number.isNaN(record.unitPrice)).toBe(true);
+    });
+
+    it("should enforce transfer requirements based on symbol presence", () => {
+      const withSymbol = createRecord({
+        activityType: ActivityType.TransferIn,
+        symbol: "AAPL",
+        quantity: 1,
+        unitPrice: 10,
+        amount: NaN,
+      });
+      const withoutSymbol = createRecord({
+        activityType: ActivityType.TransferIn,
+        symbol: "",
+        quantity: NaN,
+        unitPrice: NaN,
+        amount: 100,
+      });
+
+      const resultWithSymbol = validateRecordFieldRequirements(withSymbol);
+      const resultWithoutSymbol = validateRecordFieldRequirements(withoutSymbol);
+
+      expect(resultWithSymbol.valid).toBe(true);
+      expect(resultWithoutSymbol.valid).toBe(true);
+    });
+
+    it("should require amount when transfer has no symbol", () => {
+      const record = createRecord({
+        activityType: ActivityType.TransferOut,
+        symbol: "",
+        quantity: NaN,
+        unitPrice: NaN,
+        amount: NaN,
+      });
+
+      const result = validateRecordFieldRequirements(record);
+
+      expect(result.valid).toBe(false);
+      expect(result.invalidFields.map((field) => field.name)).toContain("amount");
+    });
+  });
+});

@@ -366,6 +366,24 @@ Before importing:
 3. Check that the converted data looks correct
 4. Import the test output into Wealthfolio to verify
 
+## Field Validation
+
+The converter automatically validates all records based on transaction type-specific field requirements. This means:
+
+- **Required fields** for each transaction type are checked (e.g., `Symbol` is required for `BUY` but not for `DEPOSIT`)
+- **Ignored fields** are automatically cleared (e.g., `Symbol` is cleared for cash-only activities)
+- **Invalid records** with missing required fields are filtered out and not included in the output
+- **Warnings** are logged for any validation failures, including the record number and specific field errors
+
+When a record fails validation, you'll see a warning message like:
+
+```text
+Skipping record 42 due to field errors:
+  - unitPrice - Invalid value, value: NaN
+```
+
+This helps you identify and fix data issues in your source CSV file.
+
 ## Common Issues
 
 ### Missing Required Columns

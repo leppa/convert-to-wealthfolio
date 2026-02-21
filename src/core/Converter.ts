@@ -10,6 +10,7 @@ import { Options, parse } from "csv-parse";
 import { stringify } from "csv-stringify/sync";
 
 import { BaseFormat, WealthfolioRecord } from "./BaseFormat";
+import { validateRecordFieldRequirements } from "./FieldRequirements";
 import { roundToPrecision } from "./Utils";
 
 // https://wealthfolio.app/docs/concepts/activity-types/ states that
@@ -111,7 +112,19 @@ export class Converter {
     }
 
     // Convert records
-    const convertedRecords = format.convert(records);
+    const convertedRecords = format
+      .convert(records)
+      // Filter all records that don't meet field requirements
+      .filter((record, index) => {
+        const result = validateRecordFieldRequirements(record);
+        if (!result.valid) {
+          console.warn(`Skipping record ${index + 1} due to field errors:`);
+          for (const field of result.invalidFields) {
+            console.warn(`  - ${field.name} - ${field.error}, value:`, field.value);
+          }
+        }
+        return result.valid;
+      });
 
     // Write output CSV
     await this.writeCSV(outputPath, convertedRecords);
