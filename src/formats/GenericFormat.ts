@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+import { bold } from "colorette";
 import { Options } from "csv-parse";
 
 import {
@@ -13,6 +14,7 @@ import {
   WealthfolioRecord,
   WealthfolioRecordMetadata,
 } from "../core/BaseFormat";
+import { Logger } from "../core/Logger";
 
 interface ParsedRecord extends Record<string, unknown> {
   date: Date;
@@ -86,7 +88,9 @@ export class GenericFormat extends BaseFormat {
       } else if (activityType === ActivityType.Dividend) {
         if (subtype === ActivitySubtype.DividendInKind) {
           // TODO: Not supported yet, needs `metadata.received_asset_id`
-          console.warn(`Skipping record ${i + 1}: '${subtype}' subtype is not supported yet`);
+          Logger.getInstance().warn(
+            `Skipping record ${bold(i + 1)}: ${bold(subtype)} subtype is not supported yet`,
+          );
           continue;
         }
       } else if (activityType === ActivityType.Fee) {

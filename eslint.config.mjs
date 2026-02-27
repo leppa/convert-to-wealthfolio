@@ -37,8 +37,7 @@ export default defineConfig([
       curly: ["error", "all"],
       eqeqeq: ["error", "always"],
       "linebreak-style": ["error", "unix"],
-      // TODO: Create logging facility and enforce its usage instead of `console`
-      "no-console": "off",
+      "no-console": "error",
       "no-trailing-spaces": "error",
       "object-curly-spacing": ["error", "always"],
       "prefer-const": "error",

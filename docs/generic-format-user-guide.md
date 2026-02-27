@@ -394,6 +394,8 @@ Skipping record 42 due to field errors:
 
 This helps you identify and fix data issues in your source CSV file.
 
+If you need more details for troubleshooting, increase log verbosity by setting its level to `DEBUG` or `TRACE`. See the [Log Verbosity](../README.md#log-verbosity) section in the [README](../README.md) for instructions on how to set verbosity levels.
+
 ## Common Issues
 
 ### Missing Required Columns

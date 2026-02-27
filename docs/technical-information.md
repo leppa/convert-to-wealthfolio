@@ -49,6 +49,13 @@ This document provides technical details about the architecture, design, and imp
 - Automatically clears ignored fields based on activity type
 - Filters out invalid records with detailed error reporting
 
+**Logger** (`src/core/Logger.ts`)
+
+- Centralized logging with colorized output and configurable verbosity levels
+- Supports `FATAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, and `TRACE` log levels
+- Logs go to `stderr`, while user-facing messages go to `stdout`
+- Log verbosity is configurable via CLI options: `--log-level`, `--debug`, and `--trace` (`ERROR` is the lowest possible verbosity, `TRACE` is the highest)
+
 ### Format Plugins
 
 Format plugins extend `BaseFormat` and implement:
@@ -149,6 +156,7 @@ npm run format:fix # or: npm run format
 
 These dependencies are required for the converter to run:
 
+- **[Colorette](https://github.com/jorgebucaran/colorette)**: Colorized console output
 - **[Commander.js](https://github.com/tj/commander.js)**: CLI argument parsing
 - **[NodeCSV](https://csv.js.org/)** (**csv-parse** & **csv-stringify**): CSV operations
 

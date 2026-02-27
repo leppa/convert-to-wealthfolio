@@ -18,6 +18,7 @@ SPDX-License-Identifier: BSD-3-Clause
 - **Plugin Architecture**: Makes it easy to add new format converters by creating new plugins
 - **Format Detection**: Automatically detects input format
 - **Field Validation**: Validates all output records against activity type-specific field requirements
+- **Advanced Logging**: Colorized log output with configurable log verbosity levels
 - **Comprehensive Testing**: Full test coverage to ensure reliability
 - **Minimal Dependencies**: Only uses lean libraries as runtime dependencies with none or minimal transitive dependencies
 
@@ -156,6 +157,35 @@ Alternatively, you can use `--help` option to get the same information:
 npm start -- --help
 # Get help for `convert` command:
 npm start convert -- --help
+```
+
+### Global Options
+
+#### Log Verbosity
+
+The CLI supports configurable log verbosity levels by using the `--log-level` option:
+
+```bash
+npm start <command-and-arguments> -- --log-level DEBUG
+```
+
+The supported levels are: `ERROR`, `WARN`, `INFO`, `DEBUG`, and `TRACE`. The default one is `INFO`.
+
+There are also two shorthand options: `--debug` and `--trace`. They will set the log verbosity to `DEBUG` and `TRACE`, respectively.
+
+```bash
+# Set log verbosity to DEBUG:
+npm start <command-and-arguments> -- --debug
+# Set log verbosity to TRACE:
+npm start <command-and-arguments> -- --trace
+```
+
+**Note:** Log messages go to `stderr` to separate them from user-facing output, which goes to `stdout`. This allows you to redirect logs and output independently if needed.
+
+E.g., you can redirect logs to a file while keeping user-facing output in the console:
+
+```bash
+npm start convert input.csv output.csv -- --log-level DEBUG 2> converter.log
 ```
 
 ## Unsupported CSV Format

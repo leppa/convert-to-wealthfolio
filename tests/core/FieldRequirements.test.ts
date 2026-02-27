@@ -9,6 +9,10 @@ import {
   validateRequiredFieldValue,
 } from "../../src/core/FieldRequirements";
 
+// Silence logging during tests
+import { Logger, LogLevel } from "../../src/core/Logger";
+Logger.setLogLevel(LogLevel.ERROR);
+
 const createRecord = (overrides: Partial<WealthfolioRecord> = {}): WealthfolioRecord => ({
   date: new Date("2024-01-15"),
   symbol: "AAPL",
@@ -49,7 +53,7 @@ describe("FieldRequirements", () => {
     });
 
     it("should warn on unexpected types", () => {
-      const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+      const warnSpy = jest.spyOn(Logger.getInstance(), "warn").mockImplementation(() => undefined);
 
       try {
         expect(validateRequiredFieldValue("amount", true)).toBe(false);
@@ -135,7 +139,7 @@ describe("FieldRequirements", () => {
         amount: 2,
       });
 
-      const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+      const warnSpy = jest.spyOn(Logger.getInstance(), "warn").mockImplementation(() => undefined);
 
       try {
         const result = validateRecordFieldRequirements(record);

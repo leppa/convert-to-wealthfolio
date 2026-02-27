@@ -6,11 +6,13 @@
 import fs from "fs";
 import path from "path";
 
+import { bold, green, italic, red } from "colorette";
 import { Options, parse } from "csv-parse";
 import { stringify } from "csv-stringify/sync";
 
 import { BaseFormat, WealthfolioRecord } from "./BaseFormat";
 import { validateRecordFieldRequirements } from "./FieldRequirements";
+import { Logger } from "./Logger";
 import { roundToPrecision } from "./Utils";
 
 // https://wealthfolio.app/docs/concepts/activity-types/ states that
@@ -43,8 +45,14 @@ export class Converter {
    * @returns Detected format plugin or null
    */
   async detectFormat(content: string): Promise<BaseFormat | null> {
+    const logger = Logger.getInstance();
+    logger.trace(
+      `Starting format detection with ${bold(this.formatPlugins.length)} registered formats`,
+    );
     for (const plugin of this.formatPlugins) {
       try {
+        logger.trace(`Validating format ${bold(plugin.getName())}...`);
+
         // Get plugin-specific parse options and header line
         const parseOptions = plugin.getParseOptions();
         const validationLineCount = plugin.getValidationLineCount();
@@ -57,9 +65,14 @@ export class Converter {
 
         // Validate with the plugin
         if (plugin.validate(records)) {
+          logger.trace(`  ...validation ${bold("succeeded")}`);
           return plugin;
         }
-      } catch (_) {
+        logger.trace(
+          `  ...validation ${bold("failed")} with \`validate()\` returning ${italic("false")}`,
+        );
+      } catch (error) {
+        logger.trace(`  ...validation ${bold("failed")} with parsing error:`, error);
         // If parsing fails for this plugin, continue to next
         continue;
       }
@@ -81,6 +94,8 @@ export class Converter {
     defaultCurrency: string,
     formatName?: string,
   ): Promise<void> {
+    const logger = Logger.getInstance();
+
     // Read input CSV content
     const fileContent = fs.readFileSync(path.resolve(inputPath), "utf-8");
 
@@ -97,7 +112,7 @@ export class Converter {
         const formatNames = this.formatPlugins.map((p) => p.getName()).join(", ");
         throw new Error(`Format '${formatName}' not found. Available formats: ${formatNames}`);
       } else {
-        console.info(`Selected format: ${format.getName()}`);
+        logger.info(`Selected format: ${bold(format.getName())}`);
       }
     } else {
       // Autodetect format
@@ -106,12 +121,13 @@ export class Converter {
         const formatNames = this.formatPlugins.map((p) => p.getName()).join(", ");
         throw new Error(`Cannot detect input format. Registered formats: ${formatNames}`);
       }
-      console.info(`Detected format: ${format.getName()}`);
+      logger.info(`Detected format: ${bold(format.getName())}`);
     }
 
     // Parse the full CSV with format-specific options
     const parseOptions = format.getParseOptions();
     const records = await this.parseCSV(fileContent, parseOptions);
+    logger.info(`Loaded ${bold(records.length)} records from: ${bold(inputPath)}`);
 
     if (formatName && !format.validate(records)) {
       throw new Error(`Input CSV does not match the '${formatName}' format`);
@@ -123,10 +139,13 @@ export class Converter {
       // Filter all records that don't meet field requirements
       .filter((record, index) => {
         const result = validateRecordFieldRequirements(record);
+        logger.debug(
+          `Validating record ${bold(index + 1)}: ${result.valid ? green("passed") : red("failed")}`,
+        );
         if (!result.valid) {
-          console.warn(`Skipping record ${index + 1} due to field errors:`);
+          logger.warn(`Skipping record ${bold(index + 1)} due to field errors:`);
           for (const field of result.invalidFields) {
-            console.warn(`  - ${field.name} - ${field.error}, value:`, field.value);
+            logger.warn(`  - ${bold(field.name)} - ${red(field.error)}, value:`, field.value);
           }
         }
         return result.valid;
@@ -205,7 +224,7 @@ export class Converter {
         });
 
         fs.writeFileSync(path.resolve(filePath), csvContent, "utf-8");
-        console.log(`Wrote ${records.length} records to: ${filePath}`);
+        Logger.getInstance().info(`Wrote ${bold(records.length)} records to: ${bold(filePath)}`);
         resolve();
       } catch (error) {
         reject(error);

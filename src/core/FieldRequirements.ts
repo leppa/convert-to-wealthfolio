@@ -3,7 +3,10 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+import { bold } from "colorette";
+
 import { ActivitySubtype, ActivityType, WealthfolioRecord } from "./BaseFormat";
+import { Logger } from "./Logger";
 
 export interface FieldValidationResult {
   name: string;
@@ -20,6 +23,7 @@ export function validateRecordFieldRequirements(
   record: WealthfolioRecord,
   clearIgnoredFields: boolean = true,
 ): RecordValidationResult {
+  const logger = Logger.getInstance();
   const fieldRequirements = RECORD_FIELD_REQUIREMENTS[record.activityType];
   const invalidFields: FieldValidationResult[] = [];
   const ignoredFields: (keyof WealthfolioRecord)[] = [];
@@ -33,7 +37,7 @@ export function validateRecordFieldRequirements(
       requirementLevel === FieldRequirement.Required &&
       !validateRequiredFieldValue(field, value)
     ) {
-      console.warn(`Required field '${field}' has invalid value:`, value);
+      logger.warn(`Required field ${bold(field)} has invalid value:`, value);
       invalidFields.push({
         name: field,
         value,
@@ -61,9 +65,12 @@ export function validateRecordFieldRequirements(
  *
  * @param field - The name of the field being validated
  * @param value - The value to validate
+ * @param logger - Optional logger instance
  * @returns `true` if the value is valid, `false` otherwise
  */
 export function validateRequiredFieldValue(field: string, value: unknown): boolean {
+  const logger = Logger.getInstance();
+  logger.trace(`Validating field ${bold(field)} with type ${bold(typeof value)} and value:`, value);
   // TODO: Any way to check activityType and subtype enums?
   switch (typeof value) {
     case "string":
@@ -94,7 +101,7 @@ export function validateRequiredFieldValue(field: string, value: unknown): boole
     case "bigint":
     case "symbol":
     case "function":
-      console.warn(`Unexpected type for field "${field}": ${typeof value}`);
+      logger.warn(`Unexpected type for field ${bold(field)}: ${bold(typeof value)}`);
     // eslint-disable-next-line no-fallthrough
     case "undefined":
     default:

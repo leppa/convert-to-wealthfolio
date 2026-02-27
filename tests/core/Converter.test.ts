@@ -17,6 +17,10 @@ import {
 import { Converter } from "../../src/core/Converter";
 import { GenericFormat } from "../../src/formats/GenericFormat";
 
+// Silence logging during tests
+import { Logger, LogLevel } from "../../src/core/Logger";
+Logger.setLogLevel(LogLevel.ERROR);
+
 const DEFAULT_CURRENCY = "EUR";
 
 class TestFormat extends BaseFormat {
@@ -188,7 +192,7 @@ describe("Converter", () => {
       };
 
       const customConverter = new Converter([new TestFormat([invalidRecord, validRecord])]);
-      const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+      const warnSpy = jest.spyOn(Logger.getInstance(), "warn").mockImplementation(() => undefined);
 
       try {
         const inputFile = path.join(fixturesDir, "sample-generic.csv");
