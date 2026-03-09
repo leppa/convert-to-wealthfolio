@@ -13,7 +13,14 @@ import { stringify } from "csv-stringify/sync";
 import { BaseFormat, WealthfolioRecord } from "./BaseFormat";
 import { validateRecordFieldRequirements } from "./FieldRequirements";
 import { Logger } from "./Logger";
+import { SymbolDataService } from "./SymbolDataService";
 import { roundToPrecision } from "./Utils";
+
+import {
+  Overrides,
+  OverridesDataProvider,
+  parseOverridesFile,
+} from "../data-providers/OverridesDataProvider";
 
 // https://wealthfolio.app/docs/concepts/activity-types/ states that
 // "eight-decimal precision is accepted"
@@ -24,9 +31,11 @@ const CSV_EXPORT_DECIMAL_PRECISION = 8;
  */
 export class Converter {
   private formatPlugins: BaseFormat[];
+  private symbolDataService: SymbolDataService;
 
   constructor(formatPlugins: BaseFormat[] = []) {
     this.formatPlugins = formatPlugins;
+    this.symbolDataService = new SymbolDataService();
   }
 
   /**
@@ -87,12 +96,14 @@ export class Converter {
    * @param outputPath - Path to output CSV file
    * @param defaultCurrency - Default currency code to use when not specified in records
    * @param formatName - Optional format name to use (skip autodetection)
+   * @param overridesPath - Optional path to overrides INI file
    */
   async convert(
     inputPath: string,
     outputPath: string,
     defaultCurrency: string,
     formatName?: string,
+    overridesPath?: string,
   ): Promise<void> {
     const logger = Logger.getInstance();
 
@@ -133,9 +144,16 @@ export class Converter {
       throw new Error(`Input CSV does not match the '${formatName}' format`);
     }
 
+    let overrides: Overrides | undefined;
+    // Load overrides if provided and register as a data provider
+    if (overridesPath) {
+      overrides = parseOverridesFile(overridesPath);
+      this.symbolDataService.registerProvider(new OverridesDataProvider(overrides));
+    }
+
     // Convert records
     const convertedRecords = format
-      .convert(records, defaultCurrency)
+      .convert(records, defaultCurrency, this.symbolDataService)
       // Filter all records that don't meet field requirements
       .filter((record, index) => {
         const result = validateRecordFieldRequirements(record);
@@ -149,6 +167,34 @@ export class Converter {
           }
         }
         return result.valid;
+      })
+      .map((record, index) => {
+        // If overrides file was provided, apply symbol overrides.
+        if (overrides?.symbols && overrides.symbols.size > 0) {
+          const newRecord = { ...record };
+          const key = newRecord.symbol.trim().toUpperCase();
+          if (!key) {
+            // Ignore empty symbols (usually cash transactions)
+            logger.trace(
+              `Skipping symbol override for record ${bold(index + 1)}: ${bold("empty")} symbol`,
+            );
+            return newRecord;
+          }
+          const mappedSymbol = overrides.symbols.get(key);
+          if (mappedSymbol) {
+            logger.debug(
+              `Overriding symbol for record ${bold(index + 1)}: ${bold(newRecord.symbol)} -> ${bold(mappedSymbol)}`,
+            );
+            newRecord.symbol = mappedSymbol;
+          } else if (newRecord.symbol !== key) {
+            logger.info(
+              `Normalizing symbol for record ${bold(index + 1)}: ${bold(newRecord.symbol)} -> ${bold(key)}`,
+            );
+            newRecord.symbol = key; // Ensure symbol is normalized, even if no override
+          }
+          return newRecord;
+        }
+        return record;
       });
 
     // Write output CSV

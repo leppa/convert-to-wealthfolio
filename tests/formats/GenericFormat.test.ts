@@ -4,15 +4,23 @@
  */
 
 import { ActivitySubtype, ActivityType } from "../../src/core/BaseFormat";
+import { SymbolDataService } from "../../src/core/SymbolDataService";
+import { OverridesDataProvider } from "../../src/data-providers";
 import { GenericFormat } from "../../src/formats/GenericFormat";
+
+// Silence logging during tests
+import { Logger, LogLevel } from "../../src/core/Logger";
+Logger.setLogLevel(LogLevel.ERROR);
 
 const DEFAULT_CURRENCY = "EUR";
 
 describe("Generic Format", () => {
   let format: GenericFormat;
+  let symbolDataService: SymbolDataService;
 
   beforeEach(() => {
     format = new GenericFormat();
+    symbolDataService = new SymbolDataService();
   });
 
   describe("validate", () => {
@@ -31,6 +39,45 @@ describe("Generic Format", () => {
           symbol: "MSFT",
           quantity: 50,
           unitprice: 350.1,
+        },
+      ];
+      expect(format.validate(records)).toBe(true);
+    });
+
+    it("should return `true` for records with ISIN field", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          isin: "US0378331005",
+          quantity: 100,
+          unitprice: 150.25,
+        },
+      ];
+      expect(format.validate(records)).toBe(true);
+    });
+
+    it("should return `true` for records with CUSIP field", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          cusip: "037833100",
+          quantity: 100,
+          unitprice: 150.25,
+        },
+      ];
+      expect(format.validate(records)).toBe(true);
+    });
+
+    it("should return `true` for records with CompanyName field", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          companyname: "Apple Inc.",
+          quantity: 100,
+          unitprice: 150.25,
         },
       ];
       expect(format.validate(records)).toBe(true);
@@ -65,7 +112,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
@@ -109,7 +156,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result).toHaveLength(3);
       expect(result[0].symbol).toBe("AAPL");
@@ -129,7 +176,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result[0].symbol).toBe("AAPL");
     });
@@ -146,7 +193,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result[0].quantity).toBe(NaN);
       expect(result[0].unitPrice).toBe(NaN);
@@ -165,7 +212,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result[0].currency).toBe(DEFAULT_CURRENCY);
     });
@@ -181,7 +228,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, "GBP");
+      const result = format.convert(records, "GBP", symbolDataService);
 
       expect(result[0].currency).toBe("GBP");
     });
@@ -198,7 +245,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, "GBP");
+      const result = format.convert(records, "GBP", symbolDataService);
 
       expect(result[0].currency).toBe("USD");
     });
@@ -214,7 +261,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result[0].amount).toBe(100 * 150.25);
     });
@@ -239,7 +286,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result[0].activityType).toBe(ActivityType.Buy);
       expect(result[1].activityType).toBe(ActivityType.Sell);
@@ -285,7 +332,7 @@ describe("Generic Format", () => {
           },
         ];
 
-        const result = format.convert(records, DEFAULT_CURRENCY);
+        const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
         expect(result[0].activityType).toBe(expected);
       });
     });
@@ -302,7 +349,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      expect(() => format.convert(records, DEFAULT_CURRENCY)).toThrow(
+      expect(() => format.convert(records, DEFAULT_CURRENCY, symbolDataService)).toThrow(
         "Unknown activity type: UNKNOWN_TYPE",
       );
     });
@@ -319,7 +366,9 @@ describe("Generic Format", () => {
         },
       ];
 
-      expect(() => format.convert(records, DEFAULT_CURRENCY)).toThrow("No activity type");
+      expect(() => format.convert(records, DEFAULT_CURRENCY, symbolDataService)).toThrow(
+        "No activity type",
+      );
     });
 
     it("should use total field when provided", () => {
@@ -334,7 +383,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result[0].amount).toBe(15000);
     });
@@ -351,7 +400,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       // For SELL, fee should be deducted (cash credit)
       expect(result[0].amount).toBe(100 * 150.25);
@@ -369,10 +418,10 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
-      // Symbol should be empty string when not provided
-      expect(result[0].symbol).toBe("");
+      // Symbol should be taken from ISIN when symbol field is missing
+      expect(result[0].symbol).toBe("US0378331005");
     });
 
     it("should handle missing quantity with default 0", () => {
@@ -387,7 +436,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result[0].quantity).toBe(0);
     });
@@ -404,7 +453,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result[0].unitPrice).toBe(0);
     });
@@ -420,7 +469,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result[0].fee).toBe(NaN);
     });
@@ -437,7 +486,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result[0].quantity).toBe(-10);
       expect(result[0].unitPrice).toBe(-5);
@@ -456,7 +505,7 @@ describe("Generic Format", () => {
         },
       ];
 
-      const result = format.convert(records, DEFAULT_CURRENCY);
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result[0].activityType).toBe(ActivityType.Fee);
       expect(result[0].amount).toBe(10.5);
@@ -612,6 +661,9 @@ describe("Generic Format", () => {
           "TransactionType",
           "TransactionSubtype",
           "Symbol",
+          "ISIN",
+          "CUSIP",
+          "CompanyName",
           "Quantity",
           "UnitPrice",
           "Fee",
@@ -627,6 +679,177 @@ describe("Generic Format", () => {
   describe("getName", () => {
     it("should return the format name", () => {
       expect(format.getName()).toBe("Generic");
+    });
+  });
+
+  describe("overrides", () => {
+    it("should convert ISIN to symbol using overrides", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          isin: "US0378331005",
+          quantity: 100,
+          unitprice: 150.25,
+          amount: 15025,
+        },
+      ];
+
+      const overrides = {
+        symbols: new Map(),
+        isin: new Map([["US0378331005", "AAPL"]]),
+        cusip: new Map(),
+        names: new Map(),
+      };
+
+      symbolDataService.registerProvider(new OverridesDataProvider(overrides));
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+
+      expect(result[0].symbol).toBe("AAPL");
+    });
+
+    it("should convert CUSIP to symbol using overrides", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          cusip: "037833100",
+          quantity: 100,
+          unitprice: 150.25,
+          amount: 15025,
+        },
+      ];
+
+      const overrides = {
+        symbols: new Map(),
+        isin: new Map(),
+        cusip: new Map([["037833100", "AAPL"]]),
+        names: new Map(),
+      };
+
+      symbolDataService.registerProvider(new OverridesDataProvider(overrides));
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+
+      expect(result[0].symbol).toBe("AAPL");
+    });
+
+    it("should prefer symbol over ISIN when both are present", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          symbol: "AAPL",
+          isin: "US0378331005",
+          quantity: 100,
+          unitprice: 150.25,
+          amount: 15025,
+        },
+      ];
+
+      const overrides = {
+        symbols: new Map(),
+        isin: new Map([["US0378331005", "DIFFERENT"]]),
+        cusip: new Map(),
+        names: new Map(),
+      };
+
+      symbolDataService.registerProvider(new OverridesDataProvider(overrides));
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+
+      expect(result[0].symbol).toBe("AAPL");
+    });
+
+    it("should prefer ISIN over CUSIP when symbol is missing", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          isin: "US0378331005",
+          cusip: "037833100",
+          quantity: 100,
+          unitprice: 150.25,
+          amount: 15025,
+        },
+      ];
+
+      const overrides = {
+        symbols: new Map(),
+        isin: new Map([["US0378331005", "AAPL"]]),
+        cusip: new Map([["037833100", "CUSIP_APPLE"]]),
+        names: new Map(),
+      };
+
+      symbolDataService.registerProvider(new OverridesDataProvider(overrides));
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+
+      expect(result[0].symbol).toBe("AAPL");
+    });
+
+    it("should make ISIN uppercase when no override is found", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          isin: "us0378331005",
+          quantity: 100,
+          unitprice: 150.25,
+          amount: 15025,
+        },
+      ];
+
+      const overrides = {
+        symbols: new Map(),
+        isin: new Map(),
+        cusip: new Map(),
+        names: new Map(),
+      };
+
+      symbolDataService.registerProvider(new OverridesDataProvider(overrides));
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+
+      expect(result[0].symbol).toBe("US0378331005");
+    });
+
+    it("should make CUSIP uppercase when no override is found", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          cusip: "38259p508",
+          quantity: 100,
+          unitprice: 150.25,
+          amount: 15025,
+        },
+      ];
+
+      const overrides = {
+        symbols: new Map(),
+        isin: new Map(),
+        cusip: new Map(),
+        names: new Map(),
+      };
+
+      symbolDataService.registerProvider(new OverridesDataProvider(overrides));
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+
+      expect(result[0].symbol).toBe("38259P508");
+    });
+
+    it("should not modify symbols when no overrides are set", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          symbol: "AAPL",
+          quantity: 100,
+          unitprice: 150.25,
+          amount: 15025,
+        },
+      ];
+
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+
+      expect(result[0].symbol).toBe("AAPL");
     });
   });
 });

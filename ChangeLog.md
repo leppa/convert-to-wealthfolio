@@ -20,11 +20,14 @@ Initial release.
 - Core functionality for the converter:
   - Command-line interface (CLI) for conversion and format information.
   - Plugin system for adding custom format converters.
+  - Plugin system for symbol resolution using ISINs, CUSIPs, and company names.
   - Field validation and error handling to ensure data integrity during
     conversion.
   - Logging system with colorized output and possibility to set log verbosity
     via CLI.
 - Ability to specify default currency when it's not present in the input CSV.
+- Ability to override symbols using an INI file.
+- Ability to map ISINs, CUSIPs, and company names to symbols using an INI file.
 - Generic format plugin with flexible column arrangement and activity names.
   Mainly as an example, because Wealthfolio's import system is very flexible and
   can handle many formats without needing a custom converter.

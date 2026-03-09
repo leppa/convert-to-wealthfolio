@@ -5,6 +5,8 @@
 
 import { Options } from "csv-parse";
 
+import { SymbolDataService } from "./SymbolDataService";
+
 /**
  * Base class for CSV format plugins
  *
@@ -30,11 +32,13 @@ export abstract class BaseFormat {
    *
    * @param records - Parsed CSV records
    * @param defaultCurrency - Default currency to use when not specified in records
+   * @param symbolDataService - API for symbol lookup to assist conversion
    * @returns Converted records in Wealthfolio format
    */
   abstract convert(
     records: Record<string, unknown>[],
     defaultCurrency: string,
+    symbolDataService: SymbolDataService,
   ): WealthfolioRecord[];
 
   /**

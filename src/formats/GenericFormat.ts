@@ -15,12 +15,16 @@ import {
   WealthfolioRecordMetadata,
 } from "../core/BaseFormat";
 import { Logger } from "../core/Logger";
+import { SymbolDataService } from "../core/SymbolDataService";
 
 interface ParsedRecord extends Record<string, unknown> {
   date: Date;
   transactiontype: string;
   transactionsubtype?: string;
   symbol?: string;
+  isin?: string;
+  cusip?: string;
+  companyname?: string;
   quantity: number;
   unitprice: number;
   fee?: number;
@@ -50,14 +54,23 @@ export class GenericFormat extends BaseFormat {
     const columns = Object.keys(records[0]);
 
     // Check for all required columns, can be in an arbitrary order
-    return this.getExpectedSchema()
+    const hasRequiredColumns = this.getExpectedSchema()
       .filter((column) => !column.optional)
       .every((requiredColumn) =>
         columns.some((column) => column.toLowerCase() === requiredColumn.name.toLowerCase()),
       );
+
+    // Although marked as optional, either symbol, ISIN, CUSIP, or CompanyName must be present
+    return (
+      hasRequiredColumns && columns.some((column) => /symbol|isin|cusip|companyname/i.test(column))
+    );
   }
 
-  convert(records: ParsedRecord[], defaultCurrency: string): WealthfolioRecord[] {
+  convert(
+    records: ParsedRecord[],
+    defaultCurrency: string,
+    symbolDataService: SymbolDataService,
+  ): WealthfolioRecord[] {
     const result: WealthfolioRecord[] = [];
 
     for (let i = 0; i < records.length; i++) {
@@ -101,9 +114,19 @@ export class GenericFormat extends BaseFormat {
         }
       }
 
+      let symbol = (record.symbol || "").trim().toUpperCase();
+      // If symbol is empty, try to resolve it form other fields using the symbol data service
+      if (!symbol && (record.isin || record.cusip || record.companyname)) {
+        ({ symbol } = symbolDataService.querySymbolWithFallback({
+          isin: record.isin,
+          cusip: record.cusip,
+          name: record.companyname,
+        }));
+      }
+
       result.push({
         date: record.date,
-        symbol: (record.symbol || "").trim().toUpperCase(),
+        symbol,
         quantity,
         activityType,
         unitPrice,
@@ -273,7 +296,25 @@ export class GenericFormat extends BaseFormat {
       },
       {
         name: "Symbol",
-        description: "ticker symbol or asset name, empty for cash transactions",
+        optional: true,
+        description:
+          "ticker symbol or asset name, empty for cash transactions (requires ISIN, CUSIP, or CompanyName column if not present)",
+      },
+      {
+        name: "ISIN",
+        optional: true,
+        description: "International Securities Identification Number (requires override file)",
+      },
+      {
+        name: "CUSIP",
+        optional: true,
+        description:
+          "Committee on Uniform Securities Identification Procedures (requires override file)",
+      },
+      {
+        name: "CompanyName",
+        optional: true,
+        description: "company or asset name (requires override file)",
       },
       {
         name: "Quantity",

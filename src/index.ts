@@ -78,17 +78,27 @@ program
       })
       .default(DEFAULT_CURRENCY),
   )
+  .option(
+    "-o, --overrides <path>",
+    "Path to INI file with symbol overrides and ISIN, CUSIP, and company name mappings",
+  )
   .action(
     async (
       input: string,
       output: string,
-      options: { format?: string; defaultCurrency: string },
+      options: { format?: string; defaultCurrency: string; overrides?: string },
     ) => {
       configureLogger();
 
       logger.info(`Using default currency: ${bold(options.defaultCurrency)}`);
       try {
-        await converter.convert(input, output, options.defaultCurrency, options.format);
+        await converter.convert(
+          input,
+          output,
+          options.defaultCurrency,
+          options.format,
+          options.overrides,
+        );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         logger.message(`Conversion failed: ${red(message)}`);

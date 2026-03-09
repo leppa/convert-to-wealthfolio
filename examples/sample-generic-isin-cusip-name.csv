@@ -1,0 +1,6 @@
+Date,TransactionType,Symbol,ISIN,CUSIP,CompanyName,Quantity,UnitPrice,Fee,Total,Currency,Comment
+2024-02-20,SELL,FB,,,,50,380.50,9.99,19015.01,USD,Resolved via Symbol (META)
+2024-01-15,BUY,,US0378331005,,,100,150.25,9.99,15034.99,USD,Resolved via ISIN (AAPL)
+2024-02-20,SELL,,,594918104,,50,380.50,9.99,19015.01,USD,Resolved via CUSIP (MSFT)
+2024-03-10,DIVIDEND,,US02079K3059,02079K305,Alphabet. Inc.,100,2.50,0,250.00,USD,Resolved via ISIN (GOOGL)
+2024-04-05,BUY,,,,Volkswagen AG Preferred,200,75.00,9.99,15009.99,USD,Resolved via company name (VOW3.DE)

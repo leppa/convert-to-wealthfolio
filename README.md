@@ -18,6 +18,8 @@ SPDX-License-Identifier: BSD-3-Clause
 - **Plugin Architecture**: Makes it easy to add new format converters by creating new plugins
 - **Format Detection**: Automatically detects input format
 - **Field Validation**: Validates all output records against activity type-specific field requirements
+- **Symbol Resolution**: Supports pluggable data providers for symbol, ISIN, CUSIP, and company name lookups
+- **Symbol Override and Mapping**: Allows overriding symbols and mapping them from ISINs, CUSIPs, and company names using an INI file
 - **Advanced Logging**: Colorized log output with configurable log verbosity levels
 - **Comprehensive Testing**: Full test coverage to ensure reliability
 - **Minimal Dependencies**: Only uses lean libraries as runtime dependencies with none or minimal transitive dependencies
@@ -31,6 +33,7 @@ See the [ChangeLog](ChangeLog.md) for a detailed list of released and upcoming c
 - **Generic**: Flexible CSV format with support for:
   - Standard transaction types (BUY, SELL, DEPOSIT, WITHDRAWAL, DIVIDENDS, etc.)
   - Optional currency, fee, FX rate, and comment fields
+  - Supports symbol resolution via ISIN, CUSIP, or company name fields
   - Respects the default currency option
   - Comma-delimited format
   - See the [Generic Format User Guide](docs/generic-format-user-guide.md) for details
@@ -84,6 +87,14 @@ Convert a generic CSV file:
 npm start convert examples/sample-generic.csv output.csv
 ```
 
+Convert a generic CSV with ISIN, CUSIP, and company name:
+
+```bash
+npm start convert examples/sample-generic-isin-cusip-name.csv output.csv
+```
+
+You will get ISIN, CUSIP, or sanitized company name as a symbol. See [Override Symbols and Resolve Identifiers](#override-symbols-and-resolve-identifiers) section for information on how to resolve identifiers into symbols by using an INI file.
+
 #### Specify Format Manually
 
 You can skip auto-detection by specifying a format explicitly with the `--format` option.
@@ -107,6 +118,45 @@ npm start convert input.csv output.csv -- --default-currency GBP
 The currency should be a 3-letter [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217).
 
 **Note:** Some formats may ignore the default currency option and always use their own. Always refer to the documentation for the specific format you're using.
+
+#### Override Symbols and Resolve Identifiers
+
+You can override symbols and resolve ISINs, CUSIPs, and company names by passing an INI file to the `--overrides` option.
+
+Convert a generic CSV file with overrides:
+
+```bash
+npm start convert examples/sample-generic-isin-cusip-name.csv output.csv -- --overrides examples/overrides.ini
+```
+
+You will get resolved identifiers, as long as they're present in the override file.
+
+The overrides file format:
+
+```ini
+[Symbol]
+FB = META
+
+[ISIN]
+US0378331005 = AAPL
+
+[CUSIP]
+594918104 = MSFT
+
+[Name]
+Volkswagen AG Preferred = VOW3.DE
+```
+
+This option is useful for:
+
+- Correcting ticker symbol changes after mergers or rebranding
+- Fixing incorrect identifiers in the source data
+- Standardizing symbol naming across different data sources
+- Mapping ISIN, CUSIP, or company name to a symbol when the original symbol is missing in the source data
+
+See [examples/overrides.ini](examples/overrides.ini) for a template.
+
+**Note**: ISIN, CUSIP, and company name lookups are handled by plugins during conversion. Symbol overrides, on the other hand, are done automatically _after_ the conversion. So if you have an ISIN that resolves to a symbol, and that symbol is in the overrides, the override will be applied to the resolved symbol.
 
 ### List Supported Formats
 
@@ -191,6 +241,10 @@ npm start convert input.csv output.csv -- --log-level DEBUG 2> converter.log
 ## Unsupported CSV Format
 
 If your CSV format is not supported, you can create a new format plugin by extending the `BaseFormat` class. See the [Plugin Development Guide](docs/plugin-development-guide.md) for instructions on how to create and integrate your own format into the converter.
+
+## Creating a New Data Provider
+
+If you want to add a new way of resolving symbols from ISINs, CUSIPs, or company names, you can create a new data provider by extending the `DataProvider` class. See the [Data Provider Development Guide](docs/data-provider-development-guide.md) for instructions on how to create and integrate a new data provider into the converter.
 
 ## Technical Information
 

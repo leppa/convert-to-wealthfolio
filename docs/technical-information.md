@@ -17,6 +17,7 @@ This document provides technical details about the architecture, design, and imp
 ├── src/                              # Source code
 │   ├── index.ts                      # CLI entry point
 │   ├── core/                         # Core framework
+│   │   data-providers/               # Symbol resolution providers
 │   └── formats/                      # Format plugin implementations
 ├── tests/                            # Jest unit and integration tests
 ├── ChangeLog.md                      # Version release and change history
@@ -56,6 +57,19 @@ This document provides technical details about the architecture, design, and imp
 - Logs go to `stderr`, while user-facing messages go to `stdout`
 - Log verbosity is configurable via CLI options: `--log-level`, `--debug`, and `--trace` (`ERROR` is the lowest possible verbosity, `TRACE` is the highest)
 
+**SymbolDataService** (`src/core/SymbolDataService.ts`)
+
+- Orchestrates symbol resolution across registered data providers
+- Queries providers in registration order and returns the first match
+- Falls back to the original identifier when no provider can resolve a symbol
+- Exposes registered provider info for diagnostics and logging
+
+**DataProvider** (`src/core/DataProvider.ts`)
+
+- Abstract base class for symbol data provider plugins
+- Defines `query()` and optional `canHandle()` for lookup filtering
+- Includes `SymbolQuery` and `DataProviderInfo` interfaces
+
 ### Format Plugins
 
 Format plugins extend `BaseFormat` and implement:
@@ -66,6 +80,16 @@ Format plugins extend `BaseFormat` and implement:
 - `getExpectedSchema()` - Returns expected input columns with optional flags and descriptions
 - `getParseOptions()` (optional) - Provides custom CSV parsing options (e.g., delimiter, casting column values to specific types)
 - `getValidationLineCount()` (optional) - Specifies how many rows to parse for format detection
+
+### Data Providers
+
+Data providers extend `DataProvider` and implement:
+
+- `getName()` - Returns provider name for diagnostics
+- `query(query)` - Resolves symbol identifiers to a ticker or returns `null`
+- `canHandle(query)` (optional) - Returns `true` if the provider can handle the query, `false` otherwise
+
+Providers are registered in `SymbolDataService` and queried in order until a match is found. If no provider resolves the symbol, the service falls back to the original identifier.
 
 ## Output Format
 
@@ -159,6 +183,7 @@ These dependencies are required for the converter to run:
 - **[Colorette](https://github.com/jorgebucaran/colorette)**: Colorized console output
 - **[Commander.js](https://github.com/tj/commander.js)**: CLI argument parsing
 - **[NodeCSV](https://csv.js.org/)** (**csv-parse** & **csv-stringify**): CSV operations
+- **[ini](https://github.com/npm/ini)**: INI file parsing
 
 I try to keep runtime dependencies lean, with no or minimal transitive dependencies, to ensure that the converter remains lightweight and easy to maintain.
 

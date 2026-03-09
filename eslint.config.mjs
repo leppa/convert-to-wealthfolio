@@ -143,6 +143,10 @@ export default defineConfig([
     },
   },
   {
+    files: [".github/**/*.md"],
+    language: "markdown/gfm",
+  },
+  {
     files: ["**/*.yaml", "**/*.yml"],
     plugins: {
       yml: yaml,

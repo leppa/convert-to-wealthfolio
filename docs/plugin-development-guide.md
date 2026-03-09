@@ -17,7 +17,13 @@ Example: `src/formats/MyCustomFormat.ts`
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import { ActivityType, BaseFormat, ColumnSchema, WealthfolioRecord } from "../core/BaseFormat";
+import {
+  ActivityType,
+  BaseFormat,
+  ColumnSchema,
+  SymbolDataService,
+  WealthfolioRecord,
+} from "../core/BaseFormat";
 
 export class MyCustomFormat extends BaseFormat {
   constructor() {
@@ -35,23 +41,38 @@ export class MyCustomFormat extends BaseFormat {
     return "mySpecificColumn" in firstRecord;
   }
 
-  convert(records: Record<string, string>[], defaultCurrency: string): WealthfolioRecord[] {
+  convert(
+    records: Record<string, string>[],
+    symbolDataService: SymbolDataService,
+  ): WealthfolioRecord[] {
     // Note: All CSV values are strings - convert types as needed during processing. You can also
     // define a more convenient data structure and convert to it by overriding `getParseOptions()`.
-    return records.map((record) => ({
-      date: new Date(record.date),
-      symbol: record.ticker.toUpperCase(),
-      quantity: Math.abs(parseFloat(record.shares)),
-      activityType: this.mapActivityType(record.action),
-      unitPrice: Math.abs(parseFloat(record.price)),
-      currency: record.currency || defaultCurrency,
-      fee: Math.abs(parseFloat(record.fee)),
-      amount: Math.abs(parseFloat(record.total)),
-      fxRate: NaN,
-      subtype: ActivitySubtype.None,
-      comment: record.notes || "",
-      metadata: {},
-    }));
+    return records.map((record) => {
+      let symbol = (record.ticker || "").trim().toUpperCase();
+      // If symbol is empty, try to resolve it form other fields using the symbol data service
+      if (!symbol && (record.isin || record.cusip || record.securityName)) {
+        ({ symbol } = symbolDataService.querySymbolWithFallback({
+          isin: record.isin,
+          cusip: record.cusip,
+          name: record.securityName,
+        }));
+      }
+
+      return {
+        date: new Date(record.date),
+        symbol,
+        quantity: Math.abs(parseFloat(record.shares)),
+        activityType: this.mapActivityType(record.action),
+        unitPrice: Math.abs(parseFloat(record.price)),
+        currency: record.currency || defaultCurrency,
+        fee: Math.abs(parseFloat(record.fee)),
+        amount: Math.abs(parseFloat(record.total)),
+        fxRate: NaN,
+        subtype: ActivitySubtype.None,
+        comment: record.notes || "",
+        metadata: {},
+      };
+    });
   }
 
   private mapActivityType(action: string): ActivityType {
@@ -91,6 +112,21 @@ export class MyCustomFormat extends BaseFormat {
     return [
       { name: "date", description: "Transaction date" },
       { name: "ticker", description: "Stock ticker symbol" },
+      {
+        name: "isin",
+        optional: true,
+        description: "International Securities Identification Number",
+      },
+      {
+        name: "cusip",
+        optional: true,
+        description: "Committee on Uniform Securities Identification Procedures",
+      },
+      {
+        name: "securityName",
+        optional: true,
+        description: "Security or asset name",
+      },
       { name: "shares", description: "Number of shares" },
       { name: "price", description: "Price per share" },
       { name: "action", description: "Transaction type (BUY, SELL, etc.)" },
@@ -234,6 +270,54 @@ As a plugin developer, you should:
 
 The validation happens automatically after your `convert()` method returns the records, so you can trust that only valid records will be written to the output file.
 
+## Symbol Overrides and Identifier Resolution
+
+Your plugin can use the `SymbolDataService` passed to the `convert()` method to resolve ISINs, CUSIPs, and company names. This automatically applies user-provided mapping from INI file and enables custom data providers.
+
+Example:
+
+```typescript
+import { BaseFormat, WealthfolioRecord } from "../core/BaseFormat";
+import { SymbolDataService } from "../core/SymbolDataService";
+
+export class MyCustomFormat extends BaseFormat {
+  convert(
+    records: Record<string, string>[],
+    symbolDataService: SymbolDataService,
+  ): WealthfolioRecord[] {
+    return records.map((record) => {
+      let symbol = record.symbol || "";
+      // When symbol is empty, use `symbolDataService` to resolve one. It handles ISIN, CUSIP, or
+      // company name lookups, and fallbacks.
+      if (!symbol && (record.isin || record.cusip || record.name)) {
+        ({ symbol } = symbolDataService.querySymbolWithFallback({
+          isin: record.isin,
+          cusip: record.cusip,
+          name: record.name,
+        }));
+      }
+
+      return {
+        date: new Date(record.date),
+        symbol, // Already resolved with overrides applied
+        quantity: parseFloat(record.shares),
+        activityType: this.mapActivityType(record.action),
+        unitPrice: parseFloat(record.unitPrice),
+        currency: record.currency || defaultCurrency,
+        fee: parseFloat(record.fee),
+        amount: parseFloat(record.total),
+        fxRate: NaN,
+        subtype: ActivitySubtype.None,
+        comment: record.notes || "",
+        metadata: {},
+      };
+    });
+  }
+}
+```
+
+**Note:** If you don't need symbol resolution, you can ignore the `symbolDataService` parameter. You only need it if you want to resolve ISINs, CUSIPs, or company names to symbols. The overrides are applied automatically after the conversion and you don't need to handle them manually.
+
 ## Best Practices
 
 - **Add copyright header**: All files must include the BSD 3-Clause copyright header
@@ -241,6 +325,7 @@ The validation happens automatically after your `convert()` method returns the r
 - **Type conversion**: Convert string values to appropriate types (numbers, dates, etc.) during parsing (see [Customizing CSV parse options](#customizing-csv-parse-options))
 - **Format detection**: Make your `validate()` method robust to detect only your CSV format. In other words, try to avoid false positives for other formats.
 - **Default currency**: If your format doesn't include a currency column, use the `defaultCurrency` parameter provided to `convert()` method
+- **Symbol Resolution**: Use `symbolDataService.querySymbol()` or `symbolDataService.querySymbolWithFallback()` to resolve symbols from ISIN, CUSIP, and company name fields (see [Symbol Overrides and Identifier Resolution](#symbol-overrides-and-identifier-resolution))
 - **Error handling**: Provide clear error messages for invalid input
 - **Documentation**: Document your format requirements and any assumptions
 - **Testing**: Test with sample CSV files before submitting
@@ -284,6 +369,9 @@ npm start convert examples/my-format-sample.csv output.csv
 
 # Verify the output looks correct
 cat output.csv
+
+# Test with overrides
+npm start convert examples/my-format-sample.csv output.csv -- --overrides examples/overrides.ini
 ```
 
 ## Code Quality

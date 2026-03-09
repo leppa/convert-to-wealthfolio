@@ -235,6 +235,66 @@ describe("Converter", () => {
       expect(content).toContain("USD");
     });
 
+    it("should apply symbol overrides when `overridesPath` is provided", async () => {
+      const inputFile = path.join(fixturesDir, "sample-generic.csv");
+      const overridesFile = path.join(tmpDir, "test-overrides.ini");
+
+      // Create a temporary overrides file that maps AAPL (which exists in sample-generic.csv)
+      fs.writeFileSync(overridesFile, "[Symbol]\nAAPL=AAPL.OVERRIDE\n", "utf-8");
+
+      await converter.convert(inputFile, outputFile, DEFAULT_CURRENCY, undefined, overridesFile);
+
+      expect(fs.existsSync(outputFile)).toBe(true);
+
+      const content = fs.readFileSync(outputFile, "utf-8");
+      // AAPL is a symbol in sample-generic.csv and should be overridden
+      expect(content).toContain("AAPL.OVERRIDE");
+      // Original AAPL should not appear (it's been overridden)
+      const lines = content.split("\n");
+      const dataLines = lines.slice(1); // Skip header
+      const hasOriginalAAPL = dataLines.some(
+        (line) => line.includes("AAPL,") || line.includes(",AAPL,"),
+      );
+      expect(hasOriginalAAPL).toBe(false);
+    });
+
+    it("should apply symbol normalization during override processing for non-normalized formats", async () => {
+      const overridesFile = path.join(tmpDir, "test-overrides-norm.ini");
+
+      const records: WealthfolioRecord[] = [
+        {
+          date: new Date("2024-01-15"),
+          symbol: "  aapl  ",
+          quantity: 100,
+          activityType: ActivityType.Buy,
+          unitPrice: 150.25,
+          currency: "EUR",
+          fee: 0,
+          amount: 15025,
+          fxRate: NaN,
+          subtype: ActivitySubtype.None,
+          comment: "",
+          metadata: {},
+        },
+      ];
+
+      // Create an overrides file that doesn't contain a mapping for AAPL
+      fs.writeFileSync(overridesFile, "[Symbol]\nOTHER=MAPPED\n", "utf-8");
+
+      const testFormat = new TestFormat(records);
+      const customConverter = new Converter([testFormat]);
+
+      const inputFile = path.join(tmpDir, "dummy-input.csv");
+      fs.writeFileSync(inputFile, "dummy,data", "utf-8");
+
+      await customConverter.convert(inputFile, outputFile, "EUR", undefined, overridesFile);
+
+      const content = fs.readFileSync(outputFile, "utf-8");
+      // Symbol should be normalized to AAPL (trimmed and uppercase)
+      expect(content).toContain("AAPL");
+      expect(content).not.toContain("  aapl  ");
+    });
+
     it("should throw error when explicit format name not found", async () => {
       const inputFile = path.join(fixturesDir, "sample-generic.csv");
 
@@ -341,7 +401,7 @@ describe("Converter", () => {
       expect(format?.getName()).toBe("Generic");
     });
 
-    it("should return null when no format matches", async () => {
+    it("should return `null` when no format matches", async () => {
       const content = "InvalidColumn1,InvalidColumn2\nvalue1,value2";
 
       const format = await converter.detectFormat(content);
