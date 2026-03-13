@@ -21,8 +21,11 @@ This document provides technical details about the architecture, design, and imp
 │   └── formats/                      # Format plugin implementations
 ├── tests/                            # Jest unit and integration tests
 ├── ChangeLog.md                      # Version release and change history
+├── CODE_OF_CONDUCT.md                # Code of conduct for contributors
+├── CONTRIBUTING.md                   # Contribution guidelines
 ├── LICENSE                           # BSD 3-Clause License
-└── README.md                         # Project README
+├── README.md                         # Project README
+└── ROADMAP.md                        # Roadmap and future plans
 ```
 
 ## Architecture

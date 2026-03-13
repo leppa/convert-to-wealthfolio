@@ -1,0 +1,73 @@
+##
+# Copyright (c) 2026 Oleksii Serdiuk
+# SPDX-License-Identifier: BSD-3-Clause
+##
+
+name: Policy Violation Report
+description: Report a violation of project policies or community guidelines.
+title: "[Policy Violation]: "
+labels: ["policy-violation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping keep the project safe and respectful.
+        Please provide as much detail as you can.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: A short summary of the policy violation.
+      placeholder: "e.g., Harassment in issue comments"
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: What happened and why it violates policy?
+      placeholder: "Describe the issue and context."
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: Link(s) to the relevant issue, PR, comment, or commit.
+      placeholder: "https://github.com/..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Who was affected and how?
+      placeholder: "Describe any harm or impact."
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or screenshots
+      description: Provide any relevant evidence (screenshots, logs, etc.).
+      placeholder: "Attach files or paste logs here."
+
+  - type: input
+    id: reporter
+    attributes:
+      label: Reporter contact (optional)
+      description: How can we reach you if we need more info?
+      placeholder: "Email or GitHub handle"
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Terms
+      options:
+        - label: I believe that the reported issue violates the project's [Code of Conduct](https://github.com/leppa/convert-to-wealthfolio/blob/main/CODE_OF_CONDUCT.md)
+          required: true
+        - label: I have provided all requested information and agree to answer any follow-up questions
+          required: true

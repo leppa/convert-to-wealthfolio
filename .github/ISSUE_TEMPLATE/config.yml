@@ -1,0 +1,18 @@
+##
+# Copyright (c) 2026 Oleksii Serdiuk
+# SPDX-License-Identifier: BSD-3-Clause
+##
+
+blank_issues_enabled: false
+contact_links:
+  - name: Code of Conduct
+    url: https://github.com/leppa/convert-to-wealthfolio/blob/main/CODE_OF_CONDUCT.md
+    about: Before opening an issue, please read the project's Code of Conduct
+
+  - name: Contribution Guidelines
+    url: https://github.com/leppa/convert-to-wealthfolio/blob/main/CONTRIBUTING.md
+    about: Before opening an issue, please read the project's Contribution Guidelines
+
+  - name: Existing Issues
+    url: https://github.com/leppa/convert-to-wealthfolio/issues
+    about: Before opening a new issue, please check if it has already been reported

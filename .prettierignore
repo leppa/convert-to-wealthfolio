@@ -1,6 +1,7 @@
 *.log
 *.csv
 .git/
+.github/CODEOWNERS
 coverage/
 dist/
 # LICENSE file should stay verbatim

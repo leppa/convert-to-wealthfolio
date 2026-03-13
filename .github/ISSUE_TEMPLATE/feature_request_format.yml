@@ -1,0 +1,121 @@
+##
+# Copyright (c) 2026 Oleksii Serdiuk
+# SPDX-License-Identifier: BSD-3-Clause
+##
+
+name: New Format Request
+description: Request support for a new CSV format
+title: "[Format Request]: "
+labels: ["enhancement", "format"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new format! Please provide as much information as possible about the format to help evaluate and implement it.
+
+        Please note that while I welcome format requests, I may not be able to implement all of them due to time constraints or other priorities. However, I encourage the community to contribute code for new formats if they are interested in seeing them implemented.
+
+        If you're able to contribute code for the new format, please see the [Plugin Development Guide](https://github.com/leppa/convert-to-wealthfolio/blob/main/docs/plugin-development-guide.md) for instructions.
+
+  - type: input
+    id: format_name
+    attributes:
+      label: Format Name
+      description: Suggested name for the new format
+      placeholder: e.g., "DEGIRO", "IBKR"
+    validations:
+      required: true
+
+  - type: textarea
+    id: software_source
+    attributes:
+      label: Export Instructions
+      description: Where and how can users export this CSV format from the software? Make sure to include any relevant settings or options that need to be selected.
+      placeholder: |
+        1. Log in to DEGIRO account
+        2. Go to "Inbox" -> "Transactions"
+        3. Select date range and uncheck "Aggregate order"
+        4. Click "Export" to download the CSV file
+    validations:
+      required: true
+
+  - type: textarea
+    id: format_description
+    attributes:
+      label: Format Description
+      description: Describe the structure and characteristics of this CSV format
+      placeholder: |
+        - Separators used (e.g., comma, semicolon, tab)
+        - Column names and meanings
+        - Data types (e.g., date format, numeric formats)
+        - Supported transaction types (e.g., buy, sell, dividend, etc.)
+        - Any unique characteristics (e.g., multiple rows per transaction, special encoding)
+        - Any special quirks or edge cases (e.g., how it handles corporate actions, splits, etc.)
+    validations:
+      required: true
+
+  - type: textarea
+    id: sample_csv
+    attributes:
+      label: Sample CSV Data
+      description: Provide a sample CSV data that includes all possible transaction types and variations
+      placeholder: |
+        Date,Action,Symbol,Shares,Price,Amount,Currency
+        2026-01-15,Buy,AAPL,10,150.00,1500.00,USD
+        2026-01-20,Sell,AAPL,5,155.00,775.00,USD
+        2026-02-01,Dividend,AAPL,,,15.00,USD
+        ...
+      render: csv
+    validations:
+      required: true
+
+  - type: textarea
+    id: documentation
+    attributes:
+      label: Documentation or Resources
+      description: Provide links to any documentation, help pages, or resources about this format
+      placeholder: |
+        - Official documentation: https://...
+        - Help page: https://...
+        - Community guide: https://...
+
+  - type: textarea
+    id: variations
+    attributes:
+      label: Format Variations
+      description: Are there different versions or variations of this format? (e.g., different export options, regional differences)
+      placeholder: Describe any known variations of this format
+
+  - type: dropdown
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Are you willing to contribute code for this format plugin?
+      options:
+        - "Yes, I can contribute code"
+        - "Yes, with guidance"
+        - "No, but I can help test and provide feedback during development"
+        - "No, but I will use the format and report any issues"
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any additional information that may be helpful for implementing this format
+      placeholder: Add any other context, edge cases, special considerations, or upload relevant files that may help in understanding or implementing the format
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Terms
+      options:
+        - label: I have read and agree to follow the project's [Code of Conduct](https://github.com/leppa/convert-to-wealthfolio/blob/main/CODE_OF_CONDUCT.md)
+          required: true
+        - label: I have read and agree to follow the project's [Contribution Guidelines](https://github.com/leppa/convert-to-wealthfolio/blob/main/CONTRIBUTING.md)
+          required: true
+        - label: I have checked existing format requests and confirmed that this format has not already been requested
+          required: true
+        - label: I have provided all requested information and agree to answer any follow-up questions
+          required: true

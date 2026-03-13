@@ -18,10 +18,18 @@
     "name": "Oleksii Serdiuk",
     "url": "https://oleksii.name/"
   },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/leppa/convert-to-wealthfolio?sponsor=1"
+  },
   "main": "dist/index.js",
   "type": "commonjs",
   "bin": {
     "convert-to-wealthfolio": "dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leppa/convert-to-wealthfolio.git"
   },
   "scripts": {
     "build": "tsc",

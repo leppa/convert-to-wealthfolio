@@ -28,6 +28,10 @@ SPDX-License-Identifier: BSD-3-Clause
 
 See the [ChangeLog](ChangeLog.md) for a detailed list of released and upcoming changes.
 
+## What's Planned
+
+See the [Roadmap](ROADMAP.md) for a list of planned features and improvements.
+
 ## Supported Formats
 
 - **Generic**: Flexible CSV format with support for:
@@ -37,6 +41,8 @@ See the [ChangeLog](ChangeLog.md) for a detailed list of released and upcoming c
   - Respects the default currency option
   - Comma-delimited format
   - See the [Generic Format User Guide](docs/generic-format-user-guide.md) for details
+
+See the [Roadmap](ROADMAP.md#format-plugins) for a list of formats that will be added in the future.
 
 ## Installation
 
@@ -246,9 +252,29 @@ If your CSV format is not supported, you can create a new format plugin by exten
 
 If you want to add a new way of resolving symbols from ISINs, CUSIPs, or company names, you can create a new data provider by extending the `DataProvider` class. See the [Data Provider Development Guide](docs/data-provider-development-guide.md) for instructions on how to create and integrate a new data provider into the converter.
 
+## Getting Support and Reporting Issues
+
+### Reporting Issues
+
+For issues and bug reports, please open a new issue and use the appropriate template. See [Reporting Issues](CONTRIBUTING.md#reporting-issues) for guidelines on how to report issues effectively.
+
+### General Support
+
+If you need support or have general questions, please open a new discussion on GitHub.
+
 ## Technical Information
 
 See the [Technical Information](docs/technical-information.md) document for details about the architecture, design, and implementation of the project.
+
+## Contributing Code and Documentation
+
+If you want to contribute to the project, please refer to the [Contributing to Convert to Wealthfolio](CONTRIBUTING.md) for guidelines on how to get involved.
+
+## Project Rationale
+
+I started this project mainly for myself to be able to import transaction history from my brokers into Wealthfolio. While Wealthfolio's import system is rather flexible, it still expects all transaction details to be in one row. However, some brokers export transactions in a way that splits details across multiple rows (e.g., one row for the main transaction and another for the associated fees). This made it difficult to import my data directly, so I decided to create a tool that could convert these formats into the one that Wealthfolio expects.
+
+At some point during development I realized that Convert to Wealthfolio could be useful for other people as well, so I decided to open source it and make it extensible. I will most probably not implement any extra formats outside of the ones that I need myself, but I'm open to contributions from other people. Same goes for the feature requests - feel free to open a feature request, but I can't promise that I will implement it unless it's something that I need myself.
 
 ## License
 
@@ -262,3 +288,7 @@ This project is licensed under the BSD 3-Clause License - see [LICENSE](LICENSE)
 ### Wealthfolio
 
 **Wealthfolio** is a trademark of Teymz Inc. This project is an independent tool and is not affiliated with or endorsed by Teymz Inc. in any way. See [wealthfolio.app](https://wealthfolio.app) for more information about **Wealthfolio**.
+
+### OSS Notices
+
+See the [NOTICE.md](NOTICE.md) file for a list of license notices for third-party runtime dependencies used in this project.

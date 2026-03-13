@@ -1,0 +1,75 @@
+##
+# Copyright (c) 2026 Oleksii Serdiuk
+# SPDX-License-Identifier: BSD-3-Clause
+##
+
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature Request]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Please provide as much information as possible about the feature or enhancement you'd like to see. This will help me evaluate and prioritize it effectively.
+
+        Please note that while I welcome feature requests, I may not be able to implement all of them due to time constraints or other priorities. However, I encourage the community to contribute code for new features if they are interested in seeing them implemented.
+
+  - type: textarea
+    id: feature_description
+    attributes:
+      label: Feature Description
+      description: A clear and detailed description of the feature or enhancement you'd like to see
+      placeholder: Describe the feature you're proposing
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Use Case
+      description: What problem does this feature solve? What use cases would it support?
+      placeholder: Explain the problem or use case this feature addresses
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed Solution
+      description: If you have ideas about how this feature could be implemented, describe them here
+      placeholder: Describe your proposed solution or implementation approach
+
+  - type: dropdown
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Are you willing to contribute code for this feature?
+      options:
+        - "Yes, I can contribute code"
+        - "Yes, with guidance"
+        - "No, but I can help test"
+        - "No"
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any additional information, references, or context about the feature request
+      placeholder: Add any other context or upload relevant files, mockups, or images that may help in understanding or implementing the feature
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Terms
+      options:
+        - label: I have read and agree to follow the project's [Code of Conduct](https://github.com/leppa/convert-to-wealthfolio/blob/main/CODE_OF_CONDUCT.md)
+          required: true
+        - label: I have read and agree to follow the project's [Contribution Guidelines](https://github.com/leppa/convert-to-wealthfolio/blob/main/CONTRIBUTING.md)
+          required: true
+        - label: I have checked existing feature requests and confirmed that this feature has not already been requested
+          required: true
+        - label: I have provided all requested information and agree to answer any follow-up questions
+          required: true

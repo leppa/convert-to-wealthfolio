@@ -243,5 +243,6 @@ npm test            # Run tests
 ## See Also
 
 - [Technical Information](technical-information.md) - Architecture overview
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines
 - [src/core/DataProvider API](../src/core/DataProvider.ts) - `DataProvider` source code
 - [src/data-providers/OverridesDataProvider.ts](../src/data-providers/OverridesDataProvider.ts) - An example of a data provider that loads symbol overrides from an INI file

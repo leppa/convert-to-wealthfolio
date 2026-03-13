@@ -388,5 +388,6 @@ npm test            # Run tests
 ## See Also
 
 - [Technical Information](technical-information.md) - Architecture overview
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines
 - [src/core/BaseFormat.ts](../src/core/BaseFormat.ts) - `BaseFormat` source code
 - [src/formats/GenericFormat.ts](../src/formats/GenericFormat.ts) - An example of a format plugin

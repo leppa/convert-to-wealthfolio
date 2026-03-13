@@ -1,0 +1,105 @@
+##
+# Copyright (c) 2026 Oleksii Serdiuk
+# SPDX-License-Identifier: BSD-3-Clause
+##
+
+name: Bug Report
+description: Report a bug or issue with the converter
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please provide as much detail as possible to help me diagnose and fix the issue.
+
+        **Note:** This template is for general issues. For format-specific issues, use the Format-Specific Bug Report.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Which version are you using?
+      placeholder: e.g., 1.0.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and detailed description of the issue
+      placeholder: Describe the issue you're experiencing
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the issue
+      placeholder: |
+        1. Run the converter with '...'
+        2. Use the following input '...'
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Describe the expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Describe the actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Your environment details
+      placeholder: |
+        - OS: [e.g., Ubuntu 22.04, Windows 11, macOS 14]
+        - Node.js version: [e.g., 20.11.0]
+      value: |
+        - OS:
+        - Node.js version:
+    validations:
+      required: true
+
+  - type: textarea
+    id: error_messages
+    attributes:
+      label: Error Messages
+      description: Any relevant error messages or stack traces
+      placeholder: Paste error messages or upload any relevant files, logs, or screenshots (please redact sensitive information)
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any additional information that may help in diagnosing the issue
+      placeholder: Add any other context about the problem here
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Terms
+      options:
+        - label: I have read and agree to follow the project's [Code of Conduct](https://github.com/leppa/convert-to-wealthfolio/blob/main/CODE_OF_CONDUCT.md)
+          required: true
+        - label: I have read and agree to follow the project's [Contribution Guidelines](https://github.com/leppa/convert-to-wealthfolio/blob/main/CONTRIBUTING.md)
+          required: true
+        - label: I have checked existing issues and confirmed that this issue has not already been reported
+          required: true
+        - label: I have provided all requested information and agree to answer any follow-up questions
+          required: true

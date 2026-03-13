@@ -1,0 +1,128 @@
+##
+# Copyright (c) 2026 Oleksii Serdiuk
+# SPDX-License-Identifier: BSD-3-Clause
+##
+
+name: Format-Specific Bug Report
+description: Report a bug related to a specific CSV format conversion
+title: "[Format Bug]: "
+labels: ["bug", "format"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a format-specific bug! Please provide as much detail as possible to help me diagnose and fix the issue.
+
+        **Note:** This template is for issues related to converting a specific CSV format. For general issues, use the general Bug Report.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Which version are you using?
+      placeholder: e.g., 1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: format_name
+    attributes:
+      label: Format Name
+      description: Which CSV format is affected?
+      placeholder: e.g., Generic
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and detailed description of the issue
+      placeholder: Describe the issue with this format conversion
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the issue with this format
+      placeholder: |
+        1. Run the converter with format '...'
+        2. Use the provided CSV input '...'
+        3. Use the attached override file '...'
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Output
+      description: What output did you expect from the conversion?
+      placeholder: Describe the expected output
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Output
+      description: What output did you actually get?
+      placeholder: Describe the actual output or error
+    validations:
+      required: true
+
+  - type: textarea
+    id: sample_csv
+    attributes:
+      label: CSV Data That Reproduces the Issue
+      description: A sample of the CSV file that reproduces the issue (please redact sensitive information)
+      placeholder: |
+        Date,Description,Amount,Currency
+        2026-01-15,Buy Stock ABC,1000.00,USD
+        ...
+      render: csv
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Your environment details
+      placeholder: |
+        - OS: [e.g., Ubuntu 24.04, Windows 11, macOS 14]
+        - Node.js version: [e.g., 20.11.0]
+      value: |
+        - OS:
+        - Node.js version:
+    validations:
+      required: true
+
+  - type: textarea
+    id: error_messages
+    attributes:
+      label: Error Messages
+      description: Any relevant error messages or stack traces
+      placeholder: Paste error messages or upload any relevant files, logs, or screenshots (please redact sensitive information)
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any additional information about the issue
+      placeholder: Add any other context, such as overrides, additional CSV samples, or specific edge cases
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Terms
+      options:
+        - label: I have read and agree to follow the project's [Code of Conduct](https://github.com/leppa/convert-to-wealthfolio/blob/main/CODE_OF_CONDUCT.md)
+          required: true
+        - label: I have read and agree to follow the project's [Contribution Guidelines](https://github.com/leppa/convert-to-wealthfolio/blob/main/CONTRIBUTING.md)
+          required: true
+        - label: I have checked existing issues and confirmed that this issue has not already been reported
+          required: true
+        - label: I have provided all requested information and agree to answer any follow-up questions
+          required: true
