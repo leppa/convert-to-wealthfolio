@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import { Options } from "csv-parse";
+import { OptionsWithColumns } from "csv-parse";
 
 import { SymbolDataService } from "./SymbolDataService";
 
@@ -60,10 +60,14 @@ export abstract class BaseFormat {
   /**
    * Get custom CSV parse options for this format
    *
-   * @returns CSV parse options, merged with defaults
+   * Columns can be overriden, but they **must** be enabled (not set to `false` or `undefined`).
+   *
+   * @returns CSV parse options
    */
-  getParseOptions(): Options {
-    return {};
+  getParseOptions(): OptionsWithColumns<Record<string, unknown>> {
+    return {
+      columns: true,
+    };
   }
 
   /**

@@ -7,14 +7,14 @@ import fs from "fs";
 import path from "path";
 
 import { bold, green, italic, red } from "colorette";
-import { Options, parse } from "csv-parse";
+import { CsvError, OptionsWithColumns, parse } from "csv-parse";
 import { stringify } from "csv-stringify/sync";
 
 import { BaseFormat, WealthfolioRecord } from "./BaseFormat";
 import { validateRecordFieldRequirements } from "./FieldRequirements";
 import { Logger } from "./Logger";
 import { SymbolDataService } from "./SymbolDataService";
-import { roundToPrecision } from "./Utils";
+import { parseNumber, roundToPrecision } from "./Utils";
 
 import {
   Overrides,
@@ -69,7 +69,7 @@ export class Converter {
         // Parse a sample of the CSV to validate format
         const records = await this.parseCSV(content, {
           ...parseOptions,
-          to_line: (parseOptions.from_line ?? 1) - 1 + validationLineCount,
+          to_line: parseNumber(parseOptions.from_line, 1) - 1 + validationLineCount,
         });
 
         // Validate with the plugin
@@ -208,8 +208,11 @@ export class Converter {
    * @param customOptions - Optional custom parse options to override defaults
    * @returns Parsed records
    */
-  private parseCSV(content: string, customOptions?: Options): Promise<Record<string, unknown>[]> {
-    const defaultOptions = {
+  private parseCSV(
+    content: string,
+    customOptions?: OptionsWithColumns<Record<string, unknown>>,
+  ): Promise<Record<string, unknown>[]> {
+    const defaultOptions: OptionsWithColumns<Record<string, unknown>> = {
       columns: true,
       skip_empty_lines: true,
       trim: true,
@@ -221,7 +224,7 @@ export class Converter {
       parse(
         content,
         parseOptions,
-        (err: Error | undefined, records?: Record<string, unknown>[]) => {
+        (err: CsvError | undefined, records?: Record<string, unknown>[]) => {
           if (err) {
             reject(err);
           } else {

@@ -21,3 +21,24 @@ export function roundToPrecision(value: number, precision: number): number {
   const factor = Math.pow(10, precision);
   return Math.round(value * factor) / factor;
 }
+
+/**
+ * Parse a value into a number, with a default fallback for invalid inputs
+ *
+ * Handles `null`, `undefined`, non-numeric strings, and non-finite numbers gracefully by returning
+ * a specified default value.
+ *
+ * @param value - The value to parse
+ * @param defaultValue - The default value to return if parsing fails
+ * @returns The parsed number or the default value
+ */
+export function parseNumber(value?: null | number | string, defaultValue: number = 0): number {
+  if (value === null || value === undefined) {
+    return defaultValue;
+  }
+  if (typeof value === "number") {
+    return isFinite(value) ? value : defaultValue;
+  }
+  const parsed = parseFloat(value);
+  return isFinite(parsed) ? parsed : defaultValue;
+}

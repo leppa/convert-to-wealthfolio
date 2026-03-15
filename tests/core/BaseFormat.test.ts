@@ -57,8 +57,8 @@ describe("BaseFormat", () => {
   });
 
   describe("getParseOptions", () => {
-    it("should return empty object by default", () => {
-      expect(format.getParseOptions()).toEqual({});
+    it("should enable columns by default", () => {
+      expect(format.getParseOptions()).toEqual({ columns: true });
     });
   });
 

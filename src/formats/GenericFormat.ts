@@ -4,8 +4,8 @@
  */
 
 import { bold } from "colorette";
-import { Options } from "csv-parse";
 
+import { OptionsWithColumns } from "csv-parse";
 import {
   ActivitySubtype,
   ActivityType,
@@ -353,7 +353,7 @@ export class GenericFormat extends BaseFormat {
     ];
   }
 
-  getParseOptions(): Options {
+  getParseOptions(): OptionsWithColumns<Record<string, unknown>> {
     return {
       // Trim whitespaces and convert column names to lowercase
       columns: (header: string[]) => header.map((column) => column.trim().toLowerCase()),

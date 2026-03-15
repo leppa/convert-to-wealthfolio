@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import { roundToPrecision } from "../../src/core/Utils";
+import { parseNumber, roundToPrecision } from "../../src/core/Utils";
 
 describe("Utils", () => {
   describe("roundToPrecision", () => {
@@ -80,6 +80,44 @@ describe("Utils", () => {
       // Test floating point precision issues
       expect(roundToPrecision(0.1 + 0.2, 1)).toBe(0.3);
       expect(roundToPrecision(0.1 + 0.2, 10)).toBe(0.3);
+    });
+  });
+
+  describe("parseNumber", () => {
+    it("should return default value for `null` and `undefined`", () => {
+      expect(parseNumber(undefined)).toBe(0);
+      expect(parseNumber(null)).toBe(0);
+      expect(parseNumber(undefined, 42)).toBe(42);
+      expect(parseNumber(null, -5)).toBe(-5);
+    });
+
+    it("should return finite numeric values unchanged", () => {
+      expect(parseNumber(123)).toBe(123);
+      expect(parseNumber(0)).toBe(0);
+      expect(parseNumber(-45.67)).toBe(-45.67);
+      expect(parseNumber(123, 999)).toBe(123);
+    });
+
+    it("should return default value for non-finite numeric values", () => {
+      expect(parseNumber(Number.NaN)).toBe(0);
+      expect(parseNumber(Number.POSITIVE_INFINITY)).toBe(0);
+      expect(parseNumber(Number.NEGATIVE_INFINITY)).toBe(0);
+      expect(parseNumber(Number.NaN, 99)).toBe(99);
+    });
+
+    it("should parse valid numeric strings", () => {
+      expect(parseNumber("123.45")).toBe(123.45);
+      expect(parseNumber("-10")).toBe(-10);
+      expect(parseNumber(" 42 ")).toBe(42);
+      expect(parseNumber("3.14abc")).toBe(3.14);
+    });
+
+    it("should return default value for invalid strings", () => {
+      expect(parseNumber("")).toBe(0);
+      expect(parseNumber("abc")).toBe(0);
+      expect(parseNumber("NaN")).toBe(0);
+      expect(parseNumber("Infinity")).toBe(0);
+      expect(parseNumber("abc", 7)).toBe(7);
     });
   });
 });
