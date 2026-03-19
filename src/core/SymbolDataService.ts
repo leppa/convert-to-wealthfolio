@@ -7,6 +7,7 @@ import { bold } from "colorette";
 
 import { DataProvider, DataProviderInfo, SymbolQuery } from "./DataProvider";
 import { Logger } from "./Logger";
+import { formatLoggedValue, sanitizeName } from "./Utils";
 
 // TODO: Should we use "UNKNOWN" or something similar here instead of an empty string?
 const UNKNOWN_SYMBOL = "";
@@ -76,7 +77,7 @@ export class SymbolDataService {
 
     if (result) {
       logger.debug(
-        `Resolved ${query.symbol ? "symbol " + bold(query.symbol) : bold("empty") + " symbol"}${query.isin ? ", ISIN: " + bold(query.isin) : ""}${query.cusip ? ", CUSIP: " + bold(query.cusip) : ""}${query.name ? ", name: " + bold(query.name) : ""} -> ${bold(result.symbol)} (provider: ${bold(result.provider)})`,
+        `Resolved ${formatLoggedValue(query.symbol, "symbol ", bold("empty") + " symbol")}${formatLoggedValue(query.isin, ", ISIN: ")}${formatLoggedValue(query.cusip, ", CUSIP: ")}${formatLoggedValue(query.name, ", name: ")} -> ${bold(result.symbol)} (provider: ${bold(result.provider)})`,
       );
 
       return result;
@@ -84,13 +85,18 @@ export class SymbolDataService {
 
     // Fallback: return the symbol based on the original query values in the priority order: symbol,
     // ISIN, CUSIP, sanitized name
-    const symbol = (query.symbol || query.isin || query.cusip || this.sanitizeName(query.name))
+    const symbol = (
+      query.symbol ||
+      query.isin ||
+      query.cusip ||
+      sanitizeName(query.name, UNKNOWN_SYMBOL)
+    )
       .trim()
       .toUpperCase();
 
     if (!query.symbol) {
       logger.warn(
-        `Couldn't resolve ${bold("empty")} symbol${query.isin ? ", ISIN: " + bold(query.isin) : ""}${query.cusip ? ", CUSIP: " + bold(query.cusip) : ""}${query.name ? ", name: " + bold(query.name) : ""} -> falling back to ${bold(symbol)}`,
+        `Couldn't resolve ${bold("empty")} symbol${formatLoggedValue(query.isin, ", ISIN: ")}${formatLoggedValue(query.cusip, ", CUSIP: ")}${formatLoggedValue(query.name, ", name: ")} -> falling back to ${bold(symbol)}`,
       );
     }
 
@@ -124,25 +130,5 @@ export class SymbolDataService {
    */
   getProviderCount(): number {
     return this.providers.length;
-  }
-
-  private sanitizeName(name?: string): string {
-    if (!name) {
-      return UNKNOWN_SYMBOL;
-    }
-
-    const sanitized = name
-      // Replace all non-alphanumeric characters with dashes (consecutive characters will be
-      // replaced with a single dash)
-      .replaceAll(/[\W_]+/g, "-");
-
-    return sanitized
-      .slice(
-        // Trim leading dash (there can be only one due to the regex above)...
-        sanitized.startsWith("-") ? 1 : 0,
-        // ...and trailing dash (same here, only one possible)
-        sanitized.endsWith("-") ? -1 : undefined,
-      )
-      .toUpperCase();
   }
 }

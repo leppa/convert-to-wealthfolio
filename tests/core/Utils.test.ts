@@ -3,7 +3,14 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import { parseNumber, roundToPrecision } from "../../src/core/Utils";
+import { bold } from "colorette";
+
+import {
+  formatLoggedValue,
+  parseNumber,
+  roundToPrecision,
+  sanitizeName,
+} from "../../src/core/Utils";
 
 describe("Utils", () => {
   describe("roundToPrecision", () => {
@@ -118,6 +125,64 @@ describe("Utils", () => {
       expect(parseNumber("NaN")).toBe(0);
       expect(parseNumber("Infinity")).toBe(0);
       expect(parseNumber("abc", 7)).toBe(7);
+    });
+  });
+
+  describe("sanitizeName", () => {
+    it("should return fallbackSymbol for undefined or empty name", () => {
+      expect(sanitizeName()).toBe("");
+      expect(sanitizeName(undefined, "FB")).toBe("FB");
+      expect(sanitizeName("", "FALLBACK")).toBe("FALLBACK");
+    });
+
+    it("should replace non-alphanumeric characters with dashes", () => {
+      expect(sanitizeName("Apple Inc.")).toBe("APPLE-INC");
+      expect(sanitizeName("ACME, Inc. / Class-A")).toBe("ACME-INC-CLASS-A");
+    });
+
+    it("should collapse consecutive special characters into a single dash", () => {
+      expect(sanitizeName("Some_Weird_Name@#!With$Special%Characters")).toBe(
+        "SOME-WEIRD-NAME-WITH-SPECIAL-CHARACTERS",
+      );
+      expect(sanitizeName("A  B")).toBe("A-B");
+    });
+
+    it("should trim leading and trailing dashes", () => {
+      expect(sanitizeName("  ACME, Inc. / Class-A-  ")).toBe("ACME-INC-CLASS-A");
+      expect(sanitizeName("-Leading")).toBe("LEADING");
+      expect(sanitizeName("Trailing-")).toBe("TRAILING");
+    });
+
+    it("should convert result to uppercase", () => {
+      expect(sanitizeName("apple inc")).toBe("APPLE-INC");
+      expect(sanitizeName("mixedCase")).toBe("MIXEDCASE");
+    });
+
+    it("should handle purely alphanumeric input", () => {
+      expect(sanitizeName("AAPL")).toBe("AAPL");
+      expect(sanitizeName("msft")).toBe("MSFT");
+      expect(sanitizeName("ABC123")).toBe("ABC123");
+    });
+  });
+
+  describe("formatLoggedValue", () => {
+    it("should return bold value when called without label or emptyLabel", () => {
+      expect(formatLoggedValue("hello")).toBe(bold("hello"));
+    });
+
+    it("should prepend label to bold value when value is present", () => {
+      expect(formatLoggedValue("world", "Label: ")).toBe(`Label: ${bold("world")}`);
+      expect(formatLoggedValue("X", ", key: ")).toBe(`, key: ${bold("X")}`);
+    });
+
+    it("should return empty string when value is absent and emptyLabel is omitted", () => {
+      expect(formatLoggedValue()).toBe("");
+      expect(formatLoggedValue("")).toBe("");
+    });
+
+    it("should return emptyLabel when value is absent", () => {
+      expect(formatLoggedValue(undefined, "", "N/A")).toBe("N/A");
+      expect(formatLoggedValue("", "Label: ", "missing")).toBe("missing");
     });
   });
 });
