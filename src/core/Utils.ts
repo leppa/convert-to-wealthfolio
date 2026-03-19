@@ -37,8 +37,8 @@ export function parseNumber(value?: null | number | string, defaultValue: number
     return defaultValue;
   }
   if (typeof value === "number") {
-    return isFinite(value) ? value : defaultValue;
+    return Number.isFinite(value) ? value : defaultValue;
   }
-  const parsed = parseFloat(value);
-  return isFinite(parsed) ? parsed : defaultValue;
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : defaultValue;
 }

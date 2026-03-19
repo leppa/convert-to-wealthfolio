@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import fs from "fs";
-import os from "os";
-import path from "path";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 import {
   ActivitySubtype,
@@ -24,7 +24,7 @@ Logger.setLogLevel(LogLevel.ERROR);
 const DEFAULT_CURRENCY = "EUR";
 
 class TestFormat extends BaseFormat {
-  private records: WealthfolioRecord[];
+  private readonly records: WealthfolioRecord[];
 
   constructor(records: WealthfolioRecord[]) {
     super("Test");
@@ -106,7 +106,7 @@ describe("Converter", () => {
       // Check that numeric values don't have more than 8 decimal places
       // The values should be properly rounded
       values.forEach((value) => {
-        if (!isNaN(Number(value)) && value.includes(".")) {
+        if (!Number.isNaN(Number(value)) && value.includes(".")) {
           const decimals = value.split(".")[1];
           expect(decimals.length).toBeLessThanOrEqual(8);
         }
@@ -171,7 +171,7 @@ describe("Converter", () => {
         currency: "USD",
         fee: 0,
         amount: 10,
-        fxRate: NaN,
+        fxRate: Number.NaN,
         subtype: ActivitySubtype.None,
         comment: "",
         metadata: {},
@@ -185,7 +185,7 @@ describe("Converter", () => {
         currency: "USD",
         fee: 0,
         amount: 40,
-        fxRate: NaN,
+        fxRate: Number.NaN,
         subtype: ActivitySubtype.None,
         comment: "",
         metadata: {},
@@ -220,8 +220,17 @@ describe("Converter", () => {
       expect(fs.existsSync(outputFile)).toBe(true);
     });
 
-    it("should use custom default currency when specified", async () => {
-      const inputFile = path.join(fixturesDir, "sample-generic.csv");
+    it("should use custom default currency when no currency column is present", async () => {
+      const inputFile = path.join(tmpDir, "custom-no-currency.csv");
+      fs.writeFileSync(
+        inputFile,
+        [
+          // No currency column
+          "Date,TransactionType,Symbol,Quantity,UnitPrice",
+          "2024-01-15,BUY,AAPL,1,100",
+        ].join("\n"),
+        "utf-8",
+      );
 
       await converter.convert(inputFile, outputFile, "USD");
 
@@ -230,8 +239,30 @@ describe("Converter", () => {
       // Read output and verify currency
       const content = fs.readFileSync(outputFile, "utf-8");
 
-      // The sample-generic.csv has some records with currency and some without
-      // We verify that the output contains USD (from our default)
+      // Verify that the output contains USD
+      expect(content).toContain("USD");
+    });
+
+    it("should use custom default currency when currency field is empty", async () => {
+      const inputFile = path.join(tmpDir, "empty-currency.csv");
+      fs.writeFileSync(
+        inputFile,
+        [
+          "Date,TransactionType,Symbol,Quantity,UnitPrice,Currency",
+          // Empty currency field
+          "2024-01-15,BUY,AAPL,1,100,",
+        ].join("\n"),
+        "utf-8",
+      );
+
+      await converter.convert(inputFile, outputFile, "USD");
+
+      expect(fs.existsSync(outputFile)).toBe(true);
+
+      // Read output and verify currency
+      const content = fs.readFileSync(outputFile, "utf-8");
+
+      // Verify that the output contains USD
       expect(content).toContain("USD");
     });
 
@@ -271,7 +302,7 @@ describe("Converter", () => {
           currency: "EUR",
           fee: 0,
           amount: 15025,
-          fxRate: NaN,
+          fxRate: Number.NaN,
           subtype: ActivitySubtype.None,
           comment: "",
           metadata: {},
@@ -321,6 +352,21 @@ describe("Converter", () => {
       ).rejects.toThrow();
     });
 
+    it("should rethrow when Error is caught", async () => {
+      const inputFile = path.join(fixturesDir, "sample-generic.csv");
+      const writeSpy = jest.spyOn(fs, "writeFileSync").mockImplementation(() => {
+        throw new Error("Disk full");
+      });
+
+      try {
+        await expect(converter.convert(inputFile, outputFile, DEFAULT_CURRENCY)).rejects.toThrow(
+          "Disk full",
+        );
+      } finally {
+        writeSpy.mockRestore();
+      }
+    });
+
     it("should handle malformed CSV during format detection", async () => {
       const malformedFile = path.join(tmpDir, "malformed.csv");
       fs.writeFileSync(malformedFile, 'Date,Symbol\n"unclosed quote,value');
@@ -356,7 +402,7 @@ describe("Converter", () => {
         currency: DEFAULT_CURRENCY,
         fee: 0,
         amount: 40,
-        fxRate: NaN,
+        fxRate: Number.NaN,
         subtype: ActivitySubtype.None,
         comment: "",
         metadata: {},

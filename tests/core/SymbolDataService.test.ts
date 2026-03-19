@@ -141,11 +141,17 @@ describe("SymbolDataService", () => {
   it("should sanitize name when no symbol, ISIN, or CUSIP are provided", () => {
     service.registerProvider(new TestProvider("ProviderA", () => null));
 
-    const result = service.querySymbolWithFallback({
-      name: "  ACME, Inc. / Class-A  ",
-    });
+    expect(
+      service.querySymbolWithFallback({
+        name: "  ACME, Inc. / Class-A-  ",
+      }),
+    ).toEqual({ symbol: "ACME-INC-CLASS-A", provider: "Fallback" });
 
-    expect(result).toEqual({ symbol: "ACME-INC-CLASS-A", provider: "Fallback" });
+    expect(
+      service.querySymbolWithFallback({
+        name: "Some@Weird#Name_With$Special%Characters",
+      }),
+    ).toEqual({ symbol: "SOME-WEIRD-NAME-WITH-SPECIAL-CHARACTERS", provider: "Fallback" });
   });
 
   it("should return empty fallback symbol when query contains no usable fields", () => {

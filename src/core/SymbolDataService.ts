@@ -131,14 +131,18 @@ export class SymbolDataService {
       return UNKNOWN_SYMBOL;
     }
 
-    return (
-      name
-        // Replace all non-alphanumeric characters with dashes.
-        .replace(/[\W-]/g, "-")
-        // Reaplace multiple consecutive dashes with a single dash.
-        .replace(/--+/g, "-")
-        // Trim leading and trailing dashes.
-        .replace(/^-*|-*$/g, "")
-    );
+    const sanitized = name
+      // Replace all non-alphanumeric characters with dashes (consecutive characters will be
+      // replaced with a single dash)
+      .replaceAll(/[\W_]+/g, "-");
+
+    return sanitized
+      .slice(
+        // Trim leading dash (there can be only one due to the regex above)...
+        sanitized.startsWith("-") ? 1 : 0,
+        // ...and trailing dash (same here, only one possible)
+        sanitized.endsWith("-") ? -1 : undefined,
+      )
+      .toUpperCase();
   }
 }

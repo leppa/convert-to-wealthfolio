@@ -85,7 +85,7 @@ describe("Utils", () => {
 
   describe("parseNumber", () => {
     it("should return default value for `null` and `undefined`", () => {
-      expect(parseNumber(undefined)).toBe(0);
+      expect(parseNumber()).toBe(0);
       expect(parseNumber(null)).toBe(0);
       expect(parseNumber(undefined, 42)).toBe(42);
       expect(parseNumber(null, -5)).toBe(-5);

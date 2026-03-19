@@ -79,8 +79,8 @@ export class GenericFormat extends BaseFormat {
       const subtype = this.mapActivitySubtype(record, activityType);
       let quantity = record.quantity;
       let unitPrice = record.unitprice;
-      let fee = record.fee || NaN;
-      let amount = record.total || NaN;
+      let fee = record.fee ?? Number.NaN;
+      let amount = record.total ?? Number.NaN;
       if (activityType !== ActivityType.Adjustment) {
         // Adjustment seems to be the only activity that can have negative quantity or amount and
         // its sign defines the direction. Other activities should always have positive sign, and
@@ -110,11 +110,11 @@ export class GenericFormat extends BaseFormat {
         // If fee amount is not provided, we can try to get the value from the fee field
         if (!Number.isFinite(amount)) {
           amount = fee;
-          fee = NaN;
+          fee = Number.NaN;
         }
       }
 
-      let symbol = (record.symbol || "").trim().toUpperCase();
+      let symbol = (record.symbol ?? "").trim().toUpperCase();
       // If symbol is empty, try to resolve it form other fields using the symbol data service
       if (!symbol && (record.isin || record.cusip || record.companyname)) {
         ({ symbol } = symbolDataService.querySymbolWithFallback({
@@ -130,12 +130,13 @@ export class GenericFormat extends BaseFormat {
         quantity,
         activityType,
         unitPrice,
+        // `||` here because we also want to replace empty strings with default currency
         currency: record.currency || defaultCurrency,
         fee,
         amount,
-        fxRate: record.fxrate || NaN,
+        fxRate: record.fxrate ?? Number.NaN,
         subtype,
-        comment: record.comment || "",
+        comment: record.comment ?? "",
         metadata,
       });
     }
@@ -367,7 +368,7 @@ export class GenericFormat extends BaseFormat {
           context.column === "amount" ||
           context.column === "fxrate"
         ) {
-          return parseFloat(value);
+          return Number.parseFloat(value);
         }
 
         return value.trim();

@@ -26,13 +26,16 @@ function formatMessageWithArgs(message: string, args: unknown[]): string {
 
   const argStr = args
     .map((arg) => {
-      if (typeof arg === "object") {
+      if (arg instanceof Date) {
+        return arg.toISOString();
+      } else if (typeof arg === "object") {
         try {
           return JSON.stringify(arg);
         } catch {
-          return String(arg);
+          // No-op - fallback to string coercion below
         }
       }
+
       return String(arg);
     })
     .join(" ");
@@ -226,7 +229,6 @@ export class Logger {
       const prefix = "[FATAL]";
       const formattedMessage = formatMessageWithArgs(message, args);
       process.stderr.write(bgRed(`${prefix} ${formattedMessage}`) + reset("\n"));
-      // process.exit(1);
     }
   }
 }

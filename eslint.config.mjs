@@ -16,23 +16,21 @@ import { defineConfig, globalIgnores } from "eslint/config";
 export default defineConfig([
   globalIgnores(["dist/**", "node_modules/**", "**/*.d.ts"]),
   {
-    files: ["**/*.js", "**/*.ts"],
-    extends: [js.configs.recommended, typescript.configs.recommended],
+    files: ["**/*.js", "**/*.mjs", "**/*.ts"],
+    extends: [js.configs.recommended],
     plugins: {
       "@tony.ganchev": header,
     },
 
     languageOptions: {
-      parser: tsParser,
-      ecmaVersion: 2020,
+      ecmaVersion: 2022,
       sourceType: "module",
       globals: {
-        ...globals.node,
+        ...globals.commonjs,
       },
     },
 
     rules: {
-      "@typescript-eslint/no-explicit-any": "error",
       "array-bracket-spacing": ["error", "never"],
       curly: ["error", "all"],
       eqeqeq: ["error", "always"],
@@ -41,8 +39,6 @@ export default defineConfig([
       "no-trailing-spaces": "error",
       "object-curly-spacing": ["error", "always"],
       "prefer-const": "error",
-      // `cause` not supported by ES2020
-      "preserve-caught-error": "off",
       semi: ["error", "always"],
 
       "@tony.ganchev/header": [
@@ -53,22 +49,15 @@ export default defineConfig([
             lines: [
               "!",
               {
-                pattern: /^ \* Copyright \(c\) \d{4} Oleksii Serdiuk(, .+)*$/,
+                // Allow author names to be in any language and include extra characters like dots,
+                // spaces, apostrophes, and hyphens. Other characters can be added as needed later.
+                pattern: /^ \* Copyright \(c\) \d{4} Oleksii Serdiuk(, [\p{L}\p{M}. '-]+)*$/u,
                 template: ` * Copyright (c) ${new Date().getFullYear()} Oleksii Serdiuk`,
               },
               " * SPDX-License-Identifier: BSD-3-Clause",
               " ",
             ],
           },
-        },
-      ],
-
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
         },
       ],
 
@@ -101,15 +90,48 @@ export default defineConfig([
     },
   },
   {
+    files: ["**/*.ts"],
+    extends: [typescript.configs.recommendedTypeChecked],
+
+    languageOptions: {
+      parser: tsParser,
+      sourceType: "module",
+      parserOptions: {
+        projectService: true,
+      },
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/prefer-readonly": "error",
+
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
+  {
     files: ["**/*.test.ts", "**/*.spec.ts"],
     languageOptions: {
+      parserOptions: {
+        projectService: false,
+        project: "./tsconfig.test.json",
+      },
       globals: {
         ...globals.jest,
       },
     },
     rules: {
-      // Allow `any` in tests for flexibility, but warn to try to minimize its usage
+      // Relax some rules for tests
       "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unsafe-argument": "warn",
     },
   },
   {
@@ -131,7 +153,7 @@ export default defineConfig([
             lines: [
               "",
               {
-                pattern: /^Copyright \(c\) \d{4} Oleksii Serdiuk(, .+)*$/,
+                pattern: /^Copyright \(c\) \d{4} Oleksii Serdiuk(, [\p{L}\p{M}. '-]+)*$/u,
                 template: `Copyright (c) ${new Date().getFullYear()} Oleksii Serdiuk`,
               },
               "SPDX-License-Identifier: BSD-3-Clause",

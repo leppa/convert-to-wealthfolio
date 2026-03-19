@@ -24,14 +24,15 @@ class TestFormat extends BaseFormat {
   convert(records: Record<string, unknown>[]): WealthfolioRecord[] {
     return records.map((record) => ({
       date: new Date("2024-01-15"),
-      symbol: String(record.testField || "TEST"),
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      symbol: record.testField ? String(record.testField) : "TEST",
       quantity: 100,
       activityType: ActivityType.Buy,
       unitPrice: 150.0,
       currency: "EUR",
       fee: 0,
       amount: 15000,
-      fxRate: NaN,
+      fxRate: Number.NaN,
       subtype: ActivitySubtype.None,
       comment: "",
       metadata: {},

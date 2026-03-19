@@ -22,7 +22,7 @@ const createRecord = (overrides: Partial<WealthfolioRecord> = {}): WealthfolioRe
   currency: "USD",
   fee: 0,
   amount: 10,
-  fxRate: NaN,
+  fxRate: Number.NaN,
   subtype: ActivitySubtype.None,
   comment: "",
   metadata: {},
@@ -40,13 +40,13 @@ describe("FieldRequirements", () => {
 
     it("should validate number values", () => {
       expect(validateRequiredFieldValue("amount", 1)).toBe(true);
-      expect(validateRequiredFieldValue("amount", NaN)).toBe(false);
+      expect(validateRequiredFieldValue("amount", Number.NaN)).toBe(false);
       expect(validateRequiredFieldValue("amount", Infinity)).toBe(false);
     });
 
     it("should validate object values", () => {
       expect(validateRequiredFieldValue("date", new Date("2024-01-15"))).toBe(true);
-      expect(validateRequiredFieldValue("date", new Date(NaN))).toBe(false);
+      expect(validateRequiredFieldValue("date", new Date(Number.NaN))).toBe(false);
       expect(validateRequiredFieldValue("metadata", null)).toBe(false);
       expect(validateRequiredFieldValue("metadata", {})).toBe(false);
       expect(validateRequiredFieldValue("metadata", { source: { broker: "Schwab" } })).toBe(true);
@@ -90,7 +90,7 @@ describe("FieldRequirements", () => {
       expect(result.valid).toBe(true);
       expect(record.symbol).toBe("");
       expect(record.quantity).toBeInstanceOf(Date);
-      expect(isNaN((record.quantity as unknown as Date).getTime())).toBe(true);
+      expect(Number.isNaN((record.quantity as unknown as Date).getTime())).toBe(true);
       expect(record.unitPrice).toEqual({});
       expect(record.subtype).toBe("");
     });
@@ -134,7 +134,7 @@ describe("FieldRequirements", () => {
       const record = createRecord({
         activityType: ActivityType.Dividend,
         subtype: ActivitySubtype.DividendInKind,
-        unitPrice: NaN,
+        unitPrice: Number.NaN,
         metadata: {},
         amount: 2,
       });
@@ -158,7 +158,7 @@ describe("FieldRequirements", () => {
       const record = createRecord({
         activityType: ActivityType.Dividend,
         subtype: ActivitySubtype.OrdinaryDividend,
-        unitPrice: NaN,
+        unitPrice: Number.NaN,
         metadata: {},
         amount: 2,
       });
@@ -173,7 +173,7 @@ describe("FieldRequirements", () => {
       const record = createRecord({
         activityType: ActivityType.Interest,
         subtype: ActivitySubtype.StakingReward,
-        unitPrice: NaN,
+        unitPrice: Number.NaN,
         amount: 1,
       });
 
@@ -187,7 +187,7 @@ describe("FieldRequirements", () => {
       const record = createRecord({
         activityType: ActivityType.Interest,
         subtype: ActivitySubtype.Coupon,
-        unitPrice: NaN,
+        unitPrice: Number.NaN,
         amount: 1,
       });
 
@@ -203,13 +203,13 @@ describe("FieldRequirements", () => {
         symbol: "AAPL",
         quantity: 1,
         unitPrice: 10,
-        amount: NaN,
+        amount: Number.NaN,
       });
       const withoutSymbol = createRecord({
         activityType: ActivityType.TransferIn,
         symbol: "",
-        quantity: NaN,
-        unitPrice: NaN,
+        quantity: Number.NaN,
+        unitPrice: Number.NaN,
         amount: 100,
       });
 
@@ -224,9 +224,9 @@ describe("FieldRequirements", () => {
       const record = createRecord({
         activityType: ActivityType.TransferOut,
         symbol: "",
-        quantity: NaN,
-        unitPrice: NaN,
-        amount: NaN,
+        quantity: Number.NaN,
+        unitPrice: Number.NaN,
+        amount: Number.NaN,
       });
 
       const result = validateRecordFieldRequirements(record);

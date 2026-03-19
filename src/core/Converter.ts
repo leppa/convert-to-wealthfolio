@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
 import { bold, green, italic, red } from "colorette";
 import { CsvError, OptionsWithColumns, parse } from "csv-parse";
@@ -16,11 +16,7 @@ import { Logger } from "./Logger";
 import { SymbolDataService } from "./SymbolDataService";
 import { parseNumber, roundToPrecision } from "./Utils";
 
-import {
-  Overrides,
-  OverridesDataProvider,
-  parseOverridesFile,
-} from "../data-providers/OverridesDataProvider";
+import { Overrides, OverridesDataProvider, parseOverridesFile } from "../data-providers";
 
 // https://wealthfolio.app/docs/concepts/activity-types/ states that
 // "eight-decimal precision is accepted"
@@ -30,12 +26,10 @@ const CSV_EXPORT_DECIMAL_PRECISION = 8;
  * Main converter class that orchestrates the CSV conversion process
  */
 export class Converter {
-  private formatPlugins: BaseFormat[];
-  private symbolDataService: SymbolDataService;
+  private readonly formatPlugins: BaseFormat[];
 
   constructor(formatPlugins: BaseFormat[] = []) {
     this.formatPlugins = formatPlugins;
-    this.symbolDataService = new SymbolDataService();
   }
 
   /**
@@ -119,11 +113,11 @@ export class Converter {
     // If explicit format is provided, use it with validation
     if (formatName) {
       format = this.formatPlugins.find((f) => f.getName() === formatName) || null;
-      if (!format) {
+      if (format) {
+        logger.info(`Selected format: ${bold(format.getName())}`);
+      } else {
         const formatNames = this.formatPlugins.map((p) => p.getName()).join(", ");
         throw new Error(`Format '${formatName}' not found. Available formats: ${formatNames}`);
-      } else {
-        logger.info(`Selected format: ${bold(format.getName())}`);
       }
     } else {
       // Autodetect format
@@ -144,16 +138,17 @@ export class Converter {
       throw new Error(`Input CSV does not match the '${formatName}' format`);
     }
 
+    const symbolDataService = new SymbolDataService();
     let overrides: Overrides | undefined;
     // Load overrides if provided and register as a data provider
     if (overridesPath) {
       overrides = parseOverridesFile(overridesPath);
-      this.symbolDataService.registerProvider(new OverridesDataProvider(overrides));
+      symbolDataService.registerProvider(new OverridesDataProvider(overrides));
     }
 
     // Convert records
     const convertedRecords = format
-      .convert(records, defaultCurrency, this.symbolDataService)
+      .convert(records, defaultCurrency, symbolDataService)
       // Filter all records that don't meet field requirements
       .filter((record, index) => {
         const result = validateRecordFieldRequirements(record);
@@ -265,10 +260,12 @@ export class Converter {
               // Invalid dates can't reach this point because records with invalid dates fail
               // validation and are filtered out before writing
               /* istanbul ignore next */
-              isNaN(value.getTime()) ? "" : value.toISOString(),
+              Number.isNaN(value.getTime()) ? "" : value.toISOString(),
             number: (value) =>
-              isNaN(value) ? "" : roundToPrecision(value, CSV_EXPORT_DECIMAL_PRECISION).toString(),
-            object: (value) => (Object.keys(value).length !== 0 ? JSON.stringify(value) : ""),
+              Number.isNaN(value)
+                ? ""
+                : roundToPrecision(value, CSV_EXPORT_DECIMAL_PRECISION).toString(),
+            object: (value) => (Object.keys(value).length === 0 ? "" : JSON.stringify(value)),
           },
         });
 
@@ -276,7 +273,11 @@ export class Converter {
         Logger.getInstance().info(`Wrote ${bold(records.length)} records to: ${bold(filePath)}`);
         resolve();
       } catch (error) {
-        reject(error);
+        if (error instanceof Error) {
+          reject(error);
+        } else {
+          reject(new Error(String(error)));
+        }
       }
     });
   }

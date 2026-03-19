@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import fs from "fs";
 import ini from "ini";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
 import { bold } from "colorette";
 
@@ -27,7 +27,7 @@ export interface Overrides {
  * an INI file
  */
 export class OverridesDataProvider extends DataProvider {
-  private overrides: Overrides;
+  private readonly overrides: Overrides;
 
   constructor(overrides: Overrides) {
     super(
@@ -100,25 +100,25 @@ export function parseOverridesFile(overridesPath: string): Overrides {
   const parsed = ini.parse(content);
 
   if (parsed.Symbol) {
-    for (const [key, value] of Object.entries(parsed.Symbol)) {
+    for (const [key, value] of Object.entries(parsed.Symbol as Record<string, string>)) {
       overrides.symbols.set(key.trim().toUpperCase(), String(value).trim().toUpperCase());
     }
   }
 
   if (parsed.ISIN) {
-    for (const [key, value] of Object.entries(parsed.ISIN)) {
+    for (const [key, value] of Object.entries(parsed.ISIN as Record<string, string>)) {
       overrides.isin.set(key.trim().toUpperCase(), String(value).trim().toUpperCase());
     }
   }
 
   if (parsed.CUSIP) {
-    for (const [key, value] of Object.entries(parsed.CUSIP)) {
+    for (const [key, value] of Object.entries(parsed.CUSIP as Record<string, string>)) {
       overrides.cusip.set(key.trim().toUpperCase(), String(value).trim().toUpperCase());
     }
   }
 
   if (parsed.Name) {
-    for (const [key, value] of Object.entries(parsed.Name)) {
+    for (const [key, value] of Object.entries(parsed.Name as Record<string, string>)) {
       overrides.names.set(key.trim().toUpperCase(), String(value).trim().toUpperCase());
     }
   }

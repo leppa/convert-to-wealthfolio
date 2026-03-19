@@ -81,18 +81,18 @@ export function validateRequiredFieldValue(field: string, value: unknown): boole
         // This will actually never fail because `None` is "" and will fail the previous
         // validation. However, just in case we set `None` to something else in the future, we can
         // still validate it here.
-        return value !== ActivitySubtype.None;
+        return (value as ActivitySubtype) !== ActivitySubtype.None;
       }
       return true;
     case "number":
-      return isFinite(value);
+      return Number.isFinite(value);
     case "object":
       if (value === null) {
         return false;
       }
       if (value instanceof Date) {
         // Should be a valid date
-        return !isNaN(value.getTime());
+        return !Number.isNaN(value.getTime());
       }
       // Should not be an empty object (e.g., when metadata is required)
       return Object.keys(value).length !== 0;
@@ -112,15 +112,17 @@ export function validateRequiredFieldValue(field: string, value: unknown): boole
 function clearField(record: WealthfolioRecord, field: keyof WealthfolioRecord): void {
   switch (typeof record[field]) {
     case "string":
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
       (record[field] as string) = "";
       break;
     case "number":
-      (record[field] as number) = NaN;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+      (record[field] as number) = Number.NaN;
       break;
     case "object":
       if (record[field] instanceof Date) {
         // Set invalid date
-        (record[field] as Date) = new Date(NaN);
+        (record[field] as Date) = new Date(Number.NaN);
       } else {
         (record[field] as unknown) = {};
       }

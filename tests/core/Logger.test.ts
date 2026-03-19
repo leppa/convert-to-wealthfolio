@@ -8,7 +8,6 @@ import { DEFAULT_LOG_LEVEL, Logger, LogLevel } from "../../src/core/Logger";
 describe("Logger", () => {
   let stderrSpy: jest.SpyInstance;
   let stdoutSpy: jest.SpyInstance;
-  // let exitSpy: jest.SpyInstance;
 
   beforeEach(() => {
     // Suppress "Setting log level to INFO" message to reduce noise in test output
@@ -89,15 +88,15 @@ describe("Logger", () => {
       stderrSpy.mockClear();
 
       Logger.setLogLevel(LogLevel.TRACE);
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("[INFO ]");
-      expect(stderrSpy.mock.calls[0][0]).toContain("Setting log level to");
-      expect(stderrSpy.mock.calls[0][0]).toContain("TRACE");
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[INFO ]"));
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Setting log level to"));
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("TRACE"));
 
       stderrSpy.mockClear();
       Logger.setLogLevel(LogLevel.INFO);
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("INFO");
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("INFO"));
     });
 
     it("should not log when setting log level above INFO", () => {
@@ -115,9 +114,9 @@ describe("Logger", () => {
 
       Logger.setLogLevel(LogLevel.FATAL);
       expect(Logger.getLogLevel()).toBe(LogLevel.ERROR);
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("[WARN ]");
-      expect(stderrSpy.mock.calls[0][0]).toContain("hide important messages");
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[WARN ]"));
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("hide important messages"));
     });
   });
 
@@ -163,9 +162,9 @@ describe("Logger", () => {
       const logger = Logger.getInstance();
       logger.trace("Trace message");
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("[TRACE]");
-      expect(stderrSpy.mock.calls[0][0]).toContain("Trace message");
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[TRACE]"));
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Trace message"));
     });
 
     it("should not write when log level is above TRACE", () => {
@@ -185,8 +184,8 @@ describe("Logger", () => {
       const logger = Logger.getInstance();
       logger.trace("Trace", "with", "args");
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("Trace with args");
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Trace with args"));
     });
   });
 
@@ -198,9 +197,9 @@ describe("Logger", () => {
       const logger = Logger.getInstance();
       logger.debug("Debug message");
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("[DEBUG]");
-      expect(stderrSpy.mock.calls[0][0]).toContain("Debug message");
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[DEBUG]"));
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Debug message"));
     });
 
     it("should not write when log level is above DEBUG", () => {
@@ -220,8 +219,8 @@ describe("Logger", () => {
       const logger = Logger.getInstance();
       logger.debug("Debug", 123, { test: true });
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain('Debug 123 {"test":true}');
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('Debug 123 {"test":true}'));
     });
   });
 
@@ -233,9 +232,9 @@ describe("Logger", () => {
       const logger = Logger.getInstance();
       logger.info("Info message");
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("[INFO ]");
-      expect(stderrSpy.mock.calls[0][0]).toContain("Info message");
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[INFO ]"));
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Info message"));
     });
 
     it("should not write when log level is above INFO", () => {
@@ -255,8 +254,8 @@ describe("Logger", () => {
       const logger = Logger.getInstance();
       logger.info("Status:", "active");
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("Status: active");
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Status: active"));
     });
   });
 
@@ -268,9 +267,9 @@ describe("Logger", () => {
       const logger = Logger.getInstance();
       logger.warn("Warning message");
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("[WARN ]");
-      expect(stderrSpy.mock.calls[0][0]).toContain("Warning message");
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[WARN ]"));
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Warning message"));
     });
 
     it("should not write when log level is above WARN", () => {
@@ -290,22 +289,22 @@ describe("Logger", () => {
       const logger = Logger.getInstance();
       logger.warn("Warning:", { code: 123 });
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain('Warning: {"code":123}');
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('Warning: {"code":123}'));
     });
   });
 
   describe("error", () => {
-    it("should write to stderr when log level is ERROR or below", () => {
+    it("should always write to stderr", () => {
       Logger.setLogLevel(LogLevel.ERROR);
       stderrSpy.mockClear();
 
       const logger = Logger.getInstance();
       logger.error("Error message");
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("[ERROR]");
-      expect(stderrSpy.mock.calls[0][0]).toContain("Error message");
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[ERROR]"));
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Error message"));
     });
 
     it("should format message with arguments", () => {
@@ -315,35 +314,35 @@ describe("Logger", () => {
       const logger = Logger.getInstance();
       logger.error("Error code:", 500);
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("Error code: 500");
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Error code: 500"));
     });
   });
 
   describe("fatal", () => {
-    it("should write to stderr and exit process", () => {
+    it("should always write to stderr", () => {
       Logger.setLogLevel(LogLevel.FATAL);
       stderrSpy.mockClear();
 
       const logger = Logger.getInstance();
       logger.fatal("Fatal error");
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("[FATAL]");
-      expect(stderrSpy.mock.calls[0][0]).toContain("Fatal error");
-      // expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[FATAL]"));
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Fatal error"));
     });
 
-    it("should format message with arguments before exiting", () => {
+    it("should format message with arguments", () => {
       Logger.setLogLevel(LogLevel.FATAL);
       stderrSpy.mockClear();
 
       const logger = Logger.getInstance();
       logger.fatal("Critical:", { error: "system failure" });
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain('Critical: {"error":"system failure"}');
-      // expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Critical: {"error":"system failure"}'),
+      );
     });
   });
 
@@ -355,8 +354,53 @@ describe("Logger", () => {
       const logger = Logger.getInstance();
       logger.info("Values:", 1, "text", true);
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("Values: 1 text true");
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Values: 1 text true"));
+    });
+
+    it("should handle BigInt values", () => {
+      Logger.setLogLevel(LogLevel.INFO);
+      stderrSpy.mockClear();
+
+      const logger = Logger.getInstance();
+      logger.info("BigInt value:", BigInt("12345678901234567890"));
+
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(
+        expect.stringContaining("BigInt value: 12345678901234567890"),
+      );
+    });
+
+    it("should handle Date objects", () => {
+      Logger.setLogLevel(LogLevel.INFO);
+      stderrSpy.mockClear();
+
+      const logger = Logger.getInstance();
+      const date = new Date("2024-01-01T00:00:00Z");
+      logger.info("Date value:", date);
+
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(
+        expect.stringContaining(`Date value: ${date.toISOString()}`),
+      );
+    });
+
+    it("should handle special numbers", () => {
+      Logger.setLogLevel(LogLevel.INFO);
+      stderrSpy.mockClear();
+
+      const logger = Logger.getInstance();
+      logger.info(
+        "Special number:",
+        Number.NEGATIVE_INFINITY,
+        Number.NaN,
+        Number.POSITIVE_INFINITY,
+      );
+
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Special number: -Infinity NaN Infinity"),
+      );
     });
 
     it("should handle objects that cannot be stringified", () => {
@@ -369,8 +413,8 @@ describe("Logger", () => {
       const logger = Logger.getInstance();
       logger.info("Circular:", circular);
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("Circular:");
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Circular: [object Object]"));
       // Should fall back to String() conversion
     });
 
@@ -381,8 +425,8 @@ describe("Logger", () => {
       const logger = Logger.getInstance();
       logger.info("Values:", null, undefined);
 
-      expect(stderrSpy).toHaveBeenCalled();
-      expect(stderrSpy.mock.calls[0][0]).toContain("Values: null undefined");
+      expect(stderrSpy).toHaveBeenCalledTimes(1);
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Values: null undefined"));
     });
   });
 
@@ -390,7 +434,7 @@ describe("Logger", () => {
     it("should filter messages based on log level", () => {
       const logger = Logger.getInstance();
 
-      // Set to INFO, should see INFO, WARN, ERROR but not TRACE or DEBUG
+      // Set to INFO, should see INFO, WARN, ERROR, and FATAL, but not TRACE or DEBUG
       Logger.setLogLevel(LogLevel.INFO);
       stderrSpy.mockClear();
 
@@ -399,11 +443,13 @@ describe("Logger", () => {
       logger.info("info");
       logger.warn("warn");
       logger.error("error");
+      logger.fatal("fatal");
 
-      expect(stderrSpy).toHaveBeenCalledTimes(3); // info, warn, error
-      expect(stderrSpy.mock.calls[0][0]).toContain("info");
-      expect(stderrSpy.mock.calls[1][0]).toContain("warn");
-      expect(stderrSpy.mock.calls[2][0]).toContain("error");
+      expect(stderrSpy).toHaveBeenCalledTimes(4); // info, warn, error, fatal
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("info"));
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("warn"));
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("error"));
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("fatal"));
     });
 
     it("should show all messages at TRACE level", () => {
@@ -416,11 +462,18 @@ describe("Logger", () => {
       logger.info("info");
       logger.warn("warn");
       logger.error("error");
+      logger.fatal("fatal");
 
-      expect(stderrSpy).toHaveBeenCalledTimes(5);
+      expect(stderrSpy).toHaveBeenCalledTimes(6);
+      expect(stderrSpy).toHaveBeenNthCalledWith(1, expect.stringContaining("trace"));
+      expect(stderrSpy).toHaveBeenNthCalledWith(2, expect.stringContaining("debug"));
+      expect(stderrSpy).toHaveBeenNthCalledWith(3, expect.stringContaining("info"));
+      expect(stderrSpy).toHaveBeenNthCalledWith(4, expect.stringContaining("warn"));
+      expect(stderrSpy).toHaveBeenNthCalledWith(5, expect.stringContaining("error"));
+      expect(stderrSpy).toHaveBeenNthCalledWith(6, expect.stringContaining("fatal"));
     });
 
-    it("should show only ERROR messages at ERROR level", () => {
+    it("should show only ERROR and FATAL messages at ERROR level", () => {
       const logger = Logger.getInstance();
       Logger.setLogLevel(LogLevel.ERROR);
       stderrSpy.mockClear();
@@ -430,9 +483,11 @@ describe("Logger", () => {
       logger.info("info");
       logger.warn("warn");
       logger.error("error");
+      logger.fatal("fatal");
 
-      expect(stderrSpy).toHaveBeenCalledTimes(1);
-      expect(stderrSpy.mock.calls[0][0]).toContain("error");
+      expect(stderrSpy).toHaveBeenCalledTimes(2); // error, fatal
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("error"));
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("fatal"));
     });
   });
 });

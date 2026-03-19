@@ -6,17 +6,15 @@
 
 import { bold, dim, red } from "colorette";
 import { InvalidArgumentError, Option, program } from "commander";
-import { readFileSync } from "fs";
-import { join } from "path";
 
 import { Converter } from "./core/Converter";
 import { Logger } from "./core/Logger";
 import formats from "./formats";
 
-const DEFAULT_CURRENCY = "EUR";
-
 // Get package version
-const packageJson = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf-8"));
+import packageJson from "../package.json";
+
+const DEFAULT_CURRENCY = "EUR";
 
 const converter = new Converter(formats);
 
@@ -69,7 +67,7 @@ program
       "3-letter ISO 4217 currency code to use when input CSV doesn't specify one",
     )
       .argParser((currency) => {
-        if (!currency.match(/^[A-Za-z]{3}$/)) {
+        if (!/^[A-Za-z]{3}$/.test(currency)) {
           throw new InvalidArgumentError(
             `Invalid currency: ${currency}. Use a 3-letter ISO 4217 currency code.`,
           );
@@ -148,8 +146,10 @@ program
  */
 function configureLogger() {
   try {
-    const logLevel = Logger.parseLogLevel(program.opts().logLevel);
-    Logger.setLogLevel(logLevel);
+    const logLevel = Logger.parseLogLevel(String(program.opts().logLevel));
+    if (logLevel !== Logger.getLogLevel()) {
+      Logger.setLogLevel(logLevel);
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     logger.error(`Error setting the log level: ${message}`);

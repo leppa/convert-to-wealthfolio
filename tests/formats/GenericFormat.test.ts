@@ -122,7 +122,7 @@ describe("Generic Format", () => {
         unitPrice: 150.25,
         amount: 15025,
         currency: DEFAULT_CURRENCY,
-        fee: NaN,
+        fee: Number.NaN,
       });
       expect(result[0].date).toBeInstanceOf(Date);
       expect(result[0].date.toISOString()).toContain("2024-01-15");
@@ -187,18 +187,18 @@ describe("Generic Format", () => {
           date: new Date("2024-01-15"),
           transactiontype: "BUY",
           symbol: "AAPL",
-          quantity: NaN,
-          unitprice: NaN,
+          quantity: Number.NaN,
+          unitprice: Number.NaN,
           fee: 3.5,
         },
       ];
 
       const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
-      expect(result[0].quantity).toBe(NaN);
-      expect(result[0].unitPrice).toBe(NaN);
+      expect(result[0].quantity).toBe(Number.NaN);
+      expect(result[0].unitPrice).toBe(Number.NaN);
       expect(result[0].fee).toBe(3.5);
-      expect(result[0].amount).toBe(NaN);
+      expect(result[0].amount).toBe(Number.NaN);
     });
 
     it("should handle missing optional fields", () => {
@@ -471,7 +471,7 @@ describe("Generic Format", () => {
 
       const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
-      expect(result[0].fee).toBe(NaN);
+      expect(result[0].fee).toBe(Number.NaN);
     });
 
     it("should preserve negative values for adjustment activity", () => {
@@ -499,8 +499,8 @@ describe("Generic Format", () => {
           date: new Date("2024-01-15"),
           transactiontype: "FEE",
           symbol: "",
-          quantity: NaN,
-          unitprice: NaN,
+          quantity: Number.NaN,
+          unitprice: Number.NaN,
           fee: 10.5,
         },
       ];
@@ -509,7 +509,7 @@ describe("Generic Format", () => {
 
       expect(result[0].activityType).toBe(ActivityType.Fee);
       expect(result[0].amount).toBe(10.5);
-      expect(result[0].fee).toBe(NaN);
+      expect(result[0].fee).toBe(Number.NaN);
     });
   });
 
@@ -536,13 +536,13 @@ describe("Generic Format", () => {
       }
 
       const cast = options.cast;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument,
       const dateValue = cast("2024-02-10", { column: "date" } as any) as Date;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument,
       const quantityValue = cast("12.5", { column: "quantity" } as any) as number;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument,
       const feeValue = cast("1.25", { column: "fee" } as any) as number;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument,
       const defaultValue = cast("  abc  ", { column: "symbol" } as any) as string;
 
       expect(dateValue).toBeInstanceOf(Date);
@@ -555,8 +555,9 @@ describe("Generic Format", () => {
 
   describe("private helpers", () => {
     // FIXME: Rewrite to avoid using private methods directly
+    /* eslint-disable @typescript-eslint/no-unsafe-call */
     it("should map activity subtypes for supported activities", () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
       const mapActivitySubtype = (format as any).mapActivitySubtype.bind(format);
 
       expect(mapActivitySubtype({ transactionsubtype: "" }, ActivityType.Dividend)).toBe(
@@ -648,6 +649,7 @@ describe("Generic Format", () => {
       );
       expect(mapActivitySubtype({}, ActivityType.Dividend)).toBe(ActivitySubtype.None);
     });
+    /* eslint-enable @typescript-eslint/no-unsafe-call */
   });
 
   describe("getExpectedSchema", () => {
