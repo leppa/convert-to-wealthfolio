@@ -11,13 +11,65 @@ on:
       - main
   pull_request:
 
-permissions:
-  contents: read
-  packages: write
-
 jobs:
   build-and-test:
+    name: Build and test with the latest LTS Node.js version
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          check-latest: true
+          cache: npm
+
+      - name: Update npm and install dependencies
+        run: |
+          npm install -g npm@latest
+          npm ci
+
+      - name: Check linting & formatting
+        run: |
+          npm run lint:check
+          npm run format:check
+
+      - name: Build code
+        run: npm run build
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Create npm package
+        id: create_npm_package
+        # `npm pack` prints the name of the created file on `stdout`, so we
+        # capture it to use it in the upload step
+        run: echo "package_file=$(npm pack)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload coverage report artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report.zip
+          path: coverage/
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v7
+        with:
+          path: ${{ steps.create_npm_package.outputs.package_file }}
+          # Already compressed by `npm pack`
+          archive: false
+
+  test-supported-node-versions:
+    name: Test with supported Node.js versions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: build-and-test
     strategy:
       fail-fast: false
       matrix:
@@ -33,18 +85,18 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
 
-      - name: Update npm and install dependencies
-        run: |
-          npm install -g npm@latest
-          npm ci
-
-      - name: Check linting & formatting
-        run: |
-          npm run lint:check
-          npm run format:check
-
-      - name: Build
-        run: npm run build
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run tests
         run: npm test
+
+  run-sonarqube-analysis:
+    name: Run SonarQube analysis
+    needs: build-and-test
+    permissions:
+      actions: read
+      contents: read
+    uses: ./.github/workflows/sonarqube-analysis.yml
+    secrets:
+      SONARQUBE_ACCESS_TOKEN: ${{ secrets.SONARQUBE_ACCESS_TOKEN }}
