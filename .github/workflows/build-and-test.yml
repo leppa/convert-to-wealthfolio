@@ -45,8 +45,9 @@ jobs:
           npm run lint:check
           npm run format:check
 
-      - name: Update package version
-        run: npm pkg set version="$(jq --raw-output .version package.json)+ci.${{ github.run_id }}.${{ github.run_attempt }}-git.$(git rev-parse --short HEAD)"
+      - name: Patch package version
+        # Double dash (`--`) is to rank these builds even lower than pre-relese tags like `alpha`
+        run: npm pkg set version="$(jq --raw-output .version package.json)--ci.${{ github.run_number }}.${{ github.run_attempt }}+git.$(git rev-parse --short HEAD)"
 
       - name: Build code
         run: npm run build

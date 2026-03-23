@@ -27,6 +27,14 @@ jobs:
       packages: write
 
     steps:
+      - name: Pull package artifact
+        id: pull_package_artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ inputs.artifact_name }}
+          # Uploaded with `archive: false`
+          skip-decompress: true
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -38,14 +46,8 @@ jobs:
       - name: Update npm
         run: npm install --ignore-scripts -g npm@latest
 
-      - name: Pull package artifact
-        uses: actions/download-artifact@v8
-        with:
-          name: ${{ inputs.artifact_name }}
-          # Uploaded with `archive: false`
-          skip-decompress: true
-
       - name: Publish package to GitHub Packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-        run: npm publish ./*convert-to-wealthfolio*.tgz --tag ci-main
+          ARTIFACT_NAME: ${{ inputs.artifact_name }}
+        run: npm publish "${{ steps.pull_package_artifact.outputs.download-path }}/$ARTIFACT_NAME" --tag ci-main
