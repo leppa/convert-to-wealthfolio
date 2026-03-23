@@ -11,6 +11,8 @@ This project is licensed under the **BSD 3-Clause License**. See the [LICENSE](L
 
 This project uses the following third-party runtime dependencies which are licensed under their respective licenses. The license texts were copied verbatim from the respective LICENSE files in the dependencies and are included below for reference. For more details, please refer to the original repositories of these dependencies.
 
+---
+
 ### Colorette
 
 Easily set your terminal text color & styles

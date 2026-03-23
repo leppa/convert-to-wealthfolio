@@ -1,0 +1,47 @@
+##
+# Copyright (c) 2026 Oleksii Serdiuk
+# SPDX-License-Identifier: BSD-3-Clause
+##
+
+name: Publish release to npmjs.com
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  publish-to-npm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          check-latest: true
+          cache: npm
+          registry-url: https://registry.npmjs.org
+          scope: "@leppa"
+
+      - name: Update npm and install dependencies
+        run: |
+          npm install --ignore-scripts -g npm@latest
+          npm ci --ignore-scripts
+
+      - name: Build code
+        run: npm run build
+
+      - name: Test package
+        run: npm pack --dry-run
+
+      - name: Publish package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_ACCESS_TOKEN }}
+        run: npm publish --provenance --access public --tag latest

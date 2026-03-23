@@ -15,7 +15,7 @@ body:
 
         Please note that while I welcome format requests, I may not be able to implement all of them due to time constraints or other priorities. However, I encourage the community to contribute code for new formats if they are interested in seeing them implemented.
 
-        If you're able to contribute code for the new format, please see the [Plugin Development Guide](https://github.com/leppa/convert-to-wealthfolio/blob/main/docs/plugin-development-guide.md) for instructions.
+        If you're able to contribute code for the new format, please see the [Format Plugin Development Guide](https://github.com/leppa/convert-to-wealthfolio/blob/main/docs/format-plugin-development-guide.md) for instructions.
 
   - type: input
     id: format_name

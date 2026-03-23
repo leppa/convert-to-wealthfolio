@@ -75,15 +75,14 @@ export class MyCustomProvider extends DataProvider {
 Add your provider to `src/data-providers/index.ts`:
 
 ```typescript
-export { OverridesDataProvider, parseOverridesFile } from "./OverridesDataProvider";
+export { Overrides, OverridesDataProvider, parseOverridesFile } from "./OverridesDataProvider";
 export { MyCustomProvider } from "./MyCustomProvider";
 ```
 
 Then import it in `src/core/Converter.ts`:
 
 ```typescript
-import { OverridesDataProvider, parseOverridesFile } from "../data-providers/OverridesDataProvider";
-import { MyCustomProvider } from "../data-providers/MyCustomProvider";
+import { MyCustomProvider, OverridesDataProvider, parseOverridesFile } from "../data-providers";
 ```
 
 And register it inside the `convert()` method:
@@ -99,10 +98,10 @@ And register it inside the `convert()` method:
     // [...]
     if (overridesPath) {
       overrides = parseOverridesFile(overridesPath);
-      this.symbolDataService.registerProvider(new OverridesDataProvider(overrides));
+      symbolDataService.registerProvider(new OverridesDataProvider(overrides));
     }
-    // Register your data provider after the overrides provider
-    this.symbolDataService.registerProvider(new MyCustomProvider());
+    // Register your data provider after the overrides provider (or unconditionally)
+    symbolDataService.registerProvider(new MyCustomProvider());
     // [...]
   }
 ```
@@ -113,7 +112,9 @@ Now, whenever a symbol query is made by the format plugin, your provider will be
 
 ```bash
 npm run build
-npm run lint:fix
+npm run lint:check
+npm run format:check
+npm test
 npm start convert <your-sample.csv> output.csv
 ```
 
@@ -234,10 +235,11 @@ export class JsonFileProvider extends DataProvider {
 After creating your plugin, run the linting tools to ensure code quality:
 
 ```bash
-npm run lint        # Check for linting issues
-npm run lint:fix    # Auto-fix issues
-npm run format      # Format code with Prettier
-npm test            # Run tests
+npm run lint:check   # Check for linting issues
+npm run lint:fix     # Auto-fix linting issues
+npm run format:check # Check formatting
+npm run format:fix   # Format code with Prettier
+npm test             # Run tests
 ```
 
 ## See Also

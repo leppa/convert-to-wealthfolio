@@ -5,6 +5,8 @@ SPDX-License-Identifier: BSD-3-Clause
 
 # Convert to Wealthfolio
 
+[![Build Status Badge]][Build Status] [![CodeQL Analysis Badge]][CodeQL Analysis] [![SonarQube Quality Gate Badge]][SonarQube Quality Gate Status]
+
 ## About
 
 **Convert to Wealthfolio** is a command-line tool that converts various CSV formats into a format that can be imported into [Wealthfolio](#wealthfolio). The architecture uses a plugin-based system to support multiple input formats.
@@ -246,13 +248,15 @@ npm start convert input.csv output.csv -- --log-level DEBUG 2> converter.log
 
 ## Unsupported CSV Format
 
-If your CSV format is not supported, you can create a new format plugin by extending the `BaseFormat` class. See the [Plugin Development Guide](docs/plugin-development-guide.md) for instructions on how to create and integrate your own format into the converter.
+If your CSV format is not supported, you can create a new format plugin by extending the `BaseFormat` class. See the [Format Plugin Development Guide](docs/format-plugin-development-guide.md) for instructions on how to create and integrate your own format into the converter.
 
 ## Creating a New Data Provider
 
 If you want to add a new way of resolving symbols from ISINs, CUSIPs, or company names, you can create a new data provider by extending the `DataProvider` class. See the [Data Provider Development Guide](docs/data-provider-development-guide.md) for instructions on how to create and integrate a new data provider into the converter.
 
 ## Getting Support and Reporting Issues
+
+Only the latest release is officially supported and will receive bug fixes.
 
 ### Reporting Issues
 
@@ -292,3 +296,15 @@ This project is licensed under the BSD 3-Clause License - see [LICENSE](LICENSE)
 ### OSS Notices
 
 See the [NOTICE.md](NOTICE.md) file for a list of license notices for third-party runtime dependencies used in this project.
+
+<!-- References for badges -->
+
+[Build Status]: https://github.com/leppa/convert-to-wealthfolio/actions/workflows/build-and-test.yml
+[CodeQL Analysis]: https://github.com/leppa/convert-to-wealthfolio/actions/workflows/github-code-scanning/codeql
+[SonarQube Quality Gate Status]: https://sonarcloud.io/summary/new_code?id=convert-to-wealthfolio
+
+<!-- Badge image URLs -->
+
+[Build Status Badge]: https://github.com/leppa/convert-to-wealthfolio/actions/workflows/build-and-test.yml/badge.svg
+[CodeQL Analysis Badge]: https://github.com/leppa/convert-to-wealthfolio/actions/workflows/github-code-scanning/codeql/badge.svg
+[SonarQube Quality Gate Badge]: https://sonarcloud.io/api/project_badges/measure?project=convert-to-wealthfolio&metric=alert_status

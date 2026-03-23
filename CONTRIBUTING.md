@@ -34,7 +34,7 @@ If you would like to see support for a new CSV format, please open an issue and 
 - A description of the format's structure and any unique characteristics
 - Any documentation or resources about the format that may be helpful
 
-If you are able to contribute code for the new format, please see the [Plugin Development Guide](docs/plugin-development-guide.md) for instructions on how to create and integrate a new format plugin.
+If you are able to contribute code for the new format, please see the [Format Plugin Development Guide](docs/format-plugin-development-guide.md) for instructions on how to create and integrate a new format plugin.
 
 ### Requesting a New Feature
 
@@ -43,6 +43,17 @@ If you have an idea for a new feature or enhancement, please open an issue and u
 ## Contributing
 
 Please note that all contributions must adhere to the project's [Code of Conduct](CODE_OF_CONDUCT.md) and [licensing terms](LICENSE). By contributing, you agree that your contributions will be licensed under the **BSD 3-Clause License**.
+
+### Branch Policy
+
+The repository uses two long-lived branches:
+
+- `main` contains the latest release and may also include unreleased bug fixes that are intended for it.
+- `dev` is the mainline branch for ongoing development.
+
+Unless your pull request is a bug fix, target the `dev` branch.
+
+Bug fixes for the latest release should target the `main` branch. Only the latest release is officially supported and will accept bug fix pull requests.
 
 ### Contributing Code
 
@@ -57,7 +68,7 @@ If you would like to contribute code, please follow these steps:
 7. Run all existing tests to make sure they pass.
 8. Commit your changes with a clear and descriptive commit message.
 9. Push your changes to your forked repository.
-10. Open a pull request against the main repository, describing your changes and the problem they solve.
+10. Open a pull request against the main repository, describing your changes and the problem they solve. Target the appropriate branch, see [Branch Policy](#branch-policy).
 11. Be responsive to feedback and make any necessary revisions to your pull request.
 
 Once your pull request is approved and merged, your contribution will be part of the project!

@@ -3,7 +3,7 @@ Copyright (c) 2026 Oleksii Serdiuk
 SPDX-License-Identifier: BSD-3-Clause
 -->
 
-# Plugin Development Guide
+# Format Plugin Development Guide
 
 To create a new format plugin:
 
@@ -18,12 +18,13 @@ Example: `src/formats/MyCustomFormat.ts`
  */
 
 import {
+  ActivitySubtype,
   ActivityType,
   BaseFormat,
   ColumnSchema,
-  SymbolDataService,
   WealthfolioRecord,
 } from "../core/BaseFormat";
+import { SymbolDataService } from "../core/SymbolDataService";
 
 export class MyCustomFormat extends BaseFormat {
   constructor() {
@@ -43,13 +44,14 @@ export class MyCustomFormat extends BaseFormat {
 
   convert(
     records: Record<string, string>[],
+    defaultCurrency: string,
     symbolDataService: SymbolDataService,
   ): WealthfolioRecord[] {
     // Note: All CSV values are strings - convert types as needed during processing. You can also
     // define a more convenient data structure and convert to it by overriding `getParseOptions()`.
     return records.map((record) => {
       let symbol = (record.ticker || "").trim().toUpperCase();
-      // If symbol is empty, try to resolve it form other fields using the symbol data service
+      // If symbol is empty, try to resolve it from other fields using the symbol data service
       if (!symbol && (record.isin || record.cusip || record.securityName)) {
         ({ symbol } = symbolDataService.querySymbolWithFallback({
           isin: record.isin,
@@ -82,9 +84,9 @@ export class MyCustomFormat extends BaseFormat {
       case "sell":
         return ActivityType.Sell;
       case "add_holding":
-        return ActivityType.AddHolding;
+        return ActivityType.TransferIn;
       case "remove_holding":
-        return ActivityType.RemoveHolding;
+        return ActivityType.TransferOut;
       case "deposit":
         return ActivityType.Deposit;
       case "withdrawal":
@@ -181,7 +183,9 @@ export default formats;
 
 ```bash
 npm run build
-npm run lint:fix
+npm run lint:check
+npm run format:check
+npm test
 npm start convert examples/my-input.csv output.csv
 ```
 
@@ -283,6 +287,7 @@ import { SymbolDataService } from "../core/SymbolDataService";
 export class MyCustomFormat extends BaseFormat {
   convert(
     records: Record<string, string>[],
+    defaultCurrency: string,
     symbolDataService: SymbolDataService,
   ): WealthfolioRecord[] {
     return records.map((record) => {
@@ -316,7 +321,7 @@ export class MyCustomFormat extends BaseFormat {
 }
 ```
 
-**Note:** If you don't need symbol resolution, you can ignore the `symbolDataService` parameter. You only need it if you want to resolve ISINs, CUSIPs, or company names to symbols. The overrides are applied automatically after the conversion and you don't need to handle them manually.
+**Note:** If you don't need symbol resolution, you can ignore the `symbolDataService` parameter. You only need it if you want to resolve ISINs, CUSIPs, or company names to symbols. Symbol overrides from the INI file are applied automatically after conversion, so you don't need to handle symbol override logic manually in your format plugin.
 
 ## Best Practices
 
