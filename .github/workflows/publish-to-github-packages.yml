@@ -3,19 +3,26 @@
 # SPDX-License-Identifier: BSD-3-Clause
 ##
 
-name: Publish `main` to GitHub Packages
+name: Publish to GitHub Packages
 
 on:
   workflow_call:
+    inputs:
+      artifact_name:
+        description: Name of the artifact containing the npm package
+        type: string
+        required: true
     secrets:
       NODE_AUTH_TOKEN:
         description: Token with write permission to GitHub Packages
         required: true
 
 jobs:
-  publish-to-github:
+  publish-to-github-packages:
+    name: Publish to GitHub Packages
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
       packages: write
 
@@ -34,7 +41,8 @@ jobs:
       - name: Pull package artifact
         uses: actions/download-artifact@v8
         with:
-          name: package
+          name: ${{ inputs.artifact_name }}
+          # Uploaded with `archive: false`
           skip-decompress: true
 
       - name: Publish package to GitHub Packages
