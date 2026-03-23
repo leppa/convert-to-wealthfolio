@@ -22,15 +22,16 @@ SPDX-License-Identifier: BSD-3-Clause
 - [ ] Documentation update
 - [ ] Code refactoring (no functional changes)
 - [ ] Test improvements
+- [ ] Chore (project maintenance, build configuration, etc.)
 - [ ] Other (please describe):
 
 ## Checklist
 
 <!-- Mark completed items with an "x". Not all items may be applicable to your change. -->
 
-- [ ] I have read the [Code of Conduct](../CODE_OF_CONDUCT.md) and agree to abide by it
+- [ ] I have read the [Code of Conduct](https://github.com/leppa/convert-to-wealthfolio/blob/main/CODE_OF_CONDUCT.md) and agree to abide by it
 - [ ] I agree that my contributions will be licensed under the **BSD 3-Clause License**
-- [ ] My code follows the project's [coding style and conventions](../CONTRIBUTING.md)
+- [ ] My code follows the project's [coding style and conventions](https://github.com/leppa/convert-to-wealthfolio/blob/main/CONTRIBUTING.md#contributing)
 - [ ] I have added [JSDoc](https://jsdoc.app/) documentation for any new functions, classes, or methods
 - [ ] I have updated relevant documentation (README, ChangeLog, docs/, etc.)
 - [ ] I have written tests for my changes
@@ -51,7 +52,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 <!-- If this PR adds a new format plugin, complete this section and the section above. Else, remove it completely. -->
 
-- [ ] I have followed the [Plugin Development Guide](../docs/plugin-development-guide.md)
+- [ ] I have followed the [Format Plugin Development Guide](https://github.com/leppa/convert-to-wealthfolio/blob/main/docs/format-plugin-development-guide.md)
 - [ ] I have added a format user guide to the `docs/` directory
   - [ ] I have documented the format's structure and known quirks in the user guide
 - [ ] I have added a sample CSV file to the `examples/` directory
@@ -64,4 +65,4 @@ SPDX-License-Identifier: BSD-3-Clause
 
 ---
 
-By submitting this pull request, I confirm that I have read and understood the [contribution guidelines](../CONTRIBUTING.md) and that my contributions are my own work.
+By submitting this pull request, I confirm that I have read and understood the [contribution guidelines](https://github.com/leppa/convert-to-wealthfolio/blob/main/CONTRIBUTING.md) and that my contributions are my own work.

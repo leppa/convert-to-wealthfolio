@@ -1,0 +1,43 @@
+##
+# Copyright (c) 2026 Oleksii Serdiuk
+# SPDX-License-Identifier: BSD-3-Clause
+##
+
+name: Publish `main` to GitHub Packages
+
+on:
+  workflow_call:
+    secrets:
+      NODE_AUTH_TOKEN:
+        description: Token with write permission to GitHub Packages
+        required: true
+
+jobs:
+  publish-to-github:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          check-latest: true
+          registry-url: https://npm.pkg.github.com
+          scope: "@${{ github.repository_owner }}"
+
+      - name: Update npm
+        run: npm install --ignore-scripts -g npm@latest
+
+      - name: Pull package artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: package
+          skip-decompress: true
+
+      - name: Publish package to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+        run: npm publish ./*convert-to-wealthfolio*.tgz --tag ci-main

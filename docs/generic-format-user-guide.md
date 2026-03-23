@@ -112,7 +112,7 @@ Used for interest earned on cash balances, bonds, or crypto staking.
 
 ```csv
 Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,TransactionSubtype
-2024-04-10,INTEREST,,,,,12.50,EUR,
+2024-04-10,INTEREST,,,,12.50,EUR,
 2024-04-11,INTEREST,ETH,0.003498,3400,11.8932,EUR,STAKING_REWARD
 ```
 
@@ -132,7 +132,7 @@ Used when depositing cash into the account.
 
 ```csv
 Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,Comment
-2024-03-20,DEPOSIT,,,,,5000.00,EUR,Initial funding
+2024-03-20,DEPOSIT,,,,5000.00,EUR,Initial funding
 ```
 
 ### Withdrawal
@@ -145,7 +145,7 @@ Used when withdrawing cash from the account.
 
 ```csv
 Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,Comment
-2024-03-25,WITHDRAWAL,,,,,2000.00,EUR,Living expenses
+2024-03-25,WITHDRAWAL,,,,2000.00,EUR,Living expenses
 ```
 
 ### Transfer In
@@ -159,7 +159,7 @@ Used when transferring securities or cash into the account from another broker o
 ```csv
 Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,Comment
 2024-04-01,TRANSFER_IN,AMZN,100,175.50,17550.00,EUR,From previous broker
-2024-04-02,TRANSFER_IN,,,,,5000.00,EUR,Cash transfer from other account
+2024-04-02,TRANSFER_IN,,,,5000.00,EUR,Cash transfer from other account
 ```
 
 **Note:** Transfers are marked as external (coming from outside sources).
@@ -175,7 +175,7 @@ Used when transferring securities out of the account to another broker or accoun
 ```csv
 Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,Comment
 2024-04-05,TRANSFER_OUT,AMZN,50,175.50,8775.00,EUR,To other broker
-2024-04-06,TRANSFER_OUT,,,,,2000.00,EUR,Cash transfer to other account
+2024-04-06,TRANSFER_OUT,,,,2000.00,EUR,Cash transfer to other account
 ```
 
 **Note:** Transfers are marked as external (going to outside sources).
@@ -190,8 +190,8 @@ Used for account fees, management fees, or other charges.
 
 ```csv
 Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Fee,Currency,TransactionSubtype
-2024-04-15,FEE,,,,,25.00,,EUR,
-2024-04-16,FEE,,,,,,10.00,EUR,MANAGEMENT_FEE
+2024-04-15,FEE,,,,25.00,,EUR,
+2024-04-16,FEE,,,,,10.00,EUR,MANAGEMENT_FEE
 ```
 
 **Note:** If `Total` value is not provided, the converter will try to use `Fee` value as the fee amount. If both are provided, `Total` takes precedence and `Fee` is ignored.
@@ -212,8 +212,8 @@ Used for tax withholding or tax payments.
 
 ```csv
 Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,TransactionSubtype
-2024-04-19,TAX,,,,,1.25,EUR,
-2024-04-19,TAX,,,,,3.75,EUR,WITHHOLDING
+2024-04-19,TAX,,,,1.25,EUR,
+2024-04-19,TAX,,,,3.75,EUR,WITHHOLDING
 ```
 
 **Supported Subtypes:**
@@ -231,7 +231,7 @@ Used to record stock splits or reverse splits. `Total` field specifies the split
 
 ```csv
 Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,Comment
-2024-04-25,SPLIT,NVDA,,,,2,,2:1 forward stock split
+2024-04-25,SPLIT,NVDA,,,2,,2:1 forward stock split
 ```
 
 ### Credit
@@ -244,8 +244,8 @@ Used for account credits, bonuses, or refunds.
 
 ```csv
 Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,TransactionSubtype
-2024-04-30,CREDIT,,,,,50.00,EUR,BONUS
-2024-05-01,CREDIT,,,,,25.00,EUR,REBATE
+2024-04-30,CREDIT,,,,50.00,EUR,BONUS
+2024-05-01,CREDIT,,,,25.00,EUR,REBATE
 ```
 
 **Supported Subtypes:**
@@ -264,7 +264,7 @@ Used for balance corrections or adjustments. Unlike other activities, adjustment
 
 ```csv
 Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,Comment
-2024-05-05,ADJUSTMENT,AAPL,-50,,,,,Share amount adjustment
+2024-05-05,ADJUSTMENT,AAPL,-50,,,,Share amount adjustment
 ```
 
 ## Value Formatting
@@ -439,4 +439,4 @@ This displays all expected columns and their requirements.
 - [Wealthfolio Documentation](https://wealthfolio.app/docs/introduction/) - For information about Wealthfolio import
 - [src/formats/GenericFormat.ts](../src/formats/GenericFormat.ts) - Source code for the Generic format plugin
 - [examples/sample-generic.csv](../examples/sample-generic.csv) - Sample file with various transaction types
-- [Plugin Development Guide](plugin-development-guide.md) - A guide for creating custom format plugins
+- [Format Plugin Development Guide](format-plugin-development-guide.md) - A guide for creating custom format plugins

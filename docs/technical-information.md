@@ -77,20 +77,22 @@ This document provides technical details about the architecture, design, and imp
 
 Format plugins extend `BaseFormat` and implement:
 
-- `getName()` - Returns format name for CLI identification
 - `validate(records)` - Detects if input matches this format
-- `convert(records)` - Converts records to Wealthfolio format
+- `convert(records, defaultCurrency, symbolDataService)` - Converts records to Wealthfolio format
 - `getExpectedSchema()` - Returns expected input columns with optional flags and descriptions
 - `getParseOptions()` (optional) - Provides custom CSV parsing options (e.g., delimiter, casting column values to specific types)
 - `getValidationLineCount()` (optional) - Specifies how many rows to parse for format detection
+
+The format name is configured through the base class constructor (`super("YourFormatName")`) and exposed through `getName()` inherited from `BaseFormat`.
 
 ### Data Providers
 
 Data providers extend `DataProvider` and implement:
 
-- `getName()` - Returns provider name for diagnostics
 - `query(query)` - Resolves symbol identifiers to a ticker or returns `null`
 - `canHandle(query)` (optional) - Returns `true` if the provider can handle the query, `false` otherwise
+
+The provider name is configured through the base class constructor (`super("YourProviderName", ...)`) and exposed through `getName()` inherited from `DataProvider`.
 
 Providers are registered in `SymbolDataService` and queried in order until a match is found. If no provider resolves the symbol, the service falls back to the original identifier.
 
@@ -109,6 +111,7 @@ All converters produce CSV with these columns:
 - **fxRate** - Currency exchange rate to base currency (if applicable)
 - **subtype** - Activity subtype (see [Activity Subtypes](#activity-subtypes) below)
 - **comment** - Additional notes or transaction details
+- **metadata** - Optional structured metadata serialized as JSON (see the [Activity Types Reference](https://github.com/afadil/wealthfolio/blob/main/docs/activities/activity-types.md) from Wealthfolio documentation)
 
 ### Activity Types
 
@@ -136,7 +139,7 @@ Some activity types can have optional subtypes for more detailed categorization.
 
 ## Creating a New Format Plugin
 
-See the [Plugin Development Guide](plugin-development-guide.md) for detailed instructions.
+See the [Format Plugin Development Guide](format-plugin-development-guide.md) for detailed instructions.
 
 ## Testing
 
