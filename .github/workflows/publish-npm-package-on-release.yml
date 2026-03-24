@@ -1,0 +1,129 @@
+##
+# Copyright (c) 2026 Oleksii Serdiuk
+# SPDX-License-Identifier: BSD-3-Clause
+##
+
+name: Publish npm package on release
+
+on:
+  release:
+    types:
+      - released
+
+jobs:
+  build-npm-package:
+    name: Build npm package
+    runs-on: ubuntu-latest
+    permissions:
+      artifact-metadata: write # Needed for attestation
+      attestations: write # Needed for attestation
+      contents: write # Needed for uploading to release assets
+      id-token: write # Needed for attestation
+    outputs:
+      package-file: ${{ steps.create-npm-package.outputs.package-file }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          check-latest: true
+          cache: npm
+
+      - name: Update npm and install dependencies
+        run: |
+          npm install --ignore-scripts -g npm@latest
+          npm ci --ignore-scripts
+
+      - name: Build code
+        run: npm run build
+
+      - name: Create npm package
+        id: create-npm-package
+        run: echo "package-file=$(npm pack)" >> "$GITHUB_OUTPUT"
+
+      - name: Generate package attestation
+        uses: actions/attest@v4
+        with:
+          subject-path: ${{ steps.create-npm-package.outputs.package-file }}
+
+      - name: Upload package to artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          path: ${{ steps.create-npm-package.outputs.package-file }}
+          # Already compressed by `npm pack`
+          archive: false
+
+      - name: Upload package to release assets
+        #     shogo82148/actions-upload-release-asset@v1.10.0
+        uses: shogo82148/actions-upload-release-asset@96bc1f0cb850b65efd58a6b5eaa0a69f88d38077
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ steps.create-npm-package.outputs.package-file }}
+
+  publish-to-npmjs:
+    name: Publish to npmjs.com
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    needs: build-npm-package
+
+    steps:
+      - name: Download package from artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ needs.build-npm-package.outputs.package-file }}
+          skip-decompress: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          check-latest: true
+          registry-url: https://registry.npmjs.org
+          scope: "@leppa"
+
+      - name: Update npm
+        run: npm install --ignore-scripts -g npm@latest
+
+      - name: Publish package to npmjs.com
+        env:
+          # TODO: Move to trusted publishing after the initial release
+          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_ACCESS_TOKEN }}
+        run: npm publish "${{ needs.build-npm-package.outputs.package-file }}" --provenance --access public --tag latest
+
+  publish-to-github-packages:
+    name: Publish to GitHub Packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    needs: build-npm-package
+
+    steps:
+      - name: Download package from artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ needs.build-npm-package.outputs.package-file }}
+          skip-decompress: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          check-latest: true
+          registry-url: https://npm.pkg.github.com
+          scope: "@${{ github.repository_owner }}"
+
+      - name: Update npm
+        run: npm install --ignore-scripts -g npm@latest
+
+      - name: Publish package to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish "${{ needs.build-npm-package.outputs.package-file }}" --provenance --tag latest
