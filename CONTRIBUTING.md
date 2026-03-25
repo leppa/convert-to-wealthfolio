@@ -98,4 +98,4 @@ In short:
 
 ## Final Notes
 
-If you have any questions about contributing, please don't hesitate to ask by opening an issue or reaching out to me directly. I appreciate your interest in contributing to the **Convert to Wealthfolio** project and look forward to seeing your contributions!
+If you have any questions about contributing, please don't hesitate to ask by [opening a discussion](https://github.com/leppa/convert-to-wealthfolio/discussions) or reaching out to me directly. I appreciate your interest in contributing to the **Convert to Wealthfolio** project and look forward to seeing your contributions!

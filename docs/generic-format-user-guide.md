@@ -5,13 +5,49 @@ SPDX-License-Identifier: BSD-3-Clause
 
 # Generic Format User Guide
 
-## Overview
+## Overview<!-- omit from toc -->
 
 The Generic format is a flexible CSV format designed to handle a wide variety of financial transactions. It can be used to convert your investment and account activity into Wealthfolio format when no specific format plugin is available for your data source.
 
 This format supports standard transaction types such as buys, sells, dividends, interest, deposits, withdrawals, transfers, fees, taxes, and more. It also allows for optional fields like currency, fees, and comments to provide additional context.
 
 **Note:** The Wealthfolio's import system is very flexible and can handle many formats without needing a custom converter. The Generic format is mainly provided as an example of how to create a custom format plugin.
+
+## Table of Contents<!-- omit from toc -->
+
+- [CSV Structure](#csv-structure)
+  - [Required Columns](#required-columns)
+  - [Optional Columns](#optional-columns)
+  - [Column Ordering](#column-ordering)
+  - [Header Row](#header-row)
+- [Transaction Types](#transaction-types)
+  - [Buy Transactions](#buy-transactions)
+  - [Sell Transactions](#sell-transactions)
+  - [Dividend Income](#dividend-income)
+  - [Interest Income](#interest-income)
+  - [Deposit](#deposit)
+  - [Withdrawal](#withdrawal)
+  - [Transfer In](#transfer-in)
+  - [Transfer Out](#transfer-out)
+  - [Fee](#fee)
+  - [Tax](#tax)
+  - [Stock Split](#stock-split)
+  - [Credit](#credit)
+  - [Adjustment](#adjustment)
+- [Value Formatting](#value-formatting)
+  - [Date and Time](#date-and-time)
+  - [Quantities and Prices](#quantities-and-prices)
+  - [Currency Codes](#currency-codes)
+- [Complete Example File](#complete-example-file)
+- [Tips and Best Practices](#tips-and-best-practices)
+- [Field Validation](#field-validation)
+- [Common Issues](#common-issues)
+  - [Missing Required Columns](#missing-required-columns)
+  - [Unknown Transaction Type](#unknown-transaction-type)
+  - [Invalid Date Format](#invalid-date-format)
+  - [Symbol Required](#symbol-required)
+- [Getting Format Information](#getting-format-information)
+- [See Also](#see-also)
 
 ## CSV Structure
 
@@ -323,11 +359,11 @@ Date,TransactionType,Symbol,Quantity,UnitPrice,Fee,Total,Currency,TransactionSub
 
 ## Tips and Best Practices
 
-### 1. Start with a small sample
+### 1. Start with a small sample<!-- omit from toc -->
 
 Before converting your entire transaction history, create a small sample file with a few transactions to test the conversion process.
 
-### 2. Verify required fields
+### 2. Verify required fields<!-- omit from toc -->
 
 Ensure every row has values for:
 
@@ -337,15 +373,15 @@ Ensure every row has values for:
 - Quantity
 - UnitPrice
 
-### 3. Use comments
+### 3. Use comments<!-- omit from toc -->
 
 The `Comment` field is useful for adding context to transactions that might be confusing later.
 
-### 4. Use Total for cash transactions
+### 4. Use Total for cash transactions<!-- omit from toc -->
 
 For transactions without securities (deposits, withdrawals, interest on cash), leave `Symbol`, `Quantity`, and `UnitPrice` empty, and use `Total` for the amount.
 
-### 5. Specify currency
+### 5. Specify currency<!-- omit from toc -->
 
 If your CSV file doesn't include a `Currency` column, the converter will use EUR as the default currency. You can specify a different default currency using the `--default-currency` option:
 
@@ -355,7 +391,7 @@ npm start convert input.csv output.csv -- --default-currency GBP
 
 This is useful when all your transactions are in the same currency and you don't want to add a `Currency` column to your CSV file.
 
-### 6. Use FXRate for foreign currency transactions
+### 6. Use FXRate for foreign currency transactions<!-- omit from toc -->
 
 When dealing with foreign currency transactions:
 
@@ -363,11 +399,11 @@ When dealing with foreign currency transactions:
 - Provide `FXRate` for the exchange rate
 - Wealthfolio will handle currency conversion
 
-### 7. Use Fee column for transaction fees
+### 7. Use Fee column for transaction fees<!-- omit from toc -->
 
 Transaction fees can be specified in the `Fee` column. Don't include fees in the `Total` amount - Wealthfolio applies the fees separately. If `Total` is not provided, it will be calculated automatically as `Quantity` × `UnitPrice`.
 
-### 8. Test your CSV
+### 8. Test your CSV<!-- omit from toc -->
 
 Before importing:
 
@@ -394,7 +430,7 @@ Skipping record 42 due to field errors:
 
 This helps you identify and fix data issues in your source CSV file.
 
-If you need more details for troubleshooting, increase log verbosity by setting its level to `DEBUG` or `TRACE`. See the [Log Verbosity](../README.md#log-verbosity) section in the [README](../README.md) for instructions on how to set verbosity levels.
+If you need more details for troubleshooting, increase log verbosity by setting its level to `DEBUG` or `TRACE`. See the [Log Verbosity](user-manual.md#log-verbosity) section in the [User Manual](user-manual.md) for instructions on how to set verbosity levels.
 
 ## Common Issues
 

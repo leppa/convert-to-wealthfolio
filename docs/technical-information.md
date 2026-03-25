@@ -10,6 +10,7 @@ This document provides technical details about the architecture, design, and imp
 ## Project Structure
 
 ```text
+├── .github/                          # GitHub-specific files (workflows, issue templates, etc.)
 ├── coverage/                         # Test coverage reports (generated)
 ├── dist/                             # Compiled JavaScript (generated)
 ├── docs/                             # Documentation and guides
@@ -19,11 +20,12 @@ This document provides technical details about the architecture, design, and imp
 │   ├── core/                         # Core framework
 │   │   data-providers/               # Symbol resolution providers
 │   └── formats/                      # Format plugin implementations
-├── tests/                            # Jest unit and integration tests
+├── tests/                            # Jest unit and integration tests (mirrors src/ structure)
 ├── ChangeLog.md                      # Version release and change history
 ├── CODE_OF_CONDUCT.md                # Code of conduct for contributors
 ├── CONTRIBUTING.md                   # Contribution guidelines
 ├── LICENSE                           # BSD 3-Clause License
+├── NOTICE.md                         # OSS Notices for third-party runtime dependencies
 ├── README.md                         # Project README
 └── ROADMAP.md                        # Roadmap and future plans
 ```
