@@ -18,7 +18,8 @@ SPDX-License-Identifier: BSD-3-Clause
 - [Features](#features)
 - [What's New](#whats-new)
 - [Supported Formats](#supported-formats)
-- [Installation and Usage](#installation-and-usage)
+- [Installing and Using the Converter](#installing-and-using-the-converter)
+- [Building and Running From Source](#building-and-running-from-source)
 - [Future Plans](#future-plans)
   - [What's Planned](#whats-planned)
   - [Adding CSV Formats](#adding-csv-formats)
@@ -64,7 +65,31 @@ See the [ChangeLog](./ChangeLog.md) for a detailed list of released and upcoming
 
 See the [Roadmap](./ROADMAP.md#format-plugins) for a list of formats that will be added in the future.
 
-## Installation and Usage
+## Installing and Using the Converter
+
+Install the converter globally using `npm`:
+
+```bash
+npm install --global @leppa/convert-to-wealthfolio
+```
+
+This should make the `convert-to-wealthfolio` command available globally in your terminal.
+
+Get help information about the CLI, its commands, and options:
+
+```bash
+convert-to-wealthfolio --help
+```
+
+Convert a CSV file:
+
+```bash
+convert-to-wealthfolio convert input.csv output.csv
+```
+
+See the [User Manual](./docs/user-manual.md#usage) for complete usage instructions, command examples, and available options.
+
+## Building and Running From Source
 
 Checkout the repository and install the dependencies:
 
@@ -80,14 +105,7 @@ After this, the converter can be run using `npm start`:
 npm start <command> -- [options]
 ```
 
-Or directly with `node`:
-
-```bash
-npm run build # Run once after checkout or after changing the source files
-node dist/index.js <command> [options]
-```
-
-See the [User Manual](./docs/user-manual.md) for complete usage instructions, command examples, and available options.
+See the [User Manual](./docs/user-manual.md#install-from-source) for complete instructions on building and running the converter from source.
 
 ## Future Plans
 

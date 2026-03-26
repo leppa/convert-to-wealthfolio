@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0] - 2026-03-26
 
 Initial release.
 
@@ -29,12 +29,13 @@ Initial release.
     conversion.
   - Logging system with colorized output and possibility to set log verbosity
     via CLI.
-- Ability to specify default currency when it's not present in the input CSV.
+- Ability to specify the default currency to use when it's not present in the
+  input CSV.
 - Ability to override symbols using an INI file.
 - Ability to map ISINs, CUSIPs, and company names to symbols using an INI file.
 - Generic format plugin with flexible column arrangement and activity names.
   Mainly as an example, because Wealthfolio's import system is very flexible and
-  can handle many formats without needing a custom converter.
+  should be able to handle same formats without the need for a custom converter.
 - Project documentation and user guides.
 
-[Unreleased]: https://github.com/leppa/convert-to-wealthfolio/commits/main/
+[0.1.0]: https://github.com/leppa/convert-to-wealthfolio/commits/0.1.0

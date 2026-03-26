@@ -430,7 +430,7 @@ Skipping record 42 due to field errors:
 
 This helps you identify and fix data issues in your source CSV file.
 
-If you need more details for troubleshooting, increase log verbosity by setting its level to `DEBUG` or `TRACE`. See the [Log Verbosity](user-manual.md#log-verbosity) section in the [User Manual](user-manual.md) for instructions on how to set verbosity levels.
+If you need more details for troubleshooting, increase log verbosity by setting its level to `DEBUG` or `TRACE`. See the [Log Verbosity](user-manual.md#set-log-verbosity) section in the [User Manual](user-manual.md) for instructions on how to set verbosity levels.
 
 ## Common Issues
 
