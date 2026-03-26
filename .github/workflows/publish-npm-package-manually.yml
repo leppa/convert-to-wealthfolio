@@ -1,0 +1,99 @@
+##
+# Copyright (c) 2026 Oleksii Serdiuk
+# SPDX-License-Identifier: BSD-3-Clause
+##
+
+name: Publish npm package manually
+description: Manually publish the npm package to either or both npmjs.com and GitHub Packages using a package file from artifacts.
+
+on:
+  workflow_dispatch:
+    inputs:
+      artifact-run-id:
+        description: "Run ID of the workflow that produced the package artifact"
+        type: number
+        required: true
+      artifact-name:
+        description: "Name of the artifact containing the npm package"
+        type: string
+        required: true
+      registry:
+        description: "Registry to publish to (npmjs, github, or both)"
+        type: choice
+        required: true
+        options:
+          - npmjs
+          - github
+          - both
+
+jobs:
+  publish-to-npmjs:
+    name: Publish to npmjs.com
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    if: ${{ inputs.registry == 'npmjs' || inputs.registry == 'both' }}
+
+    steps:
+      - name: Download package from artifacts
+        uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.artifact-run-id }}
+          name: ${{ inputs.artifact-name }}
+          skip-decompress: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          check-latest: true
+          registry-url: https://registry.npmjs.org
+          scope: "@leppa"
+
+      - name: Update npm
+        run: npm install --ignore-scripts -g npm@latest
+
+      - name: Publish package to npmjs.com
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_ACCESS_TOKEN }}
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+        run: npm publish "$ARTIFACT_NAME" --provenance --access public --tag latest
+
+  publish-to-github-packages:
+    name: Publish to GitHub Packages
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      packages: write
+    if: ${{ inputs.registry == 'github' || inputs.registry == 'both' }}
+
+    steps:
+      - name: Download package from artifacts
+        uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.artifact-run-id }}
+          name: ${{ inputs.artifact-name }}
+          skip-decompress: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          check-latest: true
+          registry-url: https://npm.pkg.github.com
+          scope: "@${{ github.repository_owner }}"
+
+      - name: Update npm
+        run: npm install --ignore-scripts -g npm@latest
+
+      - name: Publish package to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+        run: npm publish "$ARTIFACT_NAME" --provenance --access public --tag latest
