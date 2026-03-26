@@ -12,6 +12,10 @@ on:
         description: Name of the artifact containing the npm package
         type: string
         required: true
+      tag:
+        description: Tag to publish the package with
+        type: string
+        required: true
     secrets:
       NODE_AUTH_TOKEN:
         description: Token with write permission to GitHub Packages
@@ -50,4 +54,5 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
           ARTIFACT_NAME: ${{ inputs.artifact_name }}
-        run: npm publish "${{ steps.pull_package_artifact.outputs.download-path }}/$ARTIFACT_NAME" --tag ci-main
+          TAG: ${{ inputs.tag }}
+        run: npm publish "${{ steps.pull_package_artifact.outputs.download-path }}/${ARTIFACT_NAME}" --tag ${TAG}

@@ -54,10 +54,12 @@ You can also install the converter from source by cloning the repository, instal
 ```bash
 git clone https://github.com/leppa/convert-to-wealthfolio.git
 cd convert-to-wealthfolio
-git checkout <version-or-branch> # optional, defaults to main
+git checkout main # latest stable code
 npm install
 npm run build
 ```
+
+**Note:** If you want to install a specific version, checkout the corresponding tag instead of the `main` branch (e.g., `git checkout 0.1.0`). If you want to install the latest development version, checkout the `dev` branch (skipping `git checkout` will default to `dev`).
 
 After building, you can install the package globally:
 

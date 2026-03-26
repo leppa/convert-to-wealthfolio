@@ -114,8 +114,8 @@ jobs:
   publish-to-github-packages:
     name: Publish to GitHub Packages
     needs: build-and-test
-    # Only trigger for the `main` branch
-    if: ${{ github.ref_name == 'main' }}
+    # Only trigger for the `main` and `dev` branches
+    if: ${{ github.ref_name == 'main' || github.ref_name == 'dev' }}
     permissions:
       actions: read
       contents: read
@@ -123,5 +123,6 @@ jobs:
     uses: ./.github/workflows/publish-to-github-packages.yml
     with:
       artifact_name: ${{ needs.build-and-test.outputs.package_file }}
+      tag: ci-${{ github.ref_name }}
     secrets:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
