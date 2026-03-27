@@ -26,11 +26,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Pull coverage report artifact
+      - name: Download test results artifact
         uses: actions/download-artifact@v8
         with:
-          name: coverage-report.zip
-          path: coverage/
+          name: test-results.zip
+          path: test-results/
 
       - name: Run SonarQube scan
         uses: SonarSource/sonarqube-scan-action@v7

@@ -1,10 +1,11 @@
 .*
 /*.csv
 /*.tgz
+codecov.yml
 eslint*
 jest*
 sonar-project.properties
 tsconfig*
-coverage/
 src/
+test-results/
 tests/

@@ -5,7 +5,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 # Convert to Wealthfolio
 
-[![Build Status Badge]][Build Status] [![CodeQL Analysis Badge]][CodeQL Analysis] [![SonarQube Quality Gate Badge]][SonarQube Quality Gate Status]
+[![Build Status Badge]][Build Status] [![CodeQL Analysis Badge]][CodeQL Analysis] [![SonarQube Quality Gate Badge]][SonarQube Quality Gate Status] [![Codecov Badge]][Codecov]
 
 ## About<!-- omit from toc -->
 
@@ -177,9 +177,11 @@ See the [NOTICE.md](./NOTICE.md) file for a list of license notices for third-pa
 [Build Status]: https://github.com/leppa/convert-to-wealthfolio/actions/workflows/build-and-test.yml
 [CodeQL Analysis]: https://github.com/leppa/convert-to-wealthfolio/actions/workflows/github-code-scanning/codeql
 [SonarQube Quality Gate Status]: https://sonarcloud.io/summary/new_code?id=convert-to-wealthfolio
+[Codecov]: https://codecov.io/github/leppa/convert-to-wealthfolio
 
 <!-- Badge image URLs -->
 
 [Build Status Badge]: https://github.com/leppa/convert-to-wealthfolio/actions/workflows/build-and-test.yml/badge.svg
 [CodeQL Analysis Badge]: https://github.com/leppa/convert-to-wealthfolio/actions/workflows/github-code-scanning/codeql/badge.svg
 [SonarQube Quality Gate Badge]: https://sonarcloud.io/api/project_badges/measure?project=convert-to-wealthfolio&metric=alert_status
+[Codecov Badge]: https://codecov.io/github/leppa/convert-to-wealthfolio/graph/badge.svg?token=6UMNMGB3JP
