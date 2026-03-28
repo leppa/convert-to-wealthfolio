@@ -8,6 +8,7 @@ import {
   ActivityType,
   BaseFormat,
   ColumnSchema,
+  InstrumentType,
   WealthfolioRecord,
 } from "../../src/core/BaseFormat";
 
@@ -24,6 +25,7 @@ class TestFormat extends BaseFormat {
   convert(records: Record<string, unknown>[]): WealthfolioRecord[] {
     return records.map((record) => ({
       date: new Date("2024-01-15"),
+      instrumentType: InstrumentType.Equity,
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
       symbol: record.testField ? String(record.testField) : "TEST",
       quantity: 100,

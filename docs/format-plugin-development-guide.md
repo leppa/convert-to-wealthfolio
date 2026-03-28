@@ -22,6 +22,7 @@ import {
   ActivityType,
   BaseFormat,
   ColumnSchema,
+  InstrumentType,
   WealthfolioRecord,
 } from "../core/BaseFormat";
 import { SymbolDataService } from "../core/SymbolDataService";
@@ -62,6 +63,7 @@ export class MyCustomFormat extends BaseFormat {
 
       return {
         date: new Date(record.date),
+        instrumentType: this.mapInstrumentType(record.instrumentType),
         symbol,
         quantity: Math.abs(parseFloat(record.shares)),
         activityType: this.mapActivityType(record.action),
@@ -69,12 +71,44 @@ export class MyCustomFormat extends BaseFormat {
         currency: record.currency || defaultCurrency,
         fee: Math.abs(parseFloat(record.fee)),
         amount: Math.abs(parseFloat(record.total)),
-        fxRate: NaN,
+        fxRate: Number.NaN,
         subtype: ActivitySubtype.None,
         comment: record.notes || "",
         metadata: {},
       };
     });
+  }
+
+  private mapInstrumentType(type?: string): InstrumentType {
+    if (!type) {
+      return InstrumentType.Unknown;
+    }
+
+    switch (type.trim().toLowerCase()) {
+      case "equity":
+      case "stock":
+      case "etf":
+        return InstrumentType.Equity;
+      case "crypto":
+      case "cryptocurrency":
+        return InstrumentType.Crypto;
+      case "fx":
+      case "forex":
+      case "currency":
+        return InstrumentType.Fx;
+      case "option":
+      case "opt":
+        return InstrumentType.Option;
+      case "metal":
+      case "commodity":
+        return InstrumentType.Metal;
+      case "bond":
+      case "fixedincome":
+      case "debt":
+        return InstrumentType.Bond;
+      default:
+        return InstrumentType.Unknown;
+    }
   }
 
   private mapActivityType(action: string): ActivityType {
@@ -128,6 +162,11 @@ export class MyCustomFormat extends BaseFormat {
         name: "securityName",
         optional: true,
         description: "Security or asset name",
+      },
+      {
+        name: "instrumentType",
+        optional: true,
+        description: "Instrument type (equity, crypto, fx, option, metal, bond)",
       },
       { name: "shares", description: "Number of shares" },
       { name: "price", description: "Price per share" },
@@ -196,6 +235,7 @@ All converters must output records matching the `WealthfolioRecord` interface:
 ```typescript
 interface WealthfolioRecord {
   date: Date; // Transaction date as Date object
+  instrumentType: InstrumentType; // Instrument category enum (optional by activity)
   symbol: string; // Asset symbol / ticker (uppercase)
   quantity: number; // Number of shares / units
   activityType: ActivityType; // Transaction type enum
@@ -207,6 +247,16 @@ interface WealthfolioRecord {
   subtype: ActivitySubtype; // Optional activity subtype
   comment: string; // Additional notes or transaction details
   metadata: WealthfolioRecordMetadata; // Additional metadata
+}
+
+enum InstrumentType {
+  Unknown = "",
+  Equity = "EQUITY",
+  Crypto = "CRYPTO",
+  Fx = "FX",
+  Option = "OPTION",
+  Metal = "METAL",
+  Bond = "BOND",
 }
 
 enum ActivityType {
@@ -281,7 +331,7 @@ Your plugin can use the `SymbolDataService` passed to the `convert()` method to 
 Example:
 
 ```typescript
-import { BaseFormat, WealthfolioRecord } from "../core/BaseFormat";
+import { BaseFormat, InstrumentType, WealthfolioRecord } from "../core/BaseFormat";
 import { SymbolDataService } from "../core/SymbolDataService";
 
 export class MyCustomFormat extends BaseFormat {
@@ -304,6 +354,7 @@ export class MyCustomFormat extends BaseFormat {
 
       return {
         date: new Date(record.date),
+        instrumentType: InstrumentType.Unknown,
         symbol, // Already resolved with overrides applied
         quantity: parseFloat(record.shares),
         activityType: this.mapActivityType(record.action),
@@ -311,7 +362,7 @@ export class MyCustomFormat extends BaseFormat {
         currency: record.currency || defaultCurrency,
         fee: parseFloat(record.fee),
         amount: parseFloat(record.total),
-        fxRate: NaN,
+        fxRate: Number.NaN,
         subtype: ActivitySubtype.None,
         comment: record.notes || "",
         metadata: {},

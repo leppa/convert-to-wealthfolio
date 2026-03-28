@@ -19,6 +19,13 @@ and this project adheres to
 
 Upcoming release.
 
+### Added
+
+- Support for the new `instrumentType` field that was added to **Wealthfolio**
+  in March 2026.
+- New optional `InstrumentType` column in the Generic format plugin. If not
+  present or empty, it will be converted to an empty value in the output CSV.
+
 ## [0.1.0] - 2026-03-26
 
 Initial release.

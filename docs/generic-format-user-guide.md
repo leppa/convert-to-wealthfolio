@@ -34,6 +34,7 @@ This format supports standard transaction types such as buys, sells, dividends, 
   - [Stock Split](#stock-split)
   - [Credit](#credit)
   - [Adjustment](#adjustment)
+- [Instrument Types](#instrument-types)
 - [Value Formatting](#value-formatting)
   - [Date and Time](#date-and-time)
   - [Quantities and Prices](#quantities-and-prices)
@@ -69,6 +70,7 @@ These columns enhance your data, but can be omitted:
 
 | Column | Description | Default |
 | --- | --- | --- |
+| `InstrumentType` | Instrument category (see [Instrument Types](#instrument-types) below) | Empty (`UNKNOWN`) |
 | `Fee` | Transaction fee or commission (see [Quantities and Prices](#quantities-and-prices) below) | Not set |
 | `Total` | Total transaction amount (see [Quantities and Prices](#quantities-and-prices) below) | Calculated from `Quantity` × `UnitPrice` |
 | `Currency` | 3-letter currency code (see [Currency Codes](#currency-codes) below) | either `--default-currency` command line option, or `EUR` |
@@ -303,6 +305,19 @@ Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,Comment
 2024-05-05,ADJUSTMENT,AAPL,-50,,,,Share amount adjustment
 ```
 
+## Instrument Types
+
+The `InstrumentType` column is optional and case-insensitive. If omitted or unrecognized, it is treated as `UNKNOWN`.
+
+Supported normalized values and accepted aliases:
+
+- `EQUITY`: `EQUITY`, `STOCK`, `ETF`, `MUTUALFUND`, `MUTUAL_FUND`, `MUTUAL FUND`, `INDEX`
+- `CRYPTO`: `CRYPTO`, `CRYPTOCURRENCY`, `CRYPTO_CURRENCY`, `CRYPTO CURRENCY`
+- `FX`: `FX`, `FOREX`, `CURRENCY`
+- `OPTION`: `OPTION`, `OPT`
+- `METAL`: `METAL`, `COMMODITY`
+- `BOND`: `BOND`, `FIXEDINCOME`, `FIXED_INCOME`, `FIXED INCOME`, `DEBT`
+
 ## Value Formatting
 
 ### Date and Time
@@ -337,24 +352,24 @@ Use standard 3-letter [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO
 Here's a complete example CSV file demonstrating various transaction types:
 
 ```csv
-Date,TransactionType,Symbol,Quantity,UnitPrice,Fee,Total,Currency,TransactionSubtype,FxRate,Comment
-2024-01-15,BUY,AAPL,100,150.25,9.99,15034.99,EUR,,,Initial purchase
-2024-02-20,SELL,MSFT,50,380.50,9.99,19015.01,EUR,,,Partial sale
-2024-03-10,DIVIDEND,GOOGL,100,2.50,0,250.00,EUR,,,Quarterly dividend
-2024-03-11,DIVIDEND,AAPL,50,1.25,0,62.50,EUR,DRIP,,Dividend reinvestment
-2024-03-13,DIVIDEND,TSLA,75,0.90,0,67.50,EUR,QUALIFIED,,Qualified dividend
-2024-04-10,INTEREST,,,,,12.50,EUR,,,Interest on cash
-2024-04-11,INTEREST,ETH,0.003498,3400,,11.8932,EUR,STAKING_REWARD,,ETH staking
-2024-03-20,DEPOSIT,,,,,5000.00,EUR,,,Cash deposit
-2024-03-25,WITHDRAWAL,,,,,2000.00,EUR,,,Cash withdrawal
-2024-04-01,TRANSFER_IN,AMZN,100,175.50,0,17550.00,EUR,,,From other broker
-2024-04-05,TRANSFER_OUT,AMZN,50,175.50,0,8775.00,EUR,,,To other account
-2024-04-15,FEE,,,,,25.00,EUR,,,Monthly account fee
-2024-04-16,FEE,,,,,10.00,EUR,MANAGEMENT_FEE,,Management fee
-2024-04-19,TAX,,,,,3.75,EUR,WITHHOLDING,,Dividend withholding
-2024-04-25,SPLIT,NVDA,,,,0.5,,,,2:1 reverse split
-2024-04-30,CREDIT,,,,,50.00,EUR,BONUS,,Sign-up bonus
-2024-05-05,ADJUSTMENT,AAPL,-50,,,,,,,Share correction
+Date,TransactionType,Symbol,Quantity,UnitPrice,Fee,Total,Currency,InstrumentType,TransactionSubtype,FxRate,Comment
+2024-01-15,BUY,AAPL,100,150.25,9.99,15034.99,EUR,STOCK,,,Initial purchase
+2024-02-20,SELL,MSFT,50,380.50,9.99,19015.01,EUR,STOCK,,,Partial sale
+2024-03-10,DIVIDEND,GOOGL,100,2.50,0,250.00,EUR,STOCK,,,Quarterly dividend
+2024-03-11,DIVIDEND,AAPL,50,1.25,0,62.50,EUR,STOCK,DRIP,,Dividend reinvestment
+2024-03-13,DIVIDEND,TSLA,75,0.90,0,67.50,EUR,STOCK,QUALIFIED,,Qualified dividend
+2024-04-10,INTEREST,,,,,12.50,EUR,,,,Interest on cash
+2024-04-11,INTEREST,ETH,0.003498,3400,,11.8932,EUR,CRYPTO,STAKING_REWARD,,ETH staking
+2024-03-20,DEPOSIT,,,,,5000.00,EUR,,,,Cash deposit
+2024-03-25,WITHDRAWAL,,,,,2000.00,EUR,,,,Cash withdrawal
+2024-04-01,TRANSFER_IN,AMZN,100,175.50,0,17550.00,EUR,STOCK,,,From other broker
+2024-04-05,TRANSFER_OUT,AMZN,50,175.50,0,8775.00,EUR,STOCK,,,To other account
+2024-04-15,FEE,,,,,25.00,EUR,,,,Monthly account fee
+2024-04-16,FEE,,,,,10.00,EUR,,MANAGEMENT_FEE,,Management fee
+2024-04-19,TAX,,,,,3.75,EUR,,WITHHOLDING,,Dividend withholding
+2024-04-25,SPLIT,NVDA,,,,0.5,,STOCK,,,2:1 reverse split
+2024-04-30,CREDIT,,,,,50.00,EUR,,BONUS,,Sign-up bonus
+2024-05-05,ADJUSTMENT,AAPL,-50,,,,,STOCK,,,Share correction
 ```
 
 ## Tips and Best Practices

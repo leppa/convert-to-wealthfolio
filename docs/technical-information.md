@@ -5,7 +5,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 # Technical Information
 
-This document provides technical details about the architecture, design, and implementation of the Convert to Wealthfolio project. It is intended for developers who want to understand the inner workings of the codebase or contribute to the project.
+This document provides technical details about the architecture, design, and implementation of the **Convert to Wealthfolio** project. It is intended for developers who want to understand the inner workings of the codebase or contribute to the project.
 
 ## Project Structure
 
@@ -38,7 +38,7 @@ This document provides technical details about the architecture, design, and imp
 
 - Abstract base class for all format converters
 - Defines interface: `validate()`, `convert()`, `getExpectedSchema()`, etc.
-- Includes `WealthfolioRecord` interface, `ActivityType` enum, and `ActivitySubtype` enum for type-safe output
+- Includes `WealthfolioRecord` interface, `InstrumentType` enum, `ActivityType` enum, and `ActivitySubtype` enum for type-safe output
 - Supports custom CSV parsing options per format
 
 **Converter** (`src/core/Converter.ts`)
@@ -80,7 +80,7 @@ This document provides technical details about the architecture, design, and imp
 Format plugins extend `BaseFormat` and implement:
 
 - `validate(records)` - Detects if input matches this format
-- `convert(records, defaultCurrency, symbolDataService)` - Converts records to Wealthfolio format
+- `convert(records, defaultCurrency, symbolDataService)` - Converts records to **Wealthfolio** format
 - `getExpectedSchema()` - Returns expected input columns with optional flags and descriptions
 - `getParseOptions()` (optional) - Provides custom CSV parsing options (e.g., delimiter, casting column values to specific types)
 - `getValidationLineCount()` (optional) - Specifies how many rows to parse for format detection
@@ -103,6 +103,7 @@ Providers are registered in `SymbolDataService` and queried in order until a mat
 All converters produce CSV with these columns:
 
 - **date** - Transaction date (ISO format)
+- **instrumentType** - Asset category (see [Instrument Types](#instrument-types) below)
 - **symbol** - Asset symbol/ticker
 - **quantity** - Number of shares/units
 - **activityType** - Transaction type (see [Activity Types](#activity-types) below)
@@ -113,7 +114,20 @@ All converters produce CSV with these columns:
 - **fxRate** - Currency exchange rate to base currency (if applicable)
 - **subtype** - Activity subtype (see [Activity Subtypes](#activity-subtypes) below)
 - **comment** - Additional notes or transaction details
-- **metadata** - Optional structured metadata serialized as JSON (see the [Activity Types Reference](https://github.com/afadil/wealthfolio/blob/main/docs/activities/activity-types.md) from Wealthfolio documentation)
+- **metadata** - Optional structured metadata serialized as JSON (see the [Activity Types Reference](https://github.com/afadil/wealthfolio/blob/main/docs/activities/activity-types.md) from **Wealthfolio** documentation)
+
+### Instrument Types
+
+Supported instrument types:
+
+- **EQUITY** - Stocks, ETFs, and funds
+- **CRYPTO** - Cryptocurrencies
+- **FX** - Currency and forex instruments
+- **OPTION** - Options contracts
+- **METAL** - Precious metals and commodity spot instruments
+- **BOND** - Fixed-income instruments
+
+**Note:** Leave the value empty for unknown or unspecified instrument types, as **Wealthfolio** will attempt to infer the type based on the symbol and other available data.
 
 ### Activity Types
 
@@ -133,11 +147,11 @@ Supported activity types:
 - **CREDIT** - Credit or bonus (cash only)
 - **ADJUSTMENT** - Share or cash adjustment
 
-**Note:** The information above was taken from the Wealthfolio documentation and may be subject to change as v3.x is still in beta. Always refer to the latest Wealthfolio documentation for the most up-to-date information on supported activity types and subtypes.
+**Note:** The information above was taken from the **Wealthfolio** documentation and may be subject to change as v3.x is still in beta. Always refer to the latest **Wealthfolio** documentation for the most up-to-date information on supported activity types and subtypes.
 
 ### Activity Subtypes
 
-Some activity types can have optional subtypes for more detailed categorization. See the Wealthfolio documentation for the latest list of supported subtypes.
+Some activity types can have optional subtypes for more detailed categorization. See the **Wealthfolio** documentation for the latest list of supported subtypes.
 
 ## Creating a New Format Plugin
 

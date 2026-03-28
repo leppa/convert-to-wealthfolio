@@ -11,6 +11,7 @@ import {
   ActivityType,
   BaseFormat,
   ColumnSchema,
+  InstrumentType,
   WealthfolioRecord,
   WealthfolioRecordMetadata,
 } from "../core/BaseFormat";
@@ -21,6 +22,7 @@ interface ParsedRecord extends Record<string, unknown> {
   date: Date;
   transactiontype: string;
   transactionsubtype?: string;
+  instrumenttype?: string;
   symbol?: string;
   isin?: string;
   cusip?: string;
@@ -126,6 +128,7 @@ export class GenericFormat extends BaseFormat {
 
       result.push({
         date: record.date,
+        instrumentType: this.mapInstrumentType(record.instrumenttype),
         symbol,
         quantity,
         activityType,
@@ -142,6 +145,45 @@ export class GenericFormat extends BaseFormat {
     }
 
     return result;
+  }
+
+  private mapInstrumentType(type?: string): InstrumentType {
+    if (!type) {
+      return InstrumentType.Unknown;
+    }
+    switch (type.trim().toLowerCase()) {
+      case "equity":
+      case "stock":
+      case "etf":
+      case "mutualfund":
+      case "mutual_fund":
+      case "mutual fund":
+      case "index":
+        return InstrumentType.Equity;
+      case "crypto":
+      case "cryptocurrency":
+      case "crypto_currency":
+      case "crypto currency":
+        return InstrumentType.Crypto;
+      case "fx":
+      case "forex":
+      case "currency":
+        return InstrumentType.Fx;
+      case "option":
+      case "opt":
+        return InstrumentType.Option;
+      case "metal":
+      case "commodity":
+        return InstrumentType.Metal;
+      case "bond":
+      case "fixedincome":
+      case "fixed_income":
+      case "fixed income":
+      case "debt":
+        return InstrumentType.Bond;
+      default:
+        return InstrumentType.Unknown;
+    }
   }
 
   private mapActivityType(type: string): ActivityType {
@@ -294,6 +336,12 @@ export class GenericFormat extends BaseFormat {
         optional: true,
         description:
           "subtype depends on the transaction type, see the Generic Format User Guide for more details",
+      },
+      {
+        name: "InstrumentType",
+        optional: true,
+        description:
+          "type of the financial instrument, see the Generic Format User Guide for more details",
       },
       {
         name: "Symbol",

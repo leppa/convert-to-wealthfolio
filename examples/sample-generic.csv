@@ -1,30 +1,30 @@
-Date,TransactionType,Symbol,Quantity,UnitPrice,Fee,Total,Currency,TransactionSubtype,FxRate,Comment
-2024-01-15,BUY,AAPL,100,150.25,9.99,15034.99,EUR,,,Initial purchase
-2024-02-20,SELL,MSFT,50,380.50,9.99,19015.01,EUR,,,Partial sale
-2024-03-10,DIVIDEND,GOOGL,100,2.50,0,250.00,EUR,,,Quarterly dividend for 100 shares
-2024-03-11,DIVIDEND,AAPL,50,1.25,0,62.50,EUR,DRIP,,Dividend reinvestment plan
-2024-03-12,DIVIDEND,MSFT,25,2.00,0,50.00,EUR,DIVIDEND_IN_KIND,,Dividend paid in additional shares
-2024-03-13,DIVIDEND,TSLA,75,0.90,0,67.50,EUR,QUALIFIED,,Qualified dividend income
-2024-03-14,DIVIDEND,META,30,0.75,0,22.50,EUR,ORDINARY,,Ordinary dividend income
-2024-03-15,DIVIDEND,NFLX,40,1.50,0,60.00,EUR,RETURN_OF_CAPITAL,,Return of capital distribution
-2024-04-10,INTEREST,,,,,12.50,EUR,,,Interest earned on cash balance
-2024-04-11,INTEREST,ETH,0.003498,3400,,11.8932,EUR,STAKING_REWARD,,ETH staking rewards
-2024-04-12,INTEREST,,,,,8.75,EUR,LENDING_INTEREST,,Lending interest income
-2024-04-13,INTEREST,,,,,15.00,EUR,COUPON,,Bond coupon payment
-2024-03-20,DEPOSIT,,,,,5000.00,EUR,,,Cash deposit to account
-2024-03-25,WITHDRAWAL,,,,,2000.00,EUR,,,Cash withdrawal from account
-2024-04-01,TRANSFER_IN,AMZN,100,175.50,0,17550.00,EUR,,,Shares transferred in from other broker
-2024-04-05,TRANSFER_OUT,AMZN,50,175.50,0,8775.00,EUR,,,Shares transferred out to other account
-2024-04-15,FEE,,,,,25.00,EUR,,,Monthly account fee
-2024-04-16,FEE,,,,,10.00,EUR,MANAGEMENT_FEE,,Annual management fee
-2024-04-17,FEE,,,,,5.50,EUR,ADR_FEE,,ADR administrative fee
-2024-04-18,FEE,,,,,3.25,EUR,INTEREST_CHARGE,,Margin interest charge
-2024-04-19,TAX,,,,,1.25,EUR,,,Tax on interest income
-2024-04-19,TAX,,,,,3.75,EUR,WITHHOLDING,,Dividend tax withholding
-2024-04-19,TAX,,,,,37.50,EUR,NRA_WITHHOLDING,,NRA withholding
-2024-04-25,SPLIT,NVDA,,,,0.5,,,,2:1 reverse stock split
-2024-04-30,CREDIT,,,,,0.01,EUR,,,Balance correction
-2024-04-30,CREDIT,,,,,50.00,EUR,BONUS,,Broker bonus credit
-2024-05-01,CREDIT,,,,,25.00,EUR,REBATE,,Promotional rebate
-2024-05-01,CREDIT,,,,,25.00,EUR,REFUND,,Fee refund
-2024-05-05,ADJUSTMENT,AAPL,-50,,,,,,,Share amount adjustment
+Date,TransactionType,InstrumentType,Symbol,Quantity,UnitPrice,Fee,Total,Currency,TransactionSubtype,FxRate,Comment
+2024-01-15,BUY,STOCK,AAPL,100,150.25,9.99,15034.99,EUR,,,Initial purchase
+2024-02-20,SELL,ETF,SPY,50,450.25,9.99,22502.51,EUR,,,ETF sale
+2024-03-10,DIVIDEND,STOCK,GOOGL,100,2.50,0,250.00,EUR,,,Quarterly dividend for 100 shares
+2024-03-11,DIVIDEND,STOCK,AAPL,50,1.25,0,62.50,EUR,DRIP,,Dividend reinvestment plan
+2024-03-12,DIVIDEND,STOCK,MSFT,25,2.00,0,50.00,EUR,DIVIDEND_IN_KIND,,Dividend paid in additional shares
+2024-03-13,DIVIDEND,STOCK,TSLA,75,0.90,0,67.50,EUR,QUALIFIED,,Qualified dividend income
+2024-03-14,DIVIDEND,STOCK,META,30,0.75,0,22.50,EUR,ORDINARY,,Ordinary dividend income
+2024-03-15,DIVIDEND,STOCK,NFLX,40,1.50,0,60.00,EUR,RETURN_OF_CAPITAL,,Return of capital distribution
+2024-04-10,INTEREST,,,,,,12.50,EUR,,,Interest earned on cash balance
+2024-04-11,INTEREST,CRYPTO,ETH,0.003498,3400,,11.8932,EUR,STAKING_REWARD,,ETH staking rewards
+2024-04-12,INTEREST,,,,,,8.75,EUR,LENDING_INTEREST,,Lending interest income
+2024-04-13,INTEREST,,,,,,15.00,EUR,COUPON,,Bond coupon payment
+2024-03-20,DEPOSIT,,,,,,5000.00,EUR,,,Cash deposit to account
+2024-03-25,WITHDRAWAL,,,,,,2000.00,EUR,,,Cash withdrawal from account
+2024-04-01,TRANSFER_IN,BOND,US10Y,100,98.50,0,9850.00,EUR,,,10-year Treasury bond transferred in from other broker
+2024-04-05,TRANSFER_OUT,STOCK,AMZN,50,175.50,0,8775.00,EUR,,,Shares transferred out to other account
+2024-04-15,FEE,,,,,,25.00,EUR,,,Monthly account fee
+2024-04-16,FEE,,,,,,10.00,EUR,MANAGEMENT_FEE,,Annual management fee
+2024-04-17,FEE,,,,,,5.50,EUR,ADR_FEE,,ADR administrative fee
+2024-04-18,FEE,,,,,,3.25,EUR,INTEREST_CHARGE,,Margin interest charge
+2024-04-19,TAX,,,,,,1.25,EUR,,,Tax on interest income
+2024-04-19,TAX,,,,,,3.75,EUR,WITHHOLDING,,Dividend tax withholding
+2024-04-19,TAX,,,,,,37.50,EUR,NRA_WITHHOLDING,,NRA withholding
+2024-04-25,SPLIT,STOCK,NVDA,,,,0.5,,,,2:1 reverse stock split
+2024-04-30,CREDIT,,,,,,0.01,EUR,,,Balance correction
+2024-04-30,CREDIT,,,,,,50.00,EUR,BONUS,,Broker bonus credit
+2024-05-01,CREDIT,,,,,,25.00,EUR,REBATE,,Promotional rebate
+2024-05-01,CREDIT,,,,,,25.00,EUR,REFUND,,Fee refund
+2024-05-05,ADJUSTMENT,STOCK,AAPL,-50,,,,,,,Share amount adjustment

@@ -12,6 +12,7 @@ import {
   ActivityType,
   BaseFormat,
   ColumnSchema,
+  InstrumentType,
   WealthfolioRecord,
 } from "../../src/core/BaseFormat";
 import { Converter } from "../../src/core/Converter";
@@ -73,7 +74,7 @@ describe("Converter", () => {
 
       // Check header
       const headers = lines[0].split(",");
-      expect(headers.length).toBe(12);
+      expect(headers.length).toBe(13);
       expect(headers).toContain("date");
       expect(headers).toContain("symbol");
       expect(headers).toContain("quantity");
@@ -164,6 +165,7 @@ describe("Converter", () => {
     it("should skip and warn on records that fail field validation", async () => {
       const invalidRecord: WealthfolioRecord = {
         date: new Date("2024-01-15"),
+        instrumentType: InstrumentType.Equity,
         symbol: "", // Required for Buy
         quantity: 1,
         activityType: ActivityType.Buy,
@@ -178,6 +180,7 @@ describe("Converter", () => {
       };
       const validRecord: WealthfolioRecord = {
         date: new Date("2024-01-20"),
+        instrumentType: InstrumentType.Equity,
         symbol: "MSFT",
         quantity: 2,
         activityType: ActivityType.Buy,
@@ -295,6 +298,7 @@ describe("Converter", () => {
       const records: WealthfolioRecord[] = [
         {
           date: new Date("2024-01-15"),
+          instrumentType: InstrumentType.Unknown,
           symbol: "  aapl  ",
           quantity: 100,
           activityType: ActivityType.Buy,
@@ -381,6 +385,7 @@ describe("Converter", () => {
       const inputFile = path.join(fixturesDir, "sample-generic.csv");
       const recordWithMetadata: WealthfolioRecord = {
         date: new Date("2024-01-15"),
+        instrumentType: InstrumentType.Equity,
         symbol: "AAPL",
         quantity: 1,
         activityType: ActivityType.Buy,
@@ -395,6 +400,7 @@ describe("Converter", () => {
       };
       const recordWithInvalidDate: WealthfolioRecord = {
         date: new Date("2024-01-20"),
+        instrumentType: InstrumentType.Equity,
         symbol: "MSFT",
         quantity: 2,
         activityType: ActivityType.Buy,

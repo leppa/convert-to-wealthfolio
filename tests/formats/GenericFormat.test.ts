@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import { ActivitySubtype, ActivityType } from "../../src/core/BaseFormat";
+import { ActivitySubtype, ActivityType, InstrumentType } from "../../src/core/BaseFormat";
 import { SymbolDataService } from "../../src/core/SymbolDataService";
 import { OverridesDataProvider } from "../../src/data-providers";
 import { GenericFormat } from "../../src/formats/GenericFormat";
@@ -556,98 +556,84 @@ describe("Generic Format", () => {
   describe("private helpers", () => {
     // FIXME: Rewrite to avoid using private methods directly
     /* eslint-disable @typescript-eslint/no-unsafe-call */
+    it("should map instrument types for supported aliases", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+      const mapInstrumentType = (format as any).mapInstrumentType.bind(format);
+
+      const aliases: Array<[string, InstrumentType]> = [
+        ["equity", InstrumentType.Equity],
+        ["stock", InstrumentType.Equity],
+        ["etf", InstrumentType.Equity],
+        ["mutualfund", InstrumentType.Equity],
+        ["mutual_fund", InstrumentType.Equity],
+        ["mutual fund", InstrumentType.Equity],
+        ["index", InstrumentType.Equity],
+        ["crypto", InstrumentType.Crypto],
+        ["cryptocurrency", InstrumentType.Crypto],
+        ["crypto_currency", InstrumentType.Crypto],
+        ["crypto currency", InstrumentType.Crypto],
+        ["fx", InstrumentType.Fx],
+        ["forex", InstrumentType.Fx],
+        ["currency", InstrumentType.Fx],
+        ["option", InstrumentType.Option],
+        ["opt", InstrumentType.Option],
+        ["metal", InstrumentType.Metal],
+        ["commodity", InstrumentType.Metal],
+        ["bond", InstrumentType.Bond],
+        ["fixedincome", InstrumentType.Bond],
+        ["fixed_income", InstrumentType.Bond],
+        ["fixed income", InstrumentType.Bond],
+        ["debt", InstrumentType.Bond],
+      ];
+
+      aliases.forEach(([input, expected]) => {
+        expect(mapInstrumentType(input)).toBe(expected);
+      });
+
+      expect(mapInstrumentType("unknown_type")).toBe(InstrumentType.Unknown);
+      expect(mapInstrumentType("   ")).toBe(InstrumentType.Unknown);
+      expect(mapInstrumentType()).toBe(InstrumentType.Unknown);
+    });
+
     it("should map activity subtypes for supported activities", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
       const mapActivitySubtype = (format as any).mapActivitySubtype.bind(format);
 
-      expect(mapActivitySubtype({ transactionsubtype: "" }, ActivityType.Dividend)).toBe(
-        ActivitySubtype.None,
-      );
-      expect(mapActivitySubtype({ transactionsubtype: "drip" }, ActivityType.Dividend)).toBe(
-        ActivitySubtype.DRIP,
-      );
-      expect(
-        mapActivitySubtype({ transactionsubtype: "qualified_dividend" }, ActivityType.Dividend),
-      ).toBe(ActivitySubtype.QualifiedDividend);
+      const aliases: Array<[ActivityType, string | undefined, ActivitySubtype]> = [
+        [ActivityType.Dividend, "", ActivitySubtype.None],
+        [ActivityType.Dividend, "drip", ActivitySubtype.DRIP],
+        [ActivityType.Dividend, "qualified_dividend", ActivitySubtype.QualifiedDividend],
+        [ActivityType.Dividend, "ordinary_dividend", ActivitySubtype.OrdinaryDividend],
+        [ActivityType.Dividend, "return_of_capital", ActivitySubtype.ReturnOfCapital],
+        [ActivityType.Dividend, "dividend_in_kind", ActivitySubtype.DividendInKind],
+        [ActivityType.Dividend, "unknown", ActivitySubtype.None],
+        [ActivityType.Interest, "", ActivitySubtype.None],
+        [ActivityType.Interest, "staking_reward", ActivitySubtype.StakingReward],
+        [ActivityType.Interest, "lending_interest", ActivitySubtype.LendingInterest],
+        [ActivityType.Interest, "coupon", ActivitySubtype.Coupon],
+        [ActivityType.Interest, "unknown", ActivitySubtype.None],
+        [ActivityType.Fee, "", ActivitySubtype.None],
+        [ActivityType.Fee, "management_fee", ActivitySubtype.ManagementFee],
+        [ActivityType.Fee, "adr_fee", ActivitySubtype.ADRFee],
+        [ActivityType.Fee, "interest_charge", ActivitySubtype.InterestCharge],
+        [ActivityType.Fee, "unknown", ActivitySubtype.None],
+        [ActivityType.Tax, "", ActivitySubtype.None],
+        [ActivityType.Tax, "withholding", ActivitySubtype.Withholding],
+        [ActivityType.Tax, "nra_withholding", ActivitySubtype.NRAWithholding],
+        [ActivityType.Tax, "unknown", ActivitySubtype.None],
+        [ActivityType.Credit, "", ActivitySubtype.None],
+        [ActivityType.Credit, "bonus", ActivitySubtype.Bonus],
+        [ActivityType.Credit, "rebate", ActivitySubtype.Rebate],
+        [ActivityType.Credit, "refund", ActivitySubtype.Refund],
+        [ActivityType.Credit, "unknown", ActivitySubtype.None],
+        [ActivityType.Buy, "drip", ActivitySubtype.None],
+        [ActivityType.Dividend, undefined, ActivitySubtype.None],
+      ];
 
-      expect(
-        mapActivitySubtype({ transactionsubtype: "ordinary_dividend" }, ActivityType.Dividend),
-      ).toBe(ActivitySubtype.OrdinaryDividend);
-      expect(
-        mapActivitySubtype({ transactionsubtype: "return_of_capital" }, ActivityType.Dividend),
-      ).toBe(ActivitySubtype.ReturnOfCapital);
-      expect(
-        mapActivitySubtype({ transactionsubtype: "dividend_in_kind" }, ActivityType.Dividend),
-      ).toBe(ActivitySubtype.DividendInKind);
-      expect(mapActivitySubtype({ transactionsubtype: "unknown" }, ActivityType.Dividend)).toBe(
-        ActivitySubtype.None,
-      );
-
-      expect(mapActivitySubtype({ transactionsubtype: "" }, ActivityType.Interest)).toBe(
-        ActivitySubtype.None,
-      );
-      expect(
-        mapActivitySubtype({ transactionsubtype: "staking_reward" }, ActivityType.Interest),
-      ).toBe(ActivitySubtype.StakingReward);
-      expect(
-        mapActivitySubtype({ transactionsubtype: "lending_interest" }, ActivityType.Interest),
-      ).toBe(ActivitySubtype.LendingInterest);
-      expect(mapActivitySubtype({ transactionsubtype: "coupon" }, ActivityType.Interest)).toBe(
-        ActivitySubtype.Coupon,
-      );
-      expect(mapActivitySubtype({ transactionsubtype: "unknown" }, ActivityType.Interest)).toBe(
-        ActivitySubtype.None,
-      );
-
-      expect(mapActivitySubtype({ transactionsubtype: "" }, ActivityType.Fee)).toBe(
-        ActivitySubtype.None,
-      );
-      expect(mapActivitySubtype({ transactionsubtype: "management_fee" }, ActivityType.Fee)).toBe(
-        ActivitySubtype.ManagementFee,
-      );
-      expect(mapActivitySubtype({ transactionsubtype: "adr_fee" }, ActivityType.Fee)).toBe(
-        ActivitySubtype.ADRFee,
-      );
-      expect(mapActivitySubtype({ transactionsubtype: "interest_charge" }, ActivityType.Fee)).toBe(
-        ActivitySubtype.InterestCharge,
-      );
-      expect(mapActivitySubtype({ transactionsubtype: "unknown" }, ActivityType.Fee)).toBe(
-        ActivitySubtype.None,
-      );
-
-      expect(mapActivitySubtype({ transactionsubtype: "" }, ActivityType.Tax)).toBe(
-        ActivitySubtype.None,
-      );
-      expect(mapActivitySubtype({ transactionsubtype: "withholding" }, ActivityType.Tax)).toBe(
-        ActivitySubtype.Withholding,
-      );
-      expect(mapActivitySubtype({ transactionsubtype: "nra_withholding" }, ActivityType.Tax)).toBe(
-        ActivitySubtype.NRAWithholding,
-      );
-      expect(mapActivitySubtype({ transactionsubtype: "unknown" }, ActivityType.Tax)).toBe(
-        ActivitySubtype.None,
-      );
-
-      expect(mapActivitySubtype({ transactionsubtype: "" }, ActivityType.Credit)).toBe(
-        ActivitySubtype.None,
-      );
-      expect(mapActivitySubtype({ transactionsubtype: "bonus" }, ActivityType.Credit)).toBe(
-        ActivitySubtype.Bonus,
-      );
-      expect(mapActivitySubtype({ transactionsubtype: "rebate" }, ActivityType.Credit)).toBe(
-        ActivitySubtype.Rebate,
-      );
-      expect(mapActivitySubtype({ transactionsubtype: "refund" }, ActivityType.Credit)).toBe(
-        ActivitySubtype.Refund,
-      );
-      expect(mapActivitySubtype({ transactionsubtype: "unknown" }, ActivityType.Credit)).toBe(
-        ActivitySubtype.None,
-      );
-
-      expect(mapActivitySubtype({ transactionsubtype: "drip" }, ActivityType.Buy)).toBe(
-        ActivitySubtype.None,
-      );
-      expect(mapActivitySubtype({}, ActivityType.Dividend)).toBe(ActivitySubtype.None);
+      aliases.forEach(([activityType, input, expected]) => {
+        const record = input === undefined ? {} : { transactionsubtype: input };
+        expect(mapActivitySubtype(record, activityType)).toBe(expected);
+      });
     });
     /* eslint-enable @typescript-eslint/no-unsafe-call */
   });
@@ -662,6 +648,7 @@ describe("Generic Format", () => {
           "Date",
           "TransactionType",
           "TransactionSubtype",
+          "InstrumentType",
           "Symbol",
           "ISIN",
           "CUSIP",
