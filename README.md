@@ -57,7 +57,7 @@ See the [ChangeLog](./ChangeLog.md) for a detailed list of released and upcoming
 
 - **Generic**: Flexible CSV format with support for:
   - Standard transaction types (BUY, SELL, DEPOSIT, WITHDRAWAL, DIVIDENDS, etc.)
-  - Optional currency, fee, FX rate, and comment fields
+  - Optional instrument type, currency, fee, FX rate, and comment fields
   - Supports symbol resolution via ISIN, CUSIP, or company name fields
   - Respects the default currency option
   - Comma-delimited format

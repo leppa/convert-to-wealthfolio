@@ -85,6 +85,7 @@ export abstract class BaseFormat {
  */
 export interface WealthfolioRecord {
   date: Date;
+  instrumentType: InstrumentType;
   symbol: string;
   quantity: number;
   activityType: ActivityType;
@@ -98,6 +99,22 @@ export interface WealthfolioRecord {
   // Mentioned in the documentation but doesn't seem to be supported by UI / import yet. Should be
   // exported as serialized JSON.
   metadata: WealthfolioRecordMetadata;
+}
+
+export enum InstrumentType {
+  Unknown = "",
+  // Stocks, ETFs, funds
+  Equity = "EQUITY",
+  // Cryptocurrencies
+  Crypto = "CRYPTO",
+  // Currency exchange rates
+  Fx = "FX",
+  // Options contracts
+  Option = "OPTION",
+  // Precious metal spot prices (XAU, XAG)
+  Metal = "METAL",
+  // Fixed-income instruments (bonds, T-bills, notes)
+  Bond = "BOND",
 }
 
 export enum ActivityType {

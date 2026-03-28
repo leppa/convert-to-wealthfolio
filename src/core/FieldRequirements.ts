@@ -174,6 +174,7 @@ const RECORD_FIELD_REQUIREMENTS: {
 } = {
   [ActivityType.Buy]: {
     ...COMMON_FIELD_REQUIREMENTS,
+    instrumentType: FieldRequirement.Optional,
     symbol: FieldRequirement.Required,
     quantity: FieldRequirement.Required,
     unitPrice: FieldRequirement.Required,
@@ -181,6 +182,7 @@ const RECORD_FIELD_REQUIREMENTS: {
   },
   [ActivityType.Sell]: {
     ...COMMON_FIELD_REQUIREMENTS,
+    instrumentType: FieldRequirement.Optional,
     symbol: FieldRequirement.Required,
     quantity: FieldRequirement.Required,
     unitPrice: FieldRequirement.Required,
@@ -188,6 +190,7 @@ const RECORD_FIELD_REQUIREMENTS: {
   },
   [ActivityType.Dividend]: {
     ...COMMON_FIELD_REQUIREMENTS,
+    instrumentType: FieldRequirement.Optional,
     symbol: FieldRequirement.Required,
     quantity: FieldRequirement.Optional,
     unitPrice: (record) =>
@@ -205,6 +208,8 @@ const RECORD_FIELD_REQUIREMENTS: {
   },
   [ActivityType.Interest]: {
     ...COMMON_FIELD_REQUIREMENTS,
+    instrumentType: (record) =>
+      record.symbol ? FieldRequirement.Optional : FieldRequirement.Ignored,
     symbol: FieldRequirement.Optional,
     quantity: FieldRequirement.Ignored,
     unitPrice: (record) =>
@@ -217,6 +222,7 @@ const RECORD_FIELD_REQUIREMENTS: {
   },
   [ActivityType.Deposit]: {
     ...COMMON_FIELD_REQUIREMENTS,
+    instrumentType: FieldRequirement.Ignored,
     symbol: FieldRequirement.Ignored,
     quantity: FieldRequirement.Ignored,
     unitPrice: FieldRequirement.Ignored,
@@ -224,6 +230,7 @@ const RECORD_FIELD_REQUIREMENTS: {
   },
   [ActivityType.Withdrawal]: {
     ...COMMON_FIELD_REQUIREMENTS,
+    instrumentType: FieldRequirement.Ignored,
     symbol: FieldRequirement.Ignored,
     quantity: FieldRequirement.Ignored,
     unitPrice: FieldRequirement.Ignored,
@@ -231,6 +238,8 @@ const RECORD_FIELD_REQUIREMENTS: {
   },
   [ActivityType.TransferIn]: {
     ...COMMON_FIELD_REQUIREMENTS,
+    instrumentType: (record) =>
+      record.symbol ? FieldRequirement.Optional : FieldRequirement.Ignored,
     symbol: FieldRequirement.Optional,
     quantity: (record) => (record.symbol ? FieldRequirement.Required : FieldRequirement.Ignored),
     unitPrice: (record) => (record.symbol ? FieldRequirement.Required : FieldRequirement.Ignored),
@@ -238,6 +247,8 @@ const RECORD_FIELD_REQUIREMENTS: {
   },
   [ActivityType.TransferOut]: {
     ...COMMON_FIELD_REQUIREMENTS,
+    instrumentType: (record) =>
+      record.symbol ? FieldRequirement.Optional : FieldRequirement.Ignored,
     symbol: FieldRequirement.Optional,
     quantity: (record) => (record.symbol ? FieldRequirement.Required : FieldRequirement.Ignored),
     unitPrice: (record) => (record.symbol ? FieldRequirement.Required : FieldRequirement.Ignored),
@@ -245,6 +256,7 @@ const RECORD_FIELD_REQUIREMENTS: {
   },
   [ActivityType.Fee]: {
     ...COMMON_FIELD_REQUIREMENTS,
+    instrumentType: FieldRequirement.Ignored,
     symbol: FieldRequirement.Ignored,
     quantity: FieldRequirement.Ignored,
     unitPrice: FieldRequirement.Ignored,
@@ -255,6 +267,7 @@ const RECORD_FIELD_REQUIREMENTS: {
   },
   [ActivityType.Tax]: {
     ...COMMON_FIELD_REQUIREMENTS,
+    instrumentType: FieldRequirement.Ignored,
     symbol: FieldRequirement.Ignored,
     quantity: FieldRequirement.Ignored,
     unitPrice: FieldRequirement.Ignored,
@@ -263,6 +276,7 @@ const RECORD_FIELD_REQUIREMENTS: {
   },
   [ActivityType.Split]: {
     ...COMMON_FIELD_REQUIREMENTS,
+    instrumentType: FieldRequirement.Optional,
     symbol: FieldRequirement.Required,
     quantity: FieldRequirement.Ignored,
     unitPrice: FieldRequirement.Ignored,
@@ -272,6 +286,7 @@ const RECORD_FIELD_REQUIREMENTS: {
   },
   [ActivityType.Credit]: {
     ...COMMON_FIELD_REQUIREMENTS,
+    instrumentType: FieldRequirement.Ignored,
     symbol: FieldRequirement.Ignored,
     quantity: FieldRequirement.Ignored,
     unitPrice: FieldRequirement.Ignored,
@@ -281,6 +296,8 @@ const RECORD_FIELD_REQUIREMENTS: {
   // Documentation just states that field requirement "Varies by use case"
   [ActivityType.Adjustment]: {
     ...COMMON_FIELD_REQUIREMENTS,
+    instrumentType: (record) =>
+      record.symbol ? FieldRequirement.Optional : FieldRequirement.Ignored,
     symbol: FieldRequirement.Optional,
     quantity: FieldRequirement.Optional,
     unitPrice: FieldRequirement.Optional,
@@ -292,6 +309,8 @@ const RECORD_FIELD_REQUIREMENTS: {
   // flagged for review". Either ignore the whole activity or simply pass all fields through?
   [ActivityType.Unknown]: {
     ...COMMON_FIELD_REQUIREMENTS,
+    instrumentType: (record) =>
+      record.symbol ? FieldRequirement.Optional : FieldRequirement.Ignored,
     symbol: FieldRequirement.Optional,
     quantity: FieldRequirement.Optional,
     unitPrice: FieldRequirement.Optional,

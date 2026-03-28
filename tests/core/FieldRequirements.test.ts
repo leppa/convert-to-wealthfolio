@@ -3,7 +3,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import { ActivitySubtype, ActivityType, WealthfolioRecord } from "../../src/core/BaseFormat";
+import {
+  ActivitySubtype,
+  ActivityType,
+  InstrumentType,
+  WealthfolioRecord,
+} from "../../src/core/BaseFormat";
 import {
   validateRecordFieldRequirements,
   validateRequiredFieldValue,
@@ -13,21 +18,26 @@ import {
 import { Logger, LogLevel } from "../../src/core/Logger";
 Logger.setLogLevel(LogLevel.ERROR);
 
-const createRecord = (overrides: Partial<WealthfolioRecord> = {}): WealthfolioRecord => ({
-  date: new Date("2024-01-15"),
-  symbol: "AAPL",
-  quantity: 1,
-  activityType: ActivityType.Buy,
-  unitPrice: 10,
-  currency: "USD",
-  fee: 0,
-  amount: 10,
-  fxRate: Number.NaN,
-  subtype: ActivitySubtype.None,
-  comment: "",
-  metadata: {},
-  ...overrides,
-});
+const createRecord = (overrides: Partial<WealthfolioRecord> = {}): WealthfolioRecord => {
+  const { instrumentType, ...restOverrides } = overrides;
+
+  return {
+    date: new Date("2024-01-15"),
+    instrumentType: instrumentType ?? InstrumentType.Unknown,
+    symbol: "AAPL",
+    quantity: 1,
+    activityType: ActivityType.Buy,
+    unitPrice: 10,
+    currency: "USD",
+    fee: 0,
+    amount: 10,
+    fxRate: Number.NaN,
+    subtype: ActivitySubtype.None,
+    comment: "",
+    metadata: {},
+    ...restOverrides,
+  };
+};
 
 describe("FieldRequirements", () => {
   describe("validateRequiredFieldValue", () => {
@@ -233,6 +243,58 @@ describe("FieldRequirements", () => {
 
       expect(result.valid).toBe(false);
       expect(result.invalidFields.map((field) => field.name)).toContain("amount");
+    });
+
+    it("should keep instrument type for adjustment activity when symbol is present", () => {
+      const record = createRecord({
+        activityType: ActivityType.Adjustment,
+        instrumentType: InstrumentType.Equity,
+        symbol: "AAPL",
+      });
+
+      const result = validateRecordFieldRequirements(record, true);
+
+      expect(result.valid).toBe(true);
+      expect(record.instrumentType).toBe(InstrumentType.Equity);
+    });
+
+    it("should ignore instrument type for adjustment activity when symbol is missing", () => {
+      const record = createRecord({
+        activityType: ActivityType.Adjustment,
+        instrumentType: InstrumentType.Equity,
+        symbol: "",
+      });
+
+      const result = validateRecordFieldRequirements(record, true);
+
+      expect(result.valid).toBe(true);
+      expect(record.instrumentType).toBe(InstrumentType.Unknown);
+    });
+
+    it("should keep instrument type for unknown activity when symbol is present", () => {
+      const record = createRecord({
+        activityType: ActivityType.Unknown,
+        instrumentType: InstrumentType.Equity,
+        symbol: "AAPL",
+      });
+
+      const result = validateRecordFieldRequirements(record, true);
+
+      expect(result.valid).toBe(true);
+      expect(record.instrumentType).toBe(InstrumentType.Equity);
+    });
+
+    it("should ignore instrument type for unknown activity when symbol is missing", () => {
+      const record = createRecord({
+        activityType: ActivityType.Unknown,
+        instrumentType: InstrumentType.Equity,
+        symbol: "",
+      });
+
+      const result = validateRecordFieldRequirements(record, true);
+
+      expect(result.valid).toBe(true);
+      expect(record.instrumentType).toBe(InstrumentType.Unknown);
     });
   });
 });
