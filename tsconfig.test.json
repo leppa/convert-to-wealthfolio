@@ -1,9 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    // With `node20` we get TS151002 warning to set `isolatedModules: true`, however with
+    // `isolatedModules` enabled, compilation errors are not reported in tests.
+    "module": "commonjs",
     "rootDir": ".",
-    "noEmit": true,
-    "isolatedModules": true
+    "noEmit": true
   },
   "include": ["src/**/*", "tests/**/*"]
 }
