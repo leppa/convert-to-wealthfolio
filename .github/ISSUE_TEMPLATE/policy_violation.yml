@@ -5,8 +5,8 @@
 
 name: Policy Violation Report
 description: Report a violation of project policies or community guidelines.
-title: "[Policy Violation]: "
-labels: ["policy-violation"]
+title: "[Policy Violation] "
+labels: ["policy violation"]
 body:
   - type: markdown
     attributes:
@@ -67,7 +67,7 @@ body:
     attributes:
       label: Terms
       options:
-        - label: I believe that the reported issue violates the project's [Code of Conduct](https://github.com/leppa/convert-to-wealthfolio/blob/main/CODE_OF_CONDUCT.md)
+        - label: I believe that the reported issue violates the project's [Code of Conduct](https://github.com/leppa/convert-to-wealthfolio/blob/dev/CODE_OF_CONDUCT.md)
           required: true
         - label: I have provided all requested information and agree to answer any follow-up questions
           required: true

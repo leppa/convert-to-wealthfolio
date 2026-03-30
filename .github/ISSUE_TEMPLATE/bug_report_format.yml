@@ -5,8 +5,8 @@
 
 name: Format-Specific Bug Report
 description: Report a bug related to a specific CSV format conversion
-title: "[Format Bug]: "
-labels: ["bug", "format"]
+title: "[Format Bug] "
+labels: ["bug", "format plugin"]
 body:
   - type: markdown
     attributes:
@@ -118,9 +118,9 @@ body:
     attributes:
       label: Terms
       options:
-        - label: I have read and agree to follow the project's [Code of Conduct](https://github.com/leppa/convert-to-wealthfolio/blob/main/CODE_OF_CONDUCT.md)
+        - label: I have read and agree to follow the project's [Code of Conduct](https://github.com/leppa/convert-to-wealthfolio/blob/dev/CODE_OF_CONDUCT.md)
           required: true
-        - label: I have read and agree to follow the project's [Contribution Guidelines](https://github.com/leppa/convert-to-wealthfolio/blob/main/CONTRIBUTING.md)
+        - label: I have read and agree to follow the project's [Contribution Guidelines](https://github.com/leppa/convert-to-wealthfolio/blob/dev/CONTRIBUTING.md)
           required: true
         - label: I have checked existing issues and confirmed that this issue has not already been reported
           required: true

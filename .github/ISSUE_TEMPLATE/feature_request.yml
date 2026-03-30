@@ -5,7 +5,7 @@
 
 name: Feature Request
 description: Suggest a new feature or enhancement
-title: "[Feature Request]: "
+title: "[Feature Request] "
 labels: ["enhancement"]
 body:
   - type: markdown
@@ -13,7 +13,7 @@ body:
       value: |
         Thank you for suggesting a new feature! Please provide as much information as possible about the feature or enhancement you'd like to see. This will help me evaluate and prioritize it effectively.
 
-        Please note that while I welcome feature requests, I may not be able to implement all of them due to time constraints or other priorities. However, I encourage the community to contribute code for new features if they are interested in seeing them implemented.
+        Make sure to check the [Requesting Features](https://github.com/leppa/convert-to-wealthfolio/blob/dev/CONTRIBUTING.md#requesting-features) section before submitting your request.
 
   - type: textarea
     id: feature_description
@@ -65,9 +65,9 @@ body:
     attributes:
       label: Terms
       options:
-        - label: I have read and agree to follow the project's [Code of Conduct](https://github.com/leppa/convert-to-wealthfolio/blob/main/CODE_OF_CONDUCT.md)
+        - label: I have read and agree to follow the project's [Code of Conduct](https://github.com/leppa/convert-to-wealthfolio/blob/dev/CODE_OF_CONDUCT.md)
           required: true
-        - label: I have read and agree to follow the project's [Contribution Guidelines](https://github.com/leppa/convert-to-wealthfolio/blob/main/CONTRIBUTING.md)
+        - label: I have read and agree to follow the project's [Contribution Guidelines](https://github.com/leppa/convert-to-wealthfolio/blob/dev/CONTRIBUTING.md)
           required: true
         - label: I have checked existing feature requests and confirmed that this feature has not already been requested
           required: true

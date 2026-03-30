@@ -6,11 +6,11 @@
 blank_issues_enabled: false
 contact_links:
   - name: Code of Conduct
-    url: https://github.com/leppa/convert-to-wealthfolio/blob/main/CODE_OF_CONDUCT.md
+    url: https://github.com/leppa/convert-to-wealthfolio/blob/dev/CODE_OF_CONDUCT.md
     about: Before opening an issue, please read the project's Code of Conduct
 
   - name: Contribution Guidelines
-    url: https://github.com/leppa/convert-to-wealthfolio/blob/main/CONTRIBUTING.md
+    url: https://github.com/leppa/convert-to-wealthfolio/blob/dev/CONTRIBUTING.md
     about: Before opening an issue, please read the project's Contribution Guidelines
 
   - name: Existing Issues

@@ -5,24 +5,24 @@
 
 name: New Format Request
 description: Request support for a new CSV format
-title: "[Format Request]: "
-labels: ["enhancement", "format"]
+title: "[Format Request] "
+labels: ["enhancement", "format plugin"]
 body:
   - type: markdown
     attributes:
       value: |
         Thank you for suggesting a new format! Please provide as much information as possible about the format to help evaluate and implement it.
 
-        Please note that while I welcome format requests, I may not be able to implement all of them due to time constraints or other priorities. However, I encourage the community to contribute code for new formats if they are interested in seeing them implemented.
+        Make sure to check the [Requesting Features](https://github.com/leppa/convert-to-wealthfolio/blob/dev/CONTRIBUTING.md#requesting-features) section before submitting your request.
 
-        If you're able to contribute code for the new format, please see the [Format Plugin Development Guide](https://github.com/leppa/convert-to-wealthfolio/blob/main/docs/format-plugin-development-guide.md) for instructions.
+        If you're able to contribute code for the new format, please see the [Format Plugin Development Guide](https://github.com/leppa/convert-to-wealthfolio/blob/dev/docs/format-plugin-development-guide.md) for instructions.
 
   - type: input
     id: format_name
     attributes:
       label: Format Name
       description: Suggested name for the new format
-      placeholder: e.g., "DEGIRO", "IBKR"
+      placeholder: e.g., "DEGIRO", "TradeRepublic"
     validations:
       required: true
 
@@ -111,9 +111,9 @@ body:
     attributes:
       label: Terms
       options:
-        - label: I have read and agree to follow the project's [Code of Conduct](https://github.com/leppa/convert-to-wealthfolio/blob/main/CODE_OF_CONDUCT.md)
+        - label: I have read and agree to follow the project's [Code of Conduct](https://github.com/leppa/convert-to-wealthfolio/blob/dev/CODE_OF_CONDUCT.md)
           required: true
-        - label: I have read and agree to follow the project's [Contribution Guidelines](https://github.com/leppa/convert-to-wealthfolio/blob/main/CONTRIBUTING.md)
+        - label: I have read and agree to follow the project's [Contribution Guidelines](https://github.com/leppa/convert-to-wealthfolio/blob/dev/CONTRIBUTING.md)
           required: true
         - label: I have checked existing format requests and confirmed that this format has not already been requested
           required: true
