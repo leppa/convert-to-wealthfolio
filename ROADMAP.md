@@ -19,12 +19,6 @@ This format has a lot of quirks, like transactions being split across multiple r
 
 This format is also language-specific, so I will implement it for the **German** language. Will need samples in other languages to add support for them as well, so if you have **DEGIRO** transaction history in a language other than German and need support for it, feel free to reach out.
 
-#### Lime.co
-
-A transaction history exported from **Lime.co** stock broker (_Overview_ -> _Transaction History_ -> _Excel_ icon).
-
-Relatively simple, mostly row-to-row mapping, but has some special cases that need to be handled. E.g., dividends are split into two rows that can't be mapped to each other - one for the dividend itself and another for the withholding tax; also, dividends don't have a symbol or quantity in the dedicated columns, but there's company name and quantity in the transaction description.
-
 #### Interactive Brokers (IBKR)
 
 A transaction history exported from **Interactive Brokers** stock broker. Details TBD: didn't look into it yet.

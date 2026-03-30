@@ -11,8 +11,10 @@
 
 import { BaseFormat } from "../core/BaseFormat";
 import { GenericFormat } from "./GenericFormat";
+import { LimeCoFormat } from "./LimeCoFormat";
 
 const formats: BaseFormat[] = [
+  new LimeCoFormat(),
   new GenericFormat(), // Keep this last - it's the most generic and may match other formats
 ];
 

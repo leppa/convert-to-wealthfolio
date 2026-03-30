@@ -195,10 +195,12 @@ describe("Generic Format", () => {
 
       const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
-      expect(result[0].quantity).toBe(Number.NaN);
-      expect(result[0].unitPrice).toBe(Number.NaN);
-      expect(result[0].fee).toBe(3.5);
-      expect(result[0].amount).toBe(Number.NaN);
+      expect(result[0]).toMatchObject({
+        quantity: Number.NaN,
+        unitPrice: Number.NaN,
+        fee: 3.5,
+        amount: Number.NaN,
+      });
     });
 
     it("should handle missing optional fields", () => {
@@ -488,9 +490,11 @@ describe("Generic Format", () => {
 
       const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
-      expect(result[0].quantity).toBe(-10);
-      expect(result[0].unitPrice).toBe(-5);
-      expect(result[0].amount).toBe(-50);
+      expect(result[0]).toMatchObject({
+        quantity: -10,
+        unitPrice: -5,
+        amount: -50,
+      });
     });
 
     it("should use fee value as amount for Fee activity when total is not provided", () => {
@@ -507,9 +511,11 @@ describe("Generic Format", () => {
 
       const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
-      expect(result[0].activityType).toBe(ActivityType.Fee);
-      expect(result[0].amount).toBe(10.5);
-      expect(result[0].fee).toBe(Number.NaN);
+      expect(result[0]).toMatchObject({
+        activityType: ActivityType.Fee,
+        amount: 10.5,
+        fee: Number.NaN,
+      });
     });
   });
 
@@ -626,6 +632,7 @@ describe("Generic Format", () => {
         [ActivityType.Credit, "rebate", ActivitySubtype.Rebate],
         [ActivityType.Credit, "refund", ActivitySubtype.Refund],
         [ActivityType.Credit, "unknown", ActivitySubtype.None],
+        [ActivityType.Adjustment, "nonexistent_subtype", ActivitySubtype.None],
         [ActivityType.Buy, "drip", ActivitySubtype.None],
         [ActivityType.Dividend, undefined, ActivitySubtype.None],
       ];

@@ -65,7 +65,6 @@ export function validateRecordFieldRequirements(
  *
  * @param field - The name of the field being validated
  * @param value - The value to validate
- * @param logger - Optional logger instance
  * @returns `true` if the value is valid, `false` otherwise
  */
 export function validateRequiredFieldValue(field: string, value: unknown): boolean {
@@ -107,6 +106,20 @@ export function validateRequiredFieldValue(field: string, value: unknown): boole
     default:
       return false;
   }
+}
+
+/**
+ * Checks if the given activity type can have a subtype
+ *
+ * This function is meant for checking whether the activity *may* have a subtype, not whether it
+ * actually has one. For example, it will always return `true` if subtype requirement is a function,
+ * even if the function may return `FieldRequirement.Ignored` for some records.
+ *
+ * @param activityType - The activity type to check
+ * @returns `true` if the activity can have a subtype, `false` otherwise
+ */
+export function canHaveActivitySubtype(activityType: ActivityType): boolean {
+  return RECORD_FIELD_REQUIREMENTS[activityType].subtype !== FieldRequirement.Ignored;
 }
 
 function clearField(record: WealthfolioRecord, field: keyof WealthfolioRecord): void {

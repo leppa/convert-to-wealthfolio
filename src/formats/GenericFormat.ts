@@ -15,6 +15,7 @@ import {
   WealthfolioRecord,
   WealthfolioRecordMetadata,
 } from "../core/BaseFormat";
+import { canHaveActivitySubtype } from "../core/FieldRequirements";
 import { Logger } from "../core/Logger";
 import { SymbolDataService } from "../core/SymbolDataService";
 
@@ -234,7 +235,7 @@ export class GenericFormat extends BaseFormat {
   }
 
   private mapActivitySubtype(record: ParsedRecord, activityType: ActivityType): ActivitySubtype {
-    if (!record.transactionsubtype) {
+    if (!record.transactionsubtype || !canHaveActivitySubtype(activityType)) {
       return ActivitySubtype.None;
     }
 

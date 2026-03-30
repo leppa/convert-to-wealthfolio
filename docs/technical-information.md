@@ -204,8 +204,9 @@ These dependencies are required for the converter to run:
 
 - **[Colorette](https://github.com/jorgebucaran/colorette)**: Colorized console output
 - **[Commander.js](https://github.com/tj/commander.js)**: CLI argument parsing
-- **[NodeCSV](https://csv.js.org/)** (**csv-parse** & **csv-stringify**): CSV operations
+- **[Day.js](https://day.js.org/)**: Date parsing and formatting
 - **[ini](https://github.com/npm/ini)**: INI file parsing
+- **[NodeCSV](https://csv.js.org/)** (**csv-parse** & **csv-stringify**): CSV operations
 
 I try to keep runtime dependencies lean, with no or minimal transitive dependencies, to ensure that the converter remains lightweight and easy to maintain.
 

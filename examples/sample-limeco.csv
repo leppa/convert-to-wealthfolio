@@ -1,0 +1,35 @@
+sep=;
+Date;Description;Symbol;Direction;Quantity;Price;Fees;Amount
+2026-04-07 00:00:00;CASH JOURNAL *TO CASH*;;withdrawal; 0; ; 0; -25
+2026-04-07 00:00:00;CASH JOURNAL *FROM MARGIN*;;deposit; 0; ; 0; 25
+2026-04-06 00:00:00;CASH JOURNAL MOVE DR FROM CSH TO MGN;;withdrawal; 0; ; 0; -50
+2026-04-06 00:00:00;CASH JOURNAL MOVE DR FROM CSH TO MGN;;deposit; 0; ; 0; 50
+2026-04-05 00:00:00;GOOGL->GOOG;GOOG;in; 10; 175; 0; 0
+2026-04-05 00:00:00;GOOGL->GOOG;GOOGL;out; -10; 175; 0; 0
+2026-04-04 00:00:00;Reverse Split REVERSE SPLITREVERSE SPLIT;META;in; 100; 0; 0; 0
+2026-04-04 00:00:00;Reverse Split REVERSE SPLITREVERSE SPLIT;META;out; -300; 0; 0; 0
+2026-04-03 00:00:00;Split SPLITSPLIT;TSLA;out; -100; 0; 0; 0
+2026-04-03 00:00:00;Split SPLITSPLIT;TSLA;in; 300; 0; 0; 0
+2026-04-02 00:00:00;CASH JOURNAL ACATS JOURNAL ENTRY;;withdrawal; 0; ; 0; -2000
+2026-04-01 00:00:00;INCOMING WIRE BNY;;deposit; 0; ; 0; 5000
+2026-03-31 00:00:00;Foreign Tax Withholding NRA WITHHOLD: DIVIDEND;;withdrawal; 0; ; 0; -4.50
+2026-03-31 00:00:00;Foreign Tax Withholding WITHHOLD: DIVIDEND;;withdrawal; 0; ; 0; -1.25
+2026-03-31 00:00:00;Tax on capital gain;;withdrawal; 0; ; 0; -3.20
+2026-03-30 00:00:00;Cash Journal CIL from SPY merger;;deposit; 0; ; 0; 7.50
+2026-03-29 00:00:00;SEC/TAFF fee fix;;deposit; 0; ; 0; 0.02
+2026-03-28 00:00:00;Rounding of fix;;withdrawal; 0; ; 0; -0.01
+2026-03-27 00:00:00;INTEREST COLLECT 11.26200% 2 DAYS,BAL= $50;;withdrawal; 0; ; 0; -0.03
+2026-03-26 00:00:00;CASH JOURNAL ACAT DELIVERY FEE;;withdrawal; 0; ; 0; -25
+2026-03-25 00:00:00;Interest Paid .05000%31 DAYS,BAL= $5000;;deposit; 0; ; 0; 2.15
+2026-03-24 00:00:00;Dividend AAPL;AAPL;deposit; 0; 0; 0; 3.25
+2026-03-23 00:00:00;Dividend ALPHABET INC 50;;deposit; 0; 0; 0; 1.50
+2026-03-22 00:00:00;Cash Dividend APPLE INC 75;;deposit; 0; 0; 0; 18.75
+2026-03-21 00:00:00;Qualified Dividend MICROSOFT CORP 100;;deposit; 0; 0; 0; 92.00
+2026-03-20 00:00:00;Portfolio transfer out;NVDA;out; -30; 0; 0; 0
+2026-03-19 00:00:00;Portfolio transfer in;AAPL;in; 20; 185; 0; 0
+2026-03-18 00:00:00;ALU-NOK merger in;NOK;in; 5; 180; 0; 0
+2026-03-17 00:00:00;ALU-NOK merger out;ALU;out; -7; 125; 0; 0
+2026-03-15 00:00:00;VOO conversion in;VOO;in; 28; 357.14; 0; 0
+2026-03-14 00:00:00;VOO conversion out;SPY;out; -10; 560; 0; 0
+2026-03-10 00:00:00;Sell 50 AAPL @185.25;AAPL;sell; -50; 185.25; -0.99; 9261.26
+2026-03-01 00:00:00;Buy 10 MSFT @380.50;MSFT;buy; 10; 380.50; -2.82; -3807.82

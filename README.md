@@ -63,7 +63,15 @@ See the [ChangeLog](./ChangeLog.md) for a detailed list of released and upcoming
   - Comma-delimited format
   - See the [Generic Format User Guide](./docs/generic-format-user-guide.md) for details
 
-See the [Roadmap](./ROADMAP.md#format-plugins) for a list of formats that will be added in the future.
+- **Lime.co**: Semicolon-delimited CSV format from Lime.co broker with support for:
+  - Standard transaction types (BUY, SELL, DEPOSIT, WITHDRAWAL, DIVIDENDS, etc.)
+  - Supports symbol resolution for company names extracted from the "Description" field (see the [Format Quirks](./docs/limeco-format-user-guide.md#format-quirks) section in the format guide)
+  - Currency fixed to _USD_, ignores the default currency option
+  - Reverse splits automatically combined from two records
+  - Semicolon-delimited format
+  - Has its own quirks, see [Lime.co Format User Guide](./docs/limeco-format-user-guide.md) for details
+
+See the [Roadmap](./ROADMAP.md#format-plugins) for a list of formats that are planned to be added in the future.
 
 ## Installing and Using the Converter
 
