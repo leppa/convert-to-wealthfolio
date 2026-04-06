@@ -56,7 +56,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@eslint/markdown": "^7.5.1",
-    "@tony.ganchev/eslint-plugin-header": "^3.2.4",
+    "@tony.ganchev/eslint-plugin-header": "^3.4.0",
     "@types/ini": "^4.1.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.13.4",

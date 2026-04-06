@@ -1,3 +1,8 @@
+<!--
+Copyright (c) 2026 Oleksii Serdiuk
+SPDX-License-Identifier: BSD-3-Clause
+-->
+
 # Contributor Covenant 3.0 Code of Conduct
 
 ## Our Pledge
