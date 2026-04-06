@@ -1,0 +1,89 @@
+##
+# Copyright (c) 2026 Oleksii Serdiuk
+# SPDX-License-Identifier: BSD-3-Clause
+##
+
+name: Mark inactive or stale issues and pull requests
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Runs every day at midnight
+  issues:
+    types:
+      - edited
+  pull_request:
+    types:
+      - edited
+  workflow_dispatch:
+
+jobs:
+  mark-inactive-issues-and-prs:
+    name: Mark inactive issues and PRs as needing attention
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Mark inactive issues and PRs as needing attention
+        uses: actions/stale@v10
+        with:
+          days-before-stale: 30
+          stale-issue-label: needs attention
+          stale-pr-label: needs attention
+          # Don't close stale issues and PRs automatically
+          days-before-close: -1
+          # Issues and PRs with a milestone are planned to be worked on later
+          exempt-all-milestones: true
+          # Draft PRs might be long-running work in progress
+          exempt-draft-pr: true
+          # Don't mark issues and PRs with these labels as they're handled by the other job
+          exempt-issue-labels: waiting for information,needs work
+          exempt-pr-labels: waiting for information,needs work
+          stale-issue-message: |
+            This issue hasn't seen any activity and is being marked as `needs attention`. This is done to bring more attention to inactive issues.
+
+            If you're a reporter and there were new releases since your report, please confirm that the issue is still valid and update it if necessary.
+
+            If you're a maintainer, please give the issue some attention or provide a status update.
+
+            The issue will **not** be closed automatically, please **don't comment with "bump"** or similar messages.
+          stale-pr-message: |
+            This pull request hasn't seen any activity and is being marked as `needs attention`. This is done to bring more attention to inactive pull requests.
+
+            If you're a contributor, please resolve any outstanding conflicts if necessary.
+
+            If you're a maintainer, please review the pull request or provide a status update.
+
+            The pull request will **not** be closed automatically, please **don't comment with "bump"** or similar messages.
+
+  close-stale-issues-and-prs:
+    name: Close issues and PR where author didn't respond in time
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Close issues and PR where author didn't respond in time
+        uses: actions/stale@v10
+        with:
+          days-before-stale: 30
+          # Give 7 days for the author to respond after marking as stale
+          days-before-close: 7
+          stale-issue-label: stale
+          stale-pr-label: stale
+          # Only mark issues and PRs that are waiting for author's response
+          any-of-labels: waiting for information,needs work
+          close-issue-message: |
+            This issue requires information from the reporter and hasn't received any response in 30 days.
+
+            Please provide the requested information and update the issue.
+
+            If this issue doesn't receive any response in the next 7 days, it will be closed automatically.
+          close-pr-message: |
+            This pull request requires changes from the contributor but didn't receive any update in 30 days.
+
+            Please implement the requested changes and address any comments.
+
+            If this pull request doesn't receive any update in the next 7 days, it will be closed automatically.
