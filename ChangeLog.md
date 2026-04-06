@@ -26,6 +26,12 @@ Upcoming release.
 - New optional `InstrumentType` column in the Generic format plugin. If not
   present or empty, it will be converted to an empty value in the output CSV.
 
+### Fixed
+
+- Add `subtype` field as optional for dividend and interest transaction types.
+  Previously the requirement was not set, which defaulted to ignoring the field
+  and caused the converter to clear it for these activities.
+
 ## [0.1.0] - 2026-03-26
 
 Initial release.
