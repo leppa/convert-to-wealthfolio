@@ -167,7 +167,7 @@ const COMMON_FIELD_REQUIREMENTS: Pick<
  * Field requirements for each activity type, based on Wealthfolio documentation
  *
  * Source: https://github.com/afadil/wealthfolio/blob/main/docs/activities/activity-types.md
- * Last update: 2026-02-21
+ * Last update: 2026-04-06
  */
 const RECORD_FIELD_REQUIREMENTS: {
   [key in ActivityType]: WealthfolioRecordFieldRequirements;
@@ -199,6 +199,7 @@ const RECORD_FIELD_REQUIREMENTS: {
         ? FieldRequirement.Required
         : FieldRequirement.Ignored,
     amount: FieldRequirement.Required,
+    subtype: FieldRequirement.Optional,
     metadata: (record) =>
       // Dividend in kind requires metadata with `received_asset_id` to know which asset was
       // received as dividends
@@ -219,6 +220,7 @@ const RECORD_FIELD_REQUIREMENTS: {
         ? FieldRequirement.Required
         : FieldRequirement.Ignored,
     amount: FieldRequirement.Required,
+    subtype: FieldRequirement.Optional,
   },
   [ActivityType.Deposit]: {
     ...COMMON_FIELD_REQUIREMENTS,

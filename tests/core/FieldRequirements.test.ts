@@ -207,6 +207,56 @@ describe("FieldRequirements", () => {
       expect(Number.isNaN(record.unitPrice)).toBe(true);
     });
 
+    it("should preserve subtype for activities where subtype is optional", () => {
+      const cases: Array<{ activityType: ActivityType; subtype: ActivitySubtype }> = [
+        { activityType: ActivityType.Dividend, subtype: ActivitySubtype.DRIP },
+        { activityType: ActivityType.Interest, subtype: ActivitySubtype.StakingReward },
+        { activityType: ActivityType.Fee, subtype: ActivitySubtype.ManagementFee },
+        { activityType: ActivityType.Tax, subtype: ActivitySubtype.Withholding },
+        { activityType: ActivityType.Credit, subtype: ActivitySubtype.Bonus },
+        { activityType: ActivityType.Adjustment, subtype: ActivitySubtype.Refund },
+        { activityType: ActivityType.Unknown, subtype: ActivitySubtype.Rebate },
+      ];
+
+      for (const { activityType, subtype } of cases) {
+        const record = createRecord({
+          activityType,
+          subtype,
+          amount: 100,
+        });
+
+        const result = validateRecordFieldRequirements(record, true);
+
+        expect(result.valid).toBe(true);
+        expect(record.subtype).toBe(subtype);
+      }
+    });
+
+    it("should clear subtype for activities where subtype is ignored", () => {
+      const cases: ActivityType[] = [
+        ActivityType.Buy,
+        ActivityType.Sell,
+        ActivityType.Deposit,
+        ActivityType.Withdrawal,
+        ActivityType.TransferIn,
+        ActivityType.TransferOut,
+        ActivityType.Split,
+      ];
+
+      for (const activityType of cases) {
+        const record = createRecord({
+          activityType,
+          subtype: ActivitySubtype.DRIP,
+          amount: 100,
+        });
+
+        const result = validateRecordFieldRequirements(record, true);
+
+        expect(result.valid).toBe(true);
+        expect(record.subtype).toBe("");
+      }
+    });
+
     it("should enforce transfer requirements based on symbol presence", () => {
       const withSymbol = createRecord({
         activityType: ActivityType.TransferIn,
