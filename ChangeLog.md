@@ -15,17 +15,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] - 2026-04-09
 
-Upcoming release.
+This release adds support for transaction history exported from the
+[**Lime Trading** brokerage](https://lime.co/). It also adds support for the new
+`instrumentType` field in the output CSV and a new optional `InstrumentType`
+column in the **Generic** format plugin. Additionally, it introduces the ability
+to explicitly disable or force colored output via CLI options or environment
+variables.
 
 ### Added
 
-- **Lime.co** format plugin. Supports CSV files exported from the
+- **Lime.co** format plugin - supports CSV files exported from the
   [**Lime Trading** brokerage](https://lime.co/).
 - Support for the new `instrumentType` field that was added to **Wealthfolio**
   in March 2026.
-- New optional `InstrumentType` column in the Generic format plugin. If not
+- New optional `InstrumentType` column in the **Generic** format plugin. If not
   present or empty, it will be converted to an empty value in the output CSV.
 - Ability to explicitly disable or force colored output via CLI options
   (`--no-color` and `--color`) or environment variables (`NO_COLOR` and
@@ -60,6 +65,5 @@ Initial release.
   should be able to handle same formats without the need for a custom converter.
 - Project documentation and user guides.
 
-[Unreleased]:
-  https://github.com/leppa/convert-to-wealthfolio/compare/0.1.0...dev
+[0.2.0]: https://github.com/leppa/convert-to-wealthfolio/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/leppa/convert-to-wealthfolio/commits/0.1.0
