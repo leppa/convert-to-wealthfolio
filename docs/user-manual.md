@@ -22,6 +22,7 @@ SPDX-License-Identifier: BSD-3-Clause
   - [Get Help](#get-help)
   - [Global Options](#global-options)
     - [Set Log Verbosity](#set-log-verbosity)
+    - [Control Colored Output](#control-colored-output)
 - [Update](#update)
   - [Update From npmjs.com](#update-from-npmjscom)
   - [Update From Source](#update-from-source)
@@ -286,6 +287,35 @@ E.g., you can redirect logs to a file while keeping user-facing output in the co
 ```bash
 convert-to-wealthfolio convert examples/sample-generic.csv output.csv -- --log-level DEBUG 2> converter.log
 ```
+
+#### Control Colored Output
+
+By default, the converter outputs colorized text when run in an interactive shell and it supports color output. You can explicitly disable or force colored output using the `--no-color` and `--color` options:
+
+Disable colored output:
+
+```bash
+convert-to-wealthfolio --no-color <command-and-arguments>
+```
+
+Force colored output (e.g., when piping output):
+
+```bash
+convert-to-wealthfolio --color <command-and-arguments>
+```
+
+You can also control colored output using environment variables:
+
+- `NO_COLOR` - Set to any non-empty value to disable colored output (equivalent to `--no-color`). This follows the [no-color.org](https://no-color.org) convention.
+- `FORCE_COLOR` - Set to any non-empty value to force colored output (equivalent to `--color`). This may be useful when color support was not detected automatically.
+
+E.g., disable color using an environment variable:
+
+```bash
+NO_COLOR=1 convert-to-wealthfolio convert examples/sample-generic.csv output.csv
+```
+
+**Note:** The `NO_COLOR` environment variable takes precedence over _all_ other color options, as per the convention. The `--no-color` CLI option takes precedence over both the `FORCE_COLOR` environment variable and the `--color` CLI option. The `FORCE_COLOR` environment variable only takes precedence over the `--color` CLI option.
 
 ## Update
 

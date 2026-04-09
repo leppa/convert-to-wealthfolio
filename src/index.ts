@@ -48,7 +48,9 @@ program
     new Option("--trace", "Set log verbosity to TRACE, overrides --log-level")
       .implies({ logLevel: "TRACE" })
       .conflicts("debug"),
-  );
+  )
+  .addOption(new Option("--no-color", "Disable colored output").env("NO_COLOR"))
+  .addOption(new Option("--color", "Force colored output").env("FORCE_COLOR"));
 
 program
   .command("convert")

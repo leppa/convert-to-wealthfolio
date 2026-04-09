@@ -27,6 +27,9 @@ Upcoming release.
   in March 2026.
 - New optional `InstrumentType` column in the Generic format plugin. If not
   present or empty, it will be converted to an empty value in the output CSV.
+- Ability to explicitly disable or force colored output via CLI options
+  (`--no-color` and `--color`) or environment variables (`NO_COLOR` and
+  `FORCE_COLOR`).
 
 ### Fixed
 
