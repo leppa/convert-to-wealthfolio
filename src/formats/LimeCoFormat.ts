@@ -42,9 +42,9 @@ interface LimeCoRecord extends Record<string, unknown> {
 }
 
 /**
- * Lime.co CSV format plugin
+ * Lime.co format plugin
  *
- * Handles semicolon-delimited CSV files exported from Lime.co.
+ * Handles semicolon-delimited CSV files exported from the Lime Trading brokerage.
  */
 export class LimeCoFormat extends BaseFormat {
   constructor() {

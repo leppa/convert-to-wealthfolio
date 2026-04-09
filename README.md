@@ -38,16 +38,16 @@ SPDX-License-Identifier: BSD-3-Clause
 
 ## Features
 
-- **TypeScript**: Full type safety and modern JavaScript features
-- **CLI Interface**: Command-line tool for easy conversion and automation
-- **Plugin Architecture**: Makes it easy to add new format converters by creating new plugins
-- **Format Detection**: Automatically detects input format
-- **Field Validation**: Validates all output records against activity type-specific field requirements
-- **Symbol Resolution**: Supports pluggable data providers for symbol, ISIN, CUSIP, and company name lookups
-- **Symbol Override and Mapping**: Allows overriding symbols and mapping them from ISINs, CUSIPs, and company names using an INI file
-- **Advanced Logging**: Colorized log output with configurable log verbosity levels
-- **Comprehensive Testing**: Full test coverage to ensure reliability
-- **Minimal Dependencies**: Only uses lean libraries as runtime dependencies with none or minimal transitive dependencies
+- **TypeScript**: Full type safety and modern JavaScript features.
+- **CLI Interface**: Command-line tool for easy conversion and automation.
+- **Plugin Architecture**: Makes it easy to add new format converters by creating new plugins.
+- **Format Detection**: Automatically detects input format.
+- **Field Validation**: Validates all output records against activity type-specific field requirements.
+- **Symbol Resolution**: Supports pluggable data providers for symbol, ISIN, CUSIP, and company name lookups.
+- **Symbol Override and Mapping**: Allows overriding symbols and mapping them from ISINs, CUSIPs, and company names using an INI file.
+- **Advanced Logging**: Colorized log output with configurable log verbosity levels.
+- **Comprehensive Testing**: Full test coverage to ensure reliability.
+- **Minimal Dependencies**: Only uses lean libraries as runtime dependencies with none or minimal transitive dependencies.
 
 ## What's New
 
@@ -56,20 +56,20 @@ See the [ChangeLog](./ChangeLog.md) for a detailed list of released and upcoming
 ## Supported Formats
 
 - **Generic**: Flexible CSV format with support for:
-  - Standard transaction types (BUY, SELL, DEPOSIT, WITHDRAWAL, DIVIDENDS, etc.)
-  - Optional instrument type, currency, fee, FX rate, and comment fields
-  - Supports symbol resolution via ISIN, CUSIP, or company name fields
-  - Respects the default currency option
-  - Comma-delimited format
-  - See the [Generic Format User Guide](./docs/generic-format-user-guide.md) for details
+  - Standard transaction types (BUY, SELL, DEPOSIT, WITHDRAWAL, DIVIDENDS, etc.).
+  - Optional instrument type, currency, fee, FX rate, and comment fields.
+  - Supports symbol resolution via ISIN, CUSIP, or company name fields.
+  - Respects the default currency option.
+  - Comma-delimited format.
+  - See the [Generic Format User Guide](./docs/generic-format-user-guide.md) for details.
 
-- **Lime.co**: Semicolon-delimited CSV format from Lime.co broker with support for:
-  - Standard transaction types (BUY, SELL, DEPOSIT, WITHDRAWAL, DIVIDENDS, etc.)
-  - Supports symbol resolution for company names extracted from the "Description" field (see the [Format Quirks](./docs/limeco-format-user-guide.md#format-quirks) section in the format guide)
-  - Currency fixed to _USD_, ignores the default currency option
-  - Reverse splits automatically combined from two records
-  - Semicolon-delimited format
-  - Has its own quirks, see [Lime.co Format User Guide](./docs/limeco-format-user-guide.md) for details
+- **Lime.co**: Transaction history CSV from the [**Lime Trading** brokerage](https://lime.co):
+  - Supports forward and reverse splits by combining multiple records into one.
+  - Extracts company names from the `Description` field and resolves symbols using data providers.
+  - Ignores the `--default-currency` option since the brokerage only supports USD currency.
+  - Semicolon-delimited format.
+  - Has some quirks.
+  - See the [Lime.co Format User Guide](./docs/limeco-format-user-guide.md) for details.
 
 See the [Roadmap](./ROADMAP.md#format-plugins) for a list of formats that are planned to be added in the future.
 
@@ -168,7 +168,7 @@ At some point during development I realized that Convert to Wealthfolio could be
 Copyright © 2026 Oleksii Serdiuk  
 All rights reserved.
 
-This project is licensed under the BSD 3-Clause License - see [LICENSE](./LICENSE) file for details.
+This project is licensed under the **BSD 3-Clause License** - see [LICENSE](./LICENSE) for details.
 
 ## Attribution
 

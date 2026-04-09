@@ -7,9 +7,9 @@ SPDX-License-Identifier: BSD-3-Clause
 
 ## Overview
 
-This plugin handles semicolon-delimited CSV files exported by **[Lime.co](https://lime.co)**. The export structure is fixed - you cannot control how records are produced in the source CSV, so this plugin applies the best-effort rules to map those records into **Wealthfolio** transactions.
+This plugin handles semicolon-delimited CSV files exported by the **[Lime Trading](https://lime.co)** brokerage. The export structure is fixed - you cannot control how records are produced in the source CSV, so this plugin applies the best-effort rules to map those records into **Wealthfolio** transactions.
 
-**Note:** Because some **Lime.co** records are ambiguous, always review the original CSV and fix odd records before conversion. If converted / imported data looks wrong, start by checking the original **Lime.co** export around the problematic transactions. Pay special attention to the [format quirks](#format-quirks) documented below, as they are the most likely source of inconsistencies.
+**Note:** Because some records are ambiguous, always review the original CSV and fix odd records before conversion. If converted / imported data looks wrong, start by checking the original **Lime Trading** export around the problematic transactions. Pay special attention to the [format quirks](#format-quirks) documented below, as they are the most likely source of inconsistencies.
 
 ## Table of Contents<!-- omit from toc -->
 
@@ -40,7 +40,7 @@ This plugin handles semicolon-delimited CSV files exported by **[Lime.co](https:
 
 ### Getting the CSV Export
 
-To get a CSV export from **Lime.co**:
+To get a CSV export from **Lime Trading**:
 
 1. [Sign in](https://myaccount.lime.co/) to your account.
 2. Go to the _Overview_ page.
@@ -123,11 +123,11 @@ Internal cash transfers and ticker symbol renames are ignored. See the [Ignored 
 
 ### Transaction Time
 
-The time of transaction is not included in the **Lime.co** export (always set to `00:00:00`). The plugin will assume the US stock markets closing time of **16:00 US Eastern time zone** (respecting the daylight saving time).
+The time of transaction is not included in the **Lime Trading** export (always set to `00:00:00`). The plugin will assume the US stock markets closing time of **16:00 US Eastern time zone** (respecting the daylight saving time).
 
 ### Transaction Currency
 
-The **Lime.co** export doesn't include a currency field. All transactions are assumed to be in **USD**, as it's the only currency supported by **Lime.co**. The converter will automatically set the `currency` field to `USD` for all transactions and will ignore the `--default-currency` option.
+The **Lime Trading** export doesn't include a currency field. All transactions are assumed to be in **USD**, as it's the only currency supported by **Lime Trading**. The converter will automatically set the `currency` field to `USD` for all transactions and will ignore the `--default-currency` option.
 
 ### Transfer In / Out Transactions
 
@@ -164,11 +164,11 @@ See [Override Symbols and Resolve Identifiers](user-manual.md#override-symbols-a
 
 ## Format Quirks
 
-Unfortunately, some records in the **Lime.co** export are ambiguous or missing critical information. The plugin applies best-effort rules to handle those cases, but it is recommended to review the source CSV and fix any odd records before conversion.
+Unfortunately, some records in the **Lime Trading** export are ambiguous or missing critical information. The plugin applies best-effort rules to handle those cases, but it is recommended to review the source CSV and fix any odd records before conversion.
 
 ### Dividends are missing symbol and quantity<!-- omit from toc -->
 
-**Lime.co** dividend rows have empty `Symbol` and `Quantity` fields.
+Dividend rows have empty `Symbol` and `Quantity` fields.
 
 How plugin handles it:
 
@@ -196,7 +196,7 @@ See [Override Symbols and Resolve Identifiers](user-manual.md#override-symbols-a
 
 ### Forward and reverse splits are calculated from paired `in` and `out` records<!-- omit from toc -->
 
-**Lime.co** exports split events as two records (old quantity `out`, new quantity `in`), and the plugin combines them into one `SPLIT` transaction.
+**Lime Trading** exports split events as two records (old quantity `out`, new quantity `in`), and the plugin combines them into one `SPLIT` transaction.
 
 How plugin handles it:
 
@@ -217,7 +217,7 @@ Computed split ratio: `400/100 = 4` (4:1 forward split).
 
 #### Reverse splits that result in fractional shares can lead to incorrect split ratio calculation<!-- omit from toc -->
 
-Be especially wary of reverse splits that would result in your share amount becoming fractional. **Lime.co** pays out the fractional shares in cash or forfeits them when the payout is too low. In this case, the plugin will still try to compute the split ratio, but it will be incorrect. E.g., if you had 75 shares before a 1:4 reverse split and received 18 shares after it (0.75 shares paid in lieu), the plugin will calculate the split ratio as `18/75 = 0.24` (instead of the correct `1/4 = 0.25`). This is because the plugin doesn't know how many shares were forfeited and assumes that all shares were converted at the same ratio. To avoid this issue, you might want to change the `out` transaction to the amount of shares that were not paid out and manually add a `sell` record just before the split records for the cash amount that was paid in lieu of the fractional shares.
+Be especially wary of reverse splits that would result in your share amount becoming fractional. **Lime Trading** pays out the fractional shares in cash or forfeits them when the payout is too low. In this case, the plugin will still try to compute the split ratio, but it will be incorrect. E.g., if you had 75 shares before a 1:4 reverse split and received 18 shares after it (0.75 shares paid in lieu), the plugin will calculate the split ratio as `18/75 = 0.24` (instead of the correct `1/4 = 0.25`). This is because the plugin doesn't know how many shares were forfeited and assumes that all shares were converted at the same ratio. To avoid this issue, you might want to change the `out` transaction to the amount of shares that were not paid out and manually add a `sell` record just before the split records for the cash amount that was paid in lieu of the fractional shares.
 
 For example, change these lines:
 
@@ -234,17 +234,17 @@ Into these:
 2020-08-31 00:00:00;Cash in lieu of fractional shares;AAPL;sell; 3; 124.81; 0; 374.43
 ```
 
-**Note:** Due to the reverse chronological order of records in the **Lime.co** export, the `sell` line for fractional shares should be placed immediately _after_ the split `in`/`out` lines. This way it will be imported _before_ the split transaction, which is important for correct share quantity calculation.
+**Note:** Due to the reverse chronological order of records in the **Lime Trading** export, the `sell` line for fractional shares should be placed immediately _after_ the split `in`/`out` lines. This way it will be imported _before_ the split transaction, which is important for correct share quantity calculation.
 
 ### Dividend tax records cannot be reliably linked to dividends<!-- omit from toc -->
 
-Dividend tax withholding rows do not include a security symbol in the **Lime.co** export.
+Dividend tax withholding rows do not include a security symbol in the **Lime Trading** export.
 
 Why this is tricky:
 
 1. Tax records are exported as `withdrawal` transactions and have empty symbol.
 2. There is no reliable transaction-level link between a tax record and the corresponding dividend record.
-3. Matching by date is unreliable because **Lime.co** timestamps are always `00:00:00`.
+3. Matching by date is unreliable because timestamps are always `00:00:00`.
 4. A single day can contain multiple dividend payments and multiple withholding records.
 
 Example:
@@ -264,7 +264,7 @@ The following activity types and subtypes are not fully verified or supported du
 
 ### Instrument type is always set to `Unknown`<!-- omit from toc -->
 
-While **Lime.co** supports options trading, only equity transactions were available in the sample data. The plugin always sets `instrumentType` to `Unknown` and cannot distinguish between equities, options, or other instruments.
+While **Lime Trading** supports options trading, only equity transactions were available in the sample data. The plugin always sets `instrumentType` to `Unknown` and cannot distinguish between equities, options, or other instruments.
 
 ### Share transfer directions are assumed<!-- omit from toc -->
 
@@ -299,19 +299,19 @@ Before conversion:
 
 After conversion/import:
 
-- If holdings, cost basis, or cash amount look wrong, inspect the source **Lime.co** records first.
+- If holdings, cost basis, or cash amount look wrong, inspect the source records first.
 - Pay close attention to quirky records as they are the most probable source of inconsistencies.
 - If you find any issues with the converter, please [report a bug](../CONTRIBUTING.md#reporting-issues).
 
 ## Usage
 
-Convert a **Lime.co** export with automatic format detection:
+Convert a **Lime Trading** export with automatic format detection:
 
 ```bash
 convert-to-wealthfolio convert path/to/limeco-export.csv output.csv
 ```
 
-Convert a **Lime.co** export with explicit format specification:
+Convert a **Lime Trading** export with explicit format specification:
 
 ```bash
 convert-to-wealthfolio convert --format Lime.co path/to/limeco-export.csv output.csv
@@ -348,6 +348,6 @@ All **Lime.co** format tests are located in `tests/formats/LimeCoFormat.test.ts`
 ## See Also
 
 - [Wealthfolio Documentation](https://wealthfolio.app/docs/guide/activities/#csv-import) - Information about **Wealthfolio** CSV import.
-- [examples/sample-limeco.csv](../examples/sample-limeco.csv) - Sample **Lime.co** export file (synthetic data).
-- [src/formats/LimeCoFormat.ts](../src/formats/LimeCoFormat.ts) - Source code of the plugin.
-- [tests/formats/LimeCoFormat.test.ts](../tests/formats/LimeCoFormat.test.ts) - Unit tests for the plugin.
+- [examples/sample-limeco.csv](../examples/sample-limeco.csv) - Sample **Lime Trading** export file (synthetic data).
+- [src/formats/LimeCoFormat.ts](../src/formats/LimeCoFormat.ts) - Source code of the **Lime.co** format plugin.
+- [tests/formats/LimeCoFormat.test.ts](../tests/formats/LimeCoFormat.test.ts) - Unit tests for the **Lime.co** format plugin.

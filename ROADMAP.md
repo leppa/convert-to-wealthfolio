@@ -13,7 +13,7 @@ This document outlines features and improvements I plan to implement before I re
 
 #### DEGIRO
 
-A transaction history exported from **DEGIRO** stock broker (_Inbox_ -> _Transactions_ -> _Export_ icon).
+A transaction history exported from the **DEGIRO** brokerage (_Inbox_ -> _Transactions_ -> _Export_ icon).
 
 This format has a lot of quirks, like transactions being split across multiple rows and a need to extract transaction information from the description. There are also no symbols in the export, only ISINs. Creating manual mappings for all ISINs would be a pain, so I will need to implement a data provider for looking up symbols from some database or third-party API (see [Data Providers](#data-providers) below).
 
@@ -21,7 +21,7 @@ This format is also language-specific, so I will implement it for the **German**
 
 #### Interactive Brokers (IBKR)
 
-A transaction history exported from **Interactive Brokers** stock broker. Details TBD: didn't look into it yet.
+A transaction history exported from the **Interactive Brokers** brokerage. Details TBD: didn't look into it yet.
 
 ### Data Providers
 

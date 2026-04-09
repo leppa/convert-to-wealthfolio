@@ -5,21 +5,21 @@ SPDX-License-Identifier: BSD-3-Clause
 
 # Contributing to Convert to Wealthfolio
 
-Thank you for your interest in contributing to the Convert to Wealthfolio project! I welcome contributions of all kinds, including bug reports, feature requests, documentation improvements, and code contributions. This document provides guidelines and instructions for contributing to the project.
+Thank you for your interest in contributing to the **Convert to Wealthfolio** project! I welcome contributions of all kinds, including bug reports, feature requests, documentation improvements, and code contributions. This document provides guidelines and instructions for contributing to the project.
 
 ## Reporting Issues
 
 If you encounter any bugs or issues, please open an issue and use either the _Bug Report_ or the _Format-Specific Bug Report_ template. When reporting an issue, please provide as much detail as possible, including:
 
-- A clear and descriptive title
-- A detailed description of the problem or suggestion
-- Steps to reproduce the issue (if applicable)
-- Expected and actual behavior
-- Any relevant screenshots or error messages
-- Your environment details (OS, Node.js version, etc.)
-- The version of the converter you are using
-- Any relevant CSV files or data samples (if applicable)
-- Any additional context that may help in diagnosing the issue
+- A clear and descriptive title.
+- A detailed description of the problem or suggestion.
+- Steps to reproduce the issue (if applicable).
+- Expected and actual behavior.
+- Any relevant screenshots or error messages.
+- Your environment details (OS, Node.js version, etc.).
+- The version of the converter you are using.
+- Any relevant CSV files or data samples (if applicable).
+- Any additional context that may help in diagnosing the issue.
 
 ## Requesting Features
 
@@ -29,10 +29,10 @@ Please note that while I welcome feature requests, I may not be able to implemen
 
 If you would like to see support for a new CSV format, please open an issue and use the _New Format Plugin Request_ template. In your request, please provide as much detail as possible about the format, including:
 
-- The name of the format and the software it comes from
-- A sample CSV file (or a link to one) that represents the format and includes all possible transaction types and variations
-- A description of the format's structure and any unique characteristics
-- Any documentation or resources about the format that may be helpful
+- The name of the format and the software it comes from.
+- A sample CSV file (or a link to one) that represents the format and includes all possible transaction types and variations.
+- A description of the format's structure and any unique characteristics.
+- Any documentation or resources about the format that may be helpful.
 
 If you are able to contribute code for the new format, please see the [Format Plugin Development Guide](docs/format-plugin-development-guide.md) for instructions on how to create and integrate a new format plugin.
 

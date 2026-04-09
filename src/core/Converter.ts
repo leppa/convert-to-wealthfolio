@@ -152,7 +152,7 @@ export class Converter {
       // Filter all records that don't meet field requirements
       .filter((record, index) => {
         const result = validateRecordFieldRequirements(record);
-        logger.debug(
+        logger.trace(
           `Validating record ${bold(index + 1)}: ${result.valid ? green("passed") : red("failed")}`,
         );
         if (!result.valid) {

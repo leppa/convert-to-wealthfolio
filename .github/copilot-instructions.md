@@ -24,7 +24,7 @@ Always run `npm ci` before building if `node_modules` may be out of date or miss
 ```bash
 npm ci                  # install deps (use ci, not install, to match CI)
 npm run build           # compiles src/ → dist/ via tsc (no output = success)
-npm test                # runs Jest (152 tests, ~3s, all must pass)
+npm test                # runs Jest (208 tests, ~3s, all must pass)
 npm run lint:check      # ESLint flat config — no output = success
 npm run format:check    # Prettier — "All matched files use Prettier code style!" = success
 ```
@@ -75,11 +75,13 @@ Additional enforced rules (errors, not warnings):
 ```text
 ChangeLog.md            # Release history and notable changes
 CODE_OF_CONDUCT.md      # Community behavior guidelines
+codecov.yml             # Codecov coverage reporting configuration
 CONTRIBUTING.md         # Contribution process and standards
 LICENSE                 # BSD-3-Clause license text
 NOTICE.md               # OSS notices and attributions
 README.md               # Primary project documentation and usage guide
 ROADMAP.md              # Planned features and direction
+sonar-project.properties # SonarQube project configuration
 .github/
   CODEOWNERS                    # Default reviewers/ownership rules
   FUNDING.yml                   # Sponsorship links
@@ -97,11 +99,13 @@ docs/                   # User and developer guides
   data-provider-development-guide.md
   format-plugin-development-guide.md
   generic-format-user-guide.md
+  limeco-format-user-guide.md
   technical-information.md
   user-manual.md
 eslint.config.mjs       # ESLint flat config (covers .ts, .js, .md, .yml)
 examples/               # Sample CSV and INI files for manual testing
 jest.config.js          # Jest config (ts-jest preset, tests/ root, tsconfig.test.json)
+jest.config.ci.js       # CI Jest config (extends jest.config.js, adds JUnit/lcov reporters)
 src/
   core/
     BaseFormat.ts       # Abstract base class for format plugins + WealthfolioRecord interface
@@ -117,6 +121,7 @@ src/
   formats/
     GenericFormat.ts    # Generic CSV format plugin (kept last in registry — most permissive)
     index.ts            # Format plugin registry (array exported as default)
+    LimeCoFormat.ts     # Lime Trading brokerage format plugin
   index.ts              # CLI entry point (commander setup, commands)
 tests/                  # Jest tests mirroring src/ structure — all in tests/, not src/
   core/

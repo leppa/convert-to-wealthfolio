@@ -153,7 +153,7 @@ E.g., use British Pound as default currency:
 convert-to-wealthfolio convert --default-currency GBP examples/sample-generic.csv output.csv
 ```
 
-**Note:** Some formats may ignore the default currency option and always use their own. Always refer to the documentation for the specific format you're using.
+**Note:** Some formats may ignore the default currency option and always use their own. Always refer to the documentation of the specific format you're using.
 
 #### Override Symbols and Resolve Identifiers
 
@@ -307,7 +307,7 @@ If you checked out a specific branch, simply pull the latest changes for that br
 git pull
 ```
 
-If you checked out a specific tag, you'll need to check out the new tag for the latest version:
+If you checked out a specific tag, you'll need to check out the new tag of the latest version:
 
 ```bash
 git fetch --tags

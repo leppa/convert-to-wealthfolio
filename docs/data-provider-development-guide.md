@@ -135,18 +135,18 @@ interface SymbolQuery {
 
 **Key points:**
 
-- At least one field will be present (never all empty)
-- All fields are optional - check which ones are available before using
-- Values may have whitespace and varying case - normalize them (uppercase, trim)
-- Company names may be partial or have variations (e.g., "Apple Inc", "Apple, Inc.")
+- At least one field will be present (never all empty).
+- All fields are optional - check which ones are available before using.
+- Values may have whitespace and varying case - normalize them (uppercase, trim).
+- Company names may be partial or have variations (e.g., "Apple Inc", "Apple, Inc.").
 
 **Common query patterns:**
 
-- Direct symbol lookup (e.g., overrides, finding new ticker after rename): `{ symbol: "AAPL" }`
-- ISIN to symbol: `{ isin: "US0378331005" }`
-- CUSIP to symbol: `{ cusip: "037833100" }`
-- Company name to symbol: `{ name: "Apple Inc" }`
-- Multiple identifiers: `{ isin: "US0378331005", name: "Apple Inc" }`
+- Direct symbol lookup (e.g., overrides, finding new ticker after rename): `{ symbol: "AAPL" }`.
+- ISIN to symbol: `{ isin: "US0378331005" }`.
+- CUSIP to symbol: `{ cusip: "037833100" }`.
+- Company name to symbol: `{ name: "Apple Inc" }`.
+- Multiple identifiers: `{ isin: "US0378331005", name: "Apple Inc" }`.
 
 ### Return Value
 
@@ -156,7 +156,7 @@ Return a resolved symbol string when your provider finds a match:
 return "AAPL";
 ```
 
-Return `null`, _not_ an empty string, when your provider cannot resolve the symbol:
+Return `null`, **not** an empty string, when your provider cannot resolve the symbol:
 
 ```typescript
 return null;
@@ -164,9 +164,9 @@ return null;
 
 **Important details:**
 
-- Return a non-empty string when resolution succeeds (uppercase recommended)
-- Returning `null` allows the system to try other registered providers or fall back to the original value
-- The `SymbolDataService` tracks which provider returned the result
+- Return a non-empty string when resolution succeeds (uppercase recommended).
+- Returning `null` allows the system to try other registered providers or fall back to the original value.
+- The `SymbolDataService` tracks which provider returned the result.
 
 ## Example
 
@@ -224,11 +224,11 @@ export class JsonFileProvider extends DataProvider {
 
 ## Best Practices
 
-- **Normalize inputs**: Convert to uppercase and trim whitespace consistently
-- **Return `null` on failure**: Don't throw errors, return `null` if symbol cannot be resolved
-- **Cache results**: For external lookups, cache to improve the performance, consider persistent cache to retain data across runs
-- **Use `canHandle()`**: Implement `canHandle()` so that converter can skip your provider when it can't handle specific query types
-- **Add tests**: Create tests in `tests/data-providers/` to verify your provider
+- **Normalize inputs**: Convert to uppercase and trim whitespace consistently.
+- **Return `null` on failure**: Don't throw errors, return `null` if symbol cannot be resolved.
+- **Cache results**: For external lookups, cache to improve the performance, consider persistent cache to retain data across runs.
+- **Use `canHandle()`**: Implement `canHandle()` so that converter can skip your provider when it can't handle specific query types.
+- **Add tests**: Create tests in `tests/data-providers/` to verify your provider.
 
 ## Code Quality
 
@@ -244,7 +244,7 @@ npm test             # Run tests
 
 ## See Also
 
-- [Technical Information](technical-information.md) - Architecture overview
-- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines
-- [src/core/DataProvider API](../src/core/DataProvider.ts) - `DataProvider` source code
-- [src/data-providers/OverridesDataProvider.ts](../src/data-providers/OverridesDataProvider.ts) - An example of a data provider that loads symbol overrides from an INI file
+- [Technical Information](technical-information.md) - Architecture overview.
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines.
+- [src/core/DataProvider.ts](../src/core/DataProvider.ts) - `DataProvider` source code.
+- [src/data-providers/OverridesDataProvider.ts](../src/data-providers/OverridesDataProvider.ts) - An example of a data provider that loads symbol mappings and overrides from an INI file.

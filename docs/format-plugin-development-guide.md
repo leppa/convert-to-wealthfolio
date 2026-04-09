@@ -309,18 +309,18 @@ enum ActivitySubtype {
 
 The converter framework automatically validates all output records using activity type-specific field requirements defined in `src/core/FieldRequirements.ts`. This means:
 
-- **Required fields** are verified for each activity type (e.g., `BUY` requires `symbol`, `quantity`, and `unitPrice`)
-- **Ignored fields** are automatically cleared based on activity type (e.g., `symbol` is cleared for `DEPOSIT` activities)
-- **Invalid records** are filtered out and not written to the output CSV
-- **Detailed warnings** are logged for any validation failures
+- **Required fields** are verified for each activity type (e.g., `BUY` requires `symbol`, `quantity`, and `unitPrice`).
+- **Ignored fields** are automatically cleared based on activity type (e.g., `symbol` is cleared for `DEPOSIT` activities).
+- **Invalid records** are filtered out and not written to the output CSV.
+- **Detailed warnings** are logged for any validation failures.
 
 As a plugin developer, you should:
 
-- Focus on converting your CSV format to `WealthfolioRecord` objects
-- Don't worry about implementing field-level validation - the framework handles it
-- Set fields appropriately even if they might be ignored (the framework will clear them)
-- Use `NaN` for numeric fields that aren't applicable (e.g., `unitPrice` for deposits)
-- Use empty strings for text fields that aren't applicable
+- Focus on converting your CSV format to `WealthfolioRecord` objects.
+- Don't worry about implementing field-level validation - the framework handles it.
+- Set fields appropriately even if they might be ignored (the framework will clear them).
+- Use `NaN` for numeric fields that aren't applicable (e.g., `unitPrice` for deposits).
+- Use empty strings for text fields that aren't applicable.
 
 The validation happens automatically after your `convert()` method returns the records, so you can trust that only valid records will be written to the output file.
 
@@ -376,16 +376,16 @@ export class MyCustomFormat extends BaseFormat {
 
 ## Best Practices
 
-- **Add copyright header**: All files must include the BSD 3-Clause copyright header
-- **Type safety**: Use `Record<string, string>` or a custom type derived from it for parsed CSV records - all values from CSV are strings by default
-- **Type conversion**: Convert string values to appropriate types (numbers, dates, etc.) during parsing (see [Customizing CSV parse options](#customizing-csv-parse-options))
+- **Add copyright header**: All files must include the BSD 3-Clause copyright header.
+- **Type safety**: Use `Record<string, string>` or a custom type derived from it for parsed CSV records - all values from CSV are strings by default.
+- **Type conversion**: Convert string values to appropriate types (numbers, dates, etc.) during parsing (see [Customizing CSV parse options](#customizing-csv-parse-options)).
 - **Format detection**: Make your `validate()` method robust to detect only your CSV format. In other words, try to avoid false positives for other formats.
-- **Default currency**: If your format doesn't include a currency column, use the `defaultCurrency` parameter provided to `convert()` method
-- **Symbol Resolution**: Use `symbolDataService.querySymbol()` or `symbolDataService.querySymbolWithFallback()` to resolve symbols from ISIN, CUSIP, and company name fields (see [Symbol Overrides and Identifier Resolution](#symbol-overrides-and-identifier-resolution))
-- **Error handling**: Provide clear error messages for invalid input
-- **Documentation**: Document your format requirements and any assumptions
-- **Testing**: Test with sample CSV files before submitting
-- **Null safety**: Always check for empty or whitespace strings before converting values
+- **Default currency**: If your format doesn't include a currency column, use the `defaultCurrency` parameter provided to `convert()` method.
+- **Symbol Resolution**: Use `symbolDataService.querySymbol()` or `symbolDataService.querySymbolWithFallback()` to resolve symbols from ISIN, CUSIP, and company name fields (see [Symbol Overrides and Identifier Resolution](#symbol-overrides-and-identifier-resolution)).
+- **Error handling**: Provide clear error messages for invalid input.
+- **Documentation**: Document your format requirements and any assumptions.
+- **Testing**: Test with sample CSV files before submitting.
+- **Null safety**: Always check for empty or whitespace strings before converting values.
 
 ## Customizing CSV Parse Options
 
@@ -443,7 +443,7 @@ npm test            # Run tests
 
 ## See Also
 
-- [Technical Information](technical-information.md) - Architecture overview
-- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines
-- [src/core/BaseFormat.ts](../src/core/BaseFormat.ts) - `BaseFormat` source code
-- [src/formats/GenericFormat.ts](../src/formats/GenericFormat.ts) - An example of a format plugin
+- [Technical Information](technical-information.md) - Architecture overview.
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines.
+- [src/core/BaseFormat.ts](../src/core/BaseFormat.ts) - `BaseFormat` source code.
+- [src/formats/GenericFormat.ts](../src/formats/GenericFormat.ts) - An example of a format plugin.

@@ -73,7 +73,7 @@ These columns enhance your data, but can be omitted:
 | `InstrumentType` | Instrument category (see [Instrument Types](#instrument-types) below) | Empty (`UNKNOWN`) |
 | `Fee` | Transaction fee or commission (see [Quantities and Prices](#quantities-and-prices) below) | Not set |
 | `Total` | Total transaction amount (see [Quantities and Prices](#quantities-and-prices) below) | Calculated from `Quantity` × `UnitPrice` |
-| `Currency` | 3-letter currency code (see [Currency Codes](#currency-codes) below) | either `--default-currency` command line option, or `EUR` |
+| `Currency` | 3-letter currency code (see [Currency Codes](#currency-codes) below) | Either `EUR`, or `--default-currency` command-line option |
 | `TransactionSubtype` | More specific transaction classification, varies by transaction type (see [Transaction Types](#transaction-types) below) | Not set |
 | `FXRate` | Foreign exchange rate | Not set |
 | `Comment` | Notes or description | Empty |
@@ -134,11 +134,11 @@ Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,TransactionSubtype
 
 **Supported Subtypes:**
 
-- `DRIP` - Dividend Reinvestment Plan
-- `QUALIFIED_DIVIDEND`, `QUALIFIED DIVIDEND`, or `QUALIFIED` - Qualified dividend (tax advantaged)
-- `ORDINARY_DIVIDEND`, `ORDINARY DIVIDEND`, or `ORDINARY` - Ordinary dividend income
-- `RETURN_OF_CAPITAL`, `RETURN OF CAPITAL`, or `RETURN` - Return of capital distribution
-- `DIVIDEND_IN_KIND`, `DIVIDEND IN KIND`, `IN_KIND`, or `IN KIND` - Dividend paid in shares (not yet supported)
+- `DRIP` - Dividend Reinvestment Plan.
+- `QUALIFIED_DIVIDEND`, `QUALIFIED DIVIDEND`, or `QUALIFIED` - Qualified dividend (tax advantaged).
+- `ORDINARY_DIVIDEND`, `ORDINARY DIVIDEND`, or `ORDINARY` - Ordinary dividend income.
+- `RETURN_OF_CAPITAL`, `RETURN OF CAPITAL`, or `RETURN` - Return of capital distribution.
+- `DIVIDEND_IN_KIND`, `DIVIDEND IN KIND`, `IN_KIND`, or `IN KIND` - Dividend paid in shares (not yet supported).
 
 ### Interest Income
 
@@ -156,9 +156,9 @@ Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,TransactionSubtype
 
 **Supported Subtypes:**
 
-- `STAKING_REWARD`, `STAKING REWARD`, or `STAKING` - Cryptocurrency staking rewards
-- `LENDING_INTEREST`, `LENDING INTEREST`, or `LENDING` - Interest from lending activities
-- `COUPON` - Bond coupon payment
+- `STAKING_REWARD`, `STAKING REWARD`, or `STAKING` - Cryptocurrency staking rewards.
+- `LENDING_INTEREST`, `LENDING INTEREST`, or `LENDING` - Interest from lending activities.
+- `COUPON` - Bond coupon payment.
 
 ### Deposit
 
@@ -236,9 +236,9 @@ Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Fee,Currency,TransactionSub
 
 **Supported Subtypes:**
 
-- `MANAGEMENT_FEE`, `MANAGEMENT FEE`, or `MANAGEMENT` - Investment management fee
-- `ADR_FEE`, `ADR FEE`, or `ADR` - American Depositary Receipt fee
-- `INTEREST_CHARGE`, `INTEREST CHARGE`, or `INTEREST` - Margin interest or other interest charges
+- `MANAGEMENT_FEE`, `MANAGEMENT FEE`, or `MANAGEMENT` - Investment management fee.
+- `ADR_FEE`, `ADR FEE`, or `ADR` - American Depositary Receipt fee.
+- `INTEREST_CHARGE`, `INTEREST CHARGE`, or `INTEREST` - Margin interest or other interest charges.
 
 ### Tax
 
@@ -256,8 +256,8 @@ Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,TransactionSubtype
 
 **Supported Subtypes:**
 
-- `WITHHOLDING` - Tax withholding
-- `NRA_WITHHOLDING` or `NRA` - Non-Resident Alien tax withholding
+- `WITHHOLDING` - Tax withholding.
+- `NRA_WITHHOLDING` or `NRA` - Non-Resident Alien tax withholding.
 
 ### Stock Split
 
@@ -288,9 +288,9 @@ Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,TransactionSubtype
 
 **Supported Subtypes:**
 
-- `BONUS` - Broker bonus or promotional credit
-- `REBATE` - Promotional rebate
-- `REFUND` - Fee or other refund
+- `BONUS` - Broker bonus or promotional credit.
+- `REBATE` - Promotional rebate.
+- `REFUND` - Fee or other refund.
 
 ### Adjustment
 
@@ -302,6 +302,7 @@ Used for balance corrections or adjustments. Unlike other activities, adjustment
 
 ```csv
 Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,Comment
+2024-05-03,ADJUSTMENT,,,,0.01,EUR,Fix account balance
 2024-05-05,ADJUSTMENT,AAPL,-50,,,,Share amount adjustment
 ```
 
@@ -311,12 +312,12 @@ The `InstrumentType` column is optional and case-insensitive. If omitted or unre
 
 Supported normalized values and accepted aliases:
 
-- `EQUITY`: `EQUITY`, `STOCK`, `ETF`, `MUTUALFUND`, `MUTUAL_FUND`, `MUTUAL FUND`, `INDEX`
-- `CRYPTO`: `CRYPTO`, `CRYPTOCURRENCY`, `CRYPTO_CURRENCY`, `CRYPTO CURRENCY`
-- `FX`: `FX`, `FOREX`, `CURRENCY`
-- `OPTION`: `OPTION`, `OPT`
-- `METAL`: `METAL`, `COMMODITY`
-- `BOND`: `BOND`, `FIXEDINCOME`, `FIXED_INCOME`, `FIXED INCOME`, `DEBT`
+- `EQUITY`: `EQUITY`, `STOCK`, `ETF`, `MUTUALFUND`, `MUTUAL_FUND`, `MUTUAL FUND`, `INDEX`.
+- `CRYPTO`: `CRYPTO`, `CRYPTOCURRENCY`, `CRYPTO_CURRENCY`, `CRYPTO CURRENCY`.
+- `FX`: `FX`, `FOREX`, `CURRENCY`.
+- `OPTION`: `OPTION`, `OPT`.
+- `METAL`: `METAL`, `COMMODITY`.
+- `BOND`: `BOND`, `FIXEDINCOME`, `FIXED_INCOME`, `FIXED INCOME`, `DEBT`.
 
 ## Value Formatting
 
@@ -324,9 +325,9 @@ Supported normalized values and accepted aliases:
 
 The `Date` column accepts any standard date format that [JavaScript's `Date`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date) constructor can parse. Common formats include:
 
-- ISO 8601: `2024-01-15`, `2024-03-10T14:30:00`
-- European format: `15.01.2024`, `10.03.2024 14:30`
-- US format: `01/15/2024`, `3/10/2024 2:30 PM`
+- **ISO 8601**: `2024-01-15`, `2024-03-10T14:30:00`.
+- **European format**: `15.01.2024`, `10.03.2024 14:30`.
+- **US format**: `01/15/2024`, `3/10/2024 2:30 PM`.
 
 **Recommendation:** Use the [ISO 8601 format](https://en.wikipedia.org/wiki/ISO_8601) for consistency and to avoid ambiguity: date as `YYYY-MM-DD`, or date and time as `YYYY-MM-DDThh:mm:ss` (with the optional `±hh:mm` suffix for specifying time zone). Dates like `01/02/2024` can be interpreted as February 1st or January 2nd, depending on the locale.
 
@@ -334,9 +335,9 @@ The `Date` column accepts any standard date format that [JavaScript's `Date`](ht
 
 ### Quantities and Prices
 
-- Use decimal notation (e.g., `150.25`, `3750.5`), don't use thousand separators (e.g., `1,000` and `1 000` should be written as `1000`)
-- Most transaction types automatically convert to absolute values (signs are ignored)
-- For `ADJUSTMENT` activities, sign matters: negative values indicate reductions
+- Use decimal notation (e.g., `150.25`, `3750.5`), don't use thousand separators (e.g., `1,000` and `1 000` should be written as `1000`).
+- Most transaction types automatically convert to absolute values (signs are ignored).
+- For `ADJUSTMENT` activities, sign matters: negative values indicate reductions.
 
 ### Currency Codes
 
@@ -369,6 +370,7 @@ Date,TransactionType,Symbol,Quantity,UnitPrice,Fee,Total,Currency,InstrumentType
 2024-04-19,TAX,,,,,3.75,EUR,,WITHHOLDING,,Dividend withholding
 2024-04-25,SPLIT,NVDA,,,,0.5,,STOCK,,,2:1 reverse split
 2024-04-30,CREDIT,,,,,50.00,EUR,,BONUS,,Sign-up bonus
+2024-05-03,ADJUSTMENT,,,,,0.01,EUR,,,Fix account balance
 2024-05-05,ADJUSTMENT,AAPL,-50,,,,,STOCK,,,Share correction
 ```
 
@@ -410,9 +412,9 @@ This is useful when all your transactions are in the same currency and you don't
 
 When dealing with foreign currency transactions:
 
-- Set the `Currency` field to the foreign currency code
-- Provide `FXRate` for the exchange rate
-- Wealthfolio will handle currency conversion
+- Set the `Currency` field to the foreign currency code.
+- Provide `FXRate` for the exchange rate.
+- Wealthfolio will handle currency conversion.
 
 ### 7. Use Fee column for transaction fees<!-- omit from toc -->
 
@@ -422,19 +424,19 @@ Transaction fees can be specified in the `Fee` column. Don't include fees in the
 
 Before importing:
 
-1. Run the conversion: `npm start convert your-file.csv test-output.csv`
-2. Review the output for any errors or warnings
-3. Check that the converted data looks correct
-4. Import the test output into Wealthfolio to verify
+1. Run the conversion: `npm start convert your-file.csv test-output.csv`.
+2. Review the output for any errors or warnings.
+3. Check that the converted data looks correct.
+4. Import the test output into Wealthfolio to verify.
 
 ## Field Validation
 
 The converter automatically validates all records based on transaction type-specific field requirements. This means:
 
-- **Required fields** for each transaction type are checked (e.g., `Symbol` is required for `BUY` but not for `DEPOSIT`)
-- **Ignored fields** are automatically cleared (e.g., `Symbol` is cleared for cash-only activities)
-- **Invalid records** with missing required fields are filtered out and not included in the output
-- **Warnings** are logged for any validation failures, including the record number and specific field errors
+- **Required fields** for each transaction type are checked (e.g., `Symbol` is required for `BUY` but not for `DEPOSIT`).
+- **Ignored fields** are automatically cleared (e.g., `Symbol` is cleared for cash-only activities).
+- **Invalid records** with missing required fields are filtered out and not included in the output.
+- **Warnings** are logged for any validation failures, including the record number and specific field errors.
 
 When a record fails validation, you'll see a warning message like:
 
@@ -471,23 +473,24 @@ If you need more details for troubleshooting, increase log verbosity by setting 
 
 Some transaction types require a symbol (ticker):
 
-- `BUY`, `SELL`: Always required
-- `DIVIDEND`, `TRANSFER_IN`, `TRANSFER_OUT`: Usually required
-- `DEPOSIT`, `WITHDRAWAL`, `FEE`, `TAX`, `CREDIT`: Not required
+- `BUY`, `SELL`: Always required.
+- `DIVIDEND`, `TRANSFER_IN`, `TRANSFER_OUT`: Usually required.
+- `DEPOSIT`, `WITHDRAWAL`, `FEE`, `TAX`, `CREDIT`: Not required.
 
 ## Getting Format Information
 
-To see the complete schema for the Generic format:
+To see the complete schema of the Generic format:
 
 ```bash
-npm start info Generic
+convert-to-wealthfolio info Generic
 ```
 
 This displays all expected columns and their requirements.
 
 ## See Also
 
-- [Wealthfolio Documentation](https://wealthfolio.app/docs/introduction/) - For information about Wealthfolio import
-- [src/formats/GenericFormat.ts](../src/formats/GenericFormat.ts) - Source code for the Generic format plugin
-- [examples/sample-generic.csv](../examples/sample-generic.csv) - Sample file with various transaction types
-- [Format Plugin Development Guide](format-plugin-development-guide.md) - A guide for creating custom format plugins
+- [Wealthfolio Documentation](https://wealthfolio.app/docs/guide/activities/#csv-import) - Information about **Wealthfolio** CSV import.
+- [examples/sample-generic.csv](../examples/sample-generic.csv) - Sample file with various transaction types.
+- [src/formats/GenericFormat.ts](../src/formats/GenericFormat.ts) - Source code of the **Generic** format plugin.
+- [src/formats/GenericFormat.test.ts](../src/formats/GenericFormat.test.ts) - Unit tests for the **Generic** format plugin.
+- [Format Plugin Development Guide](format-plugin-development-guide.md) - A guide for creating custom format plugins.

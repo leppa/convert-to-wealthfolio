@@ -27,4 +27,5 @@ Date,TransactionType,InstrumentType,Symbol,Quantity,UnitPrice,Fee,Total,Currency
 2024-04-30,CREDIT,,,,,,50.00,EUR,BONUS,,Broker bonus credit
 2024-05-01,CREDIT,,,,,,25.00,EUR,REBATE,,Promotional rebate
 2024-05-01,CREDIT,,,,,,25.00,EUR,REFUND,,Fee refund
+2024-05-03,ADJUSTMENT,,,,,,0.01,EUR,,,Fix account balance
 2024-05-05,ADJUSTMENT,STOCK,AAPL,-50,,,,,,,Share amount adjustment

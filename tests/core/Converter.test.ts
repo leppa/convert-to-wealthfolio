@@ -89,7 +89,7 @@ describe("Converter", () => {
       expect(headers).toContain("metadata");
 
       // Check we have the right number of records
-      expect(lines.length).toBe(29); // header + 28 data rows
+      expect(lines.length).toBe(30); // header + 29 data rows
     });
 
     it("should round numeric values to 8 decimal places", async () => {

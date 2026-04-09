@@ -21,8 +21,8 @@ Upcoming release.
 
 ### Added
 
-- **Lime.co** format plugin. Supports CSV files exported from
-  [Lime.co broker](https://lime.co/).
+- **Lime.co** format plugin. Supports CSV files exported from the
+  [**Lime Trading** brokerage](https://lime.co/).
 - Support for the new `instrumentType` field that was added to **Wealthfolio**
   in March 2026.
 - New optional `InstrumentType` column in the Generic format plugin. If not
