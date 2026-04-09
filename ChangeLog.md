@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Upcoming release.
+
 ## [0.2.0] - 2026-04-09
 
 This release adds support for transaction history exported from the
@@ -65,5 +69,7 @@ Initial release.
   should be able to handle same formats without the need for a custom converter.
 - Project documentation and user guides.
 
+[Unreleased]:
+  https://github.com/leppa/convert-to-wealthfolio/compare/0.2.0...HEAD
 [0.2.0]: https://github.com/leppa/convert-to-wealthfolio/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/leppa/convert-to-wealthfolio/commits/0.1.0
