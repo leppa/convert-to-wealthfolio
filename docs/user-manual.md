@@ -138,6 +138,14 @@ E.g., specify format as _Generic_:
 convert-to-wealthfolio convert --format Generic examples/sample-generic.csv output.csv
 ```
 
+You can also set the format using the `CTW_FORMAT` environment variable:
+
+```bash
+CTW_FORMAT=Generic convert-to-wealthfolio convert examples/sample-generic.csv output.csv
+```
+
+**Note:** The CLI option takes precedence over the environment variable if both are set.
+
 #### Specify the Default Currency
 
 You can specify a default currency code to use when the input CSV doesn't specify a currency for a record by using the `--default-currency` option:
@@ -153,6 +161,14 @@ E.g., use British Pound as default currency:
 ```bash
 convert-to-wealthfolio convert --default-currency GBP examples/sample-generic.csv output.csv
 ```
+
+You can also set the default currency using the `CTW_DEFAULT_CURRENCY` environment variable:
+
+```bash
+CTW_DEFAULT_CURRENCY=GBP convert-to-wealthfolio convert examples/sample-generic.csv output.csv
+```
+
+**Note:** The CLI option takes precedence over the environment variable if both are set.
 
 **Note:** Some formats may ignore the default currency option and always use their own. Always refer to the documentation of the specific format you're using.
 
@@ -197,6 +213,14 @@ This option is useful for:
 - Mapping ISIN, CUSIP, or company name to a symbol when the original symbol is missing in the source data
 
 See [examples/overrides.ini](../examples/overrides.ini) for a template.
+
+You can also set the path to the overrides file using the `CTW_OVERRIDES` environment variable:
+
+```bash
+CTW_OVERRIDES="examples/overrides.ini" convert-to-wealthfolio convert examples/sample-generic-isin-cusip-name.csv output.csv
+```
+
+**Note:** The CLI option takes precedence over the environment variable if both are set.
 
 **Note**: ISIN, CUSIP, and company name lookups are handled by plugins during conversion. Symbol overrides, on the other hand, are done automatically _after_ the conversion. So if you have an ISIN that resolves to a symbol, and that symbol is in the overrides, the override will be applied to the resolved symbol.
 
@@ -279,6 +303,16 @@ convert-to-wealthfolio --debug <command-and-arguments>
 # Set log verbosity to TRACE:
 convert-to-wealthfolio --trace <command-and-arguments>
 ```
+
+You can also set the log verbosity using the `CTW_LOG_LEVEL` environment variable, which accepts the same values as `--log-level`.
+
+E.g., set log verbosity using an environment variable:
+
+```bash
+CTW_LOG_LEVEL=DEBUG convert-to-wealthfolio convert examples/sample-generic.csv output.csv
+```
+
+**Note:** The CLI option takes precedence over the environment variable if both are set.
 
 **Note:** Log messages go to `stderr` to separate them from user-facing output, which goes to `stdout`. This allows you to redirect logs and output independently if needed.
 

@@ -35,6 +35,7 @@ program
   .helpCommand("help <command>", "Show help for a specific command")
   .addOption(
     new Option("-l, --log-level <level>", "Set log verbosity level")
+      .env("CTW_LOG_LEVEL")
       // The lowest log level is ERROR, as ERROR and FATAL messages should always be shown
       .choices(["ERROR", "WARN", "INFO", "DEBUG", "TRACE"])
       .default("INFO"),
@@ -58,10 +59,9 @@ program
   .argument("<output>", "Output CSV file path")
   .description("Convert input CSV for import to Wealthfolio")
   .addOption(
-    new Option(
-      "-f, --format <format>",
-      "Format to use for conversion (skip autodetection)",
-    ).choices(formats.map((f) => f.getName())),
+    new Option("-f, --format <format>", "Format to use for conversion (skip autodetection)")
+      .env("CTW_FORMAT")
+      .choices(formats.map((f) => f.getName())),
   )
   .addOption(
     new Option(
@@ -76,11 +76,14 @@ program
         }
         return currency.toUpperCase();
       })
+      .env("CTW_DEFAULT_CURRENCY")
       .default(DEFAULT_CURRENCY),
   )
-  .option(
-    "-o, --overrides <path>",
-    "Path to INI file with symbol overrides and ISIN, CUSIP, and company name mappings",
+  .addOption(
+    new Option(
+      "-o, --overrides <path>",
+      "Path to INI file with symbol overrides and ISIN, CUSIP, and company name mappings",
+    ).env("CTW_OVERRIDES"),
   )
   .action(
     async (

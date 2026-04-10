@@ -19,6 +19,18 @@ and this project adheres to
 
 Upcoming release.
 
+### Added
+
+- Environment variables to control their respective CLI options:
+  - `CTW_LOG_LEVEL` - Sets the log level (equivalent to `--log-level`).
+  - `CTW_FORMAT` - Sets the format plugin name (equivalent to `--format`).
+  - `CTW_DEFAULT_CURRENCY` - Sets the default currency (equivalent to
+    `--default-currency`).
+  - `CTW_OVERRIDES` - Sets the path to the overrides file (equivalent to
+    `--overrides`).
+
+  CLI options take precedence over environment variables when both are set.
+
 ## [0.2.0] - 2026-04-09
 
 This release adds support for transaction history exported from the
