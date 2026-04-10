@@ -4,9 +4,10 @@
  */
 
 import { DataProvider, SymbolQuery } from "../../src/core/DataProvider";
-import { Logger, LogLevel } from "../../src/core/Logger";
 import { SymbolDataService } from "../../src/core/SymbolDataService";
 
+// Silence logging during tests
+import { Logger, LogLevel } from "../../src/core/Logger";
 Logger.setLogLevel(LogLevel.ERROR);
 
 class TestProvider extends DataProvider {
@@ -151,31 +152,117 @@ describe("SymbolDataService", () => {
   it("should return empty fallback symbol when query contains no usable fields", () => {
     service.registerProvider(new TestProvider("ProviderA", () => null));
 
-    const result = service.querySymbolWithFallback({});
+    const result = service.querySymbol({});
 
     expect(result).toEqual({ symbol: "", provider: "Fallback" });
   });
 
-  it("should log debug with empty symbol marker when `query.symbol` is missing but provider resolves", () => {
-    service.registerProvider(new TestProvider("ProviderA", () => "AAPL.RESOLVED"));
+  it("should call provider only once for repeated identical queries", () => {
+    const resolver = jest.fn(() => "AAPL");
+    service.registerProvider(new TestProvider("ProviderA", resolver));
 
-    const result = service.querySymbolWithFallback({
-      isin: "US0378331005",
-    });
+    service.querySymbol({ isin: "US0378331005" });
+    service.querySymbol({ isin: "US0378331005" });
+    service.querySymbolWithFallback({ isin: "US0378331005", cusip: "037833100" });
+    service.querySymbol({ isin: "US0378331005" });
 
-    expect(result).toEqual({ symbol: "AAPL.RESOLVED", provider: "ProviderA" });
+    expect(resolver).toHaveBeenCalledTimes(2);
   });
 
-  it("should include all query fields in debug message when they are present", () => {
-    service.registerProvider(new TestProvider("ProviderA", () => "RESOLVED"));
+  it("should treat queries with different whitespace and casing as identical", () => {
+    const resolver = jest.fn(() => "AAPL");
+    service.registerProvider(new TestProvider("ProviderA", resolver));
 
-    const result = service.querySymbolWithFallback({
-      symbol: "AAPL",
-      isin: "US0378331005",
-      cusip: "037833100",
-      name: "Apple Inc",
+    service.querySymbolWithFallback({ symbol: "  aapl  " });
+    service.querySymbolWithFallback({ symbol: "AAPL" });
+    service.querySymbol({ symbol: "aapl" });
+
+    expect(resolver).toHaveBeenCalledTimes(1);
+  });
+
+  it("should re-evaluate fallback cache entries after a new provider is registered", () => {
+    // First provider cannot resolve — result is cached as Fallback
+    service.registerProvider(new TestProvider("ProviderA", () => null));
+    expect(service.querySymbolWithFallback({ isin: "US0378331005" })).toEqual({
+      symbol: "US0378331005",
+      provider: "Fallback",
     });
 
-    expect(result).toEqual({ symbol: "RESOLVED", provider: "ProviderA" });
+    // Register a second provider that can resolve
+    const resolverB = jest.fn(() => "AAPL");
+    service.registerProvider(new TestProvider("ProviderB", resolverB));
+
+    // The fallback cache entry must have been cleared — ProviderB should now be queried
+    expect(service.querySymbolWithFallback({ isin: "US0378331005" })).toEqual({
+      symbol: "AAPL",
+      provider: "ProviderB",
+    });
+    expect(resolverB).toHaveBeenCalledTimes(1);
+  });
+
+  it("should not evict non-fallback cache entries when a new provider is registered", () => {
+    // ProviderA resolves the query — result is cached as ProviderA
+    const resolverA = jest.fn(() => "AAPL");
+    service.registerProvider(new TestProvider("ProviderA", resolverA));
+    service.querySymbolWithFallback({ isin: "US0378331005" });
+    expect(resolverA).toHaveBeenCalledTimes(1);
+
+    // Register a second provider
+    const resolverB = jest.fn(() => "MSFT");
+    service.registerProvider(new TestProvider("ProviderB", resolverB));
+    expect(service.querySymbolWithFallback({ isin: "US0378331005" })).toEqual({
+      symbol: "AAPL",
+      provider: "ProviderA",
+    });
+
+    // Still only one call from the first query
+    expect(resolverA).toHaveBeenCalledTimes(1);
+    expect(resolverB).not.toHaveBeenCalled();
+  });
+
+  it("should clear the entire cache when all providers are cleared", () => {
+    // ProviderA resolves and the result gets cached
+    const resolverA = jest.fn(() => "AAPL");
+    service.registerProvider(new TestProvider("ProviderA", resolverA));
+    service.querySymbol({ isin: "US0378331005" });
+    expect(resolverA).toHaveBeenCalledTimes(1);
+
+    // Clearing providers must also wipe the cache
+    service.clearProviders();
+
+    // Register a new provider and re-query — new provider must be called
+    const resolverB = jest.fn(() => "MSFT");
+    service.registerProvider(new TestProvider("ProviderB", resolverB));
+    expect(service.querySymbolWithFallback({ isin: "US0378331005" })).toEqual({
+      symbol: "MSFT",
+      provider: "ProviderB",
+    });
+    expect(resolverB).toHaveBeenCalledTimes(1);
+  });
+
+  it("should return `null` from `querySymbol()` without querying providers when a Fallback cache entry exists", () => {
+    // Provider cannot resolve — result is cached as Fallback
+    const resolver = jest.fn(() => null);
+    service.registerProvider(new TestProvider("ProviderA", resolver));
+    service.querySymbolWithFallback({ isin: "US0378331005" });
+    expect(resolver).toHaveBeenCalledTimes(1);
+
+    // Direct querySymbol() should hit the Fallback cache entry and return null immediately
+    const result = service.querySymbol({ isin: "US0378331005" });
+
+    expect(result).toBeNull();
+    // Still only one call from the first query
+    expect(resolver).toHaveBeenCalledTimes(1);
+
+    // querySymbolWithFallback(), on the other hand, should hit the Fallback cache entry and return
+    // the result
+    const resultWithFallback = service.querySymbolWithFallback({ isin: "US0378331005" });
+
+    expect(resultWithFallback).toEqual({
+      symbol: "US0378331005",
+      provider: "Fallback",
+    });
+    // Still only one call from the first query
+    expect(resolver).toHaveBeenCalledTimes(1);
   });
 });

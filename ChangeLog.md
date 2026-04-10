@@ -21,7 +21,16 @@ Upcoming release.
 
 ### Added
 
-- Environment variables to control their respective CLI options:
+- **Symbol resolution caching** - once a symbol is resolved, it will be cached
+  in-memory for the duration of the converter's execution. This means that if
+  the same symbol appears multiple times in the input CSV, it will only be
+  resolved once, and all subsequent occurrences will use the cached value. The
+  cache is based on the combination of symbol, ISIN, CUSIP, and company name
+  (after normalization - see below), which means that if one transaction
+  contains only ISIN and another transaction contains a combination of ISIN and
+  CUSIP, the resolution will be performed separately for each of them.
+
+- **Environment variables** to control their respective CLI options:
   - `CTW_LOG_LEVEL` - Sets the log level (equivalent to `--log-level`).
   - `CTW_FORMAT` - Sets the format plugin name (equivalent to `--format`).
   - `CTW_DEFAULT_CURRENCY` - Sets the default currency (equivalent to
@@ -30,6 +39,24 @@ Upcoming release.
     `--overrides`).
 
   CLI options take precedence over environment variables when both are set.
+
+### Changed
+
+- **Symbol normalization** - before querying providers or looking up the cache,
+  the converter now normalizes query fields: symbol, ISIN, and CUSIP are trimmed
+  and converted to uppercase; company name is only trimmed. As a result,
+  identifier values that differ only in whitespace or casing (e.g.,
+  `" us0378331005 "` and `"US0378331005"`) are treated the same and share a
+  single cache entry.
+
+- As a consequence of the symbol resolution caching and normalization, there are
+  also changes to the way symbol resolution is logged:
+  - When symbol is queried for the first time and resolution _succeeds_, it will
+    be logged with the `INFO` level.
+  - When symbol is queried for the first time and resolution _fails_, it will be
+    logged with the `WARN` level.
+  - All subsequent queries (cache hits) will be logged with the `TRACE` level to
+    reduce noise in the logs.
 
 ## [0.2.0] - 2026-04-09
 

@@ -135,9 +135,9 @@ interface SymbolQuery {
 
 **Key points:**
 
-- At least one field will be present (never all empty).
+- At least one field will be non-empty (an all-empty query is rejected before providers are called).
 - All fields are optional - check which ones are available before using.
-- Values may have whitespace and varying case - normalize them (uppercase, trim).
+- `symbol`, `isin`, and `cusip` are always trimmed and uppercased before your method is called; `name` is always trimmed. You do not need to normalize these fields yourself.
 - Company names may be partial or have variations (e.g., "Apple Inc", "Apple, Inc.").
 
 **Common query patterns:**
@@ -166,7 +166,7 @@ return null;
 
 - Return a non-empty string when resolution succeeds (uppercase recommended).
 - Returning `null` allows the system to try other registered providers or fall back to the original value.
-- The `SymbolDataService` tracks which provider returned the result.
+- The `SymbolDataService` tracks which provider returned the result and caches it in memory — your `query()` method is called at most once per unique identifier combination per conversion run.
 
 ## Example
 
@@ -226,7 +226,7 @@ export class JsonFileProvider extends DataProvider {
 
 - **Normalize inputs**: Convert to uppercase and trim whitespace consistently.
 - **Return `null` on failure**: Don't throw errors, return `null` if symbol cannot be resolved.
-- **Cache results**: For external lookups, cache to improve the performance, consider persistent cache to retain data across runs.
+- **Cache data, not queries**: `SymbolDataService` automatically caches resolution results in memory for the duration of the run, so your `query()` method is called at most once per unique identifier combination. However, if your provider loads data from an external source (files, APIs, databases), cache that data internally (as in the `JsonFileProvider` example above) to avoid reloading it on every query call. Consider a persistent cache to retain data across runs for providers that make expensive external lookups.
 - **Use `canHandle()`**: Implement `canHandle()` so that converter can skip your provider when it can't handle specific query types.
 - **Add tests**: Create tests in `tests/data-providers/` to verify your provider.
 

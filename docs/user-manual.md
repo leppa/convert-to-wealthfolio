@@ -224,6 +224,8 @@ CTW_OVERRIDES="examples/overrides.ini" convert-to-wealthfolio convert examples/s
 
 **Note**: ISIN, CUSIP, and company name lookups are handled by plugins during conversion. Symbol overrides, on the other hand, are done automatically _after_ the conversion. So if you have an ISIN that resolves to a symbol, and that symbol is in the overrides, the override will be applied to the resolved symbol.
 
+**Note**: Symbol resolution results are cached in memory for the duration of the conversion. If the same combination of symbol, ISIN, CUSIP, and company name appears multiple times in the input CSV, the identifier is resolved only once and the result is reused for all matching rows. Cache hits are logged at the `TRACE` level; use `--trace` to see them.
+
 ### List Supported Formats
 
 Use the `list` command to see all available formats that can be passed to the `--format` option:

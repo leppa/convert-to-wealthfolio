@@ -372,7 +372,7 @@ export class MyCustomFormat extends BaseFormat {
 }
 ```
 
-**Note:** If you don't need symbol resolution, you can ignore the `symbolDataService` parameter. You only need it if you want to resolve ISINs, CUSIPs, or company names to symbols. Symbol overrides from the INI file are applied automatically after conversion, so you don't need to handle symbol override logic manually in your format plugin.
+**Note:** If you don't need symbol resolution, you can ignore the `symbolDataService` parameter. You only need it if you want to resolve ISINs, CUSIPs, or company names to symbols. Resolution results are cached in memory by `SymbolDataService` — calling `querySymbolWithFallback()` multiple times with the same query parameters is efficient and will not repeat provider lookups. Symbol overrides from the INI file are applied automatically after conversion, so you don't need to handle symbol override logic manually in your format plugin.
 
 ## Best Practices
 

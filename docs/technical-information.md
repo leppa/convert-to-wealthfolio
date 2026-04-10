@@ -65,9 +65,15 @@ This document provides technical details about the architecture, design, and imp
 **SymbolDataService** (`src/core/SymbolDataService.ts`)
 
 - Orchestrates symbol resolution across registered data providers.
-- Queries providers in registration order and returns the first match.
-- Falls back to the original identifier when no provider can resolve a symbol.
+- `querySymbol()` follows these steps:
+  1. Normalizes the query: `symbol`, `ISIN`, and `CUSIP` are trimmed and uppercased; `name` is only trimmed. Queries differing only in whitespace or casing are therefore treated as identical.
+  2. Short-circuits when all fields are empty after normalization, returning `{ symbol: "", provider: "Fallback" }` without querying any provider.
+  3. Checks the in-memory cache and returns the cached `SymbolResult` on a hit.
+  4. Queries providers in registration order, caches the first match, and returns it.
+  5. Returns `null` if no provider returns a match.
+- `querySymbolWithFallback()` calls `querySymbol()` and adds a fallback that returns the best available identifier (ISIN -> CUSIP -> sanitized name) when `querySymbol()` returns `null`.
 - Exposes registered provider info for diagnostics and logging.
+- Logs successful resolutions at the `INFO` level, cache hits at the `TRACE` level, and unresolvable identifiers at the `WARN` level.
 
 **DataProvider** (`src/core/DataProvider.ts`)
 
