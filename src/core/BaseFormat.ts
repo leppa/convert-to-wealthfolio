@@ -87,6 +87,7 @@ export interface WealthfolioRecord {
   date: Date;
   instrumentType: InstrumentType;
   symbol: string;
+  isin: string;
   quantity: number;
   activityType: ActivityType;
   unitPrice: number;

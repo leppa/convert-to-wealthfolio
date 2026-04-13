@@ -170,6 +170,7 @@ describe("Generic Format", () => {
           date: new Date("2024-01-15"),
           transactiontype: "BUY",
           symbol: "aapl",
+          isin: "us0378331005",
           quantity: 100,
           unitprice: 150.25,
           amount: 15025,
@@ -179,6 +180,7 @@ describe("Generic Format", () => {
       const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result[0].symbol).toBe("AAPL");
+      expect(result[0].isin).toBe("US0378331005");
     });
 
     it("should handle `NaN` values", () => {
@@ -422,8 +424,9 @@ describe("Generic Format", () => {
 
       const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
-      // Symbol should be taken from ISIN when symbol field is missing
-      expect(result[0].symbol).toBe("US0378331005");
+      // When symbol is missing, ISIN is kept in the isin field and symbol stays empty
+      expect(result[0].symbol).toBe("");
+      expect(result[0].isin).toBe("US0378331005");
     });
 
     it("should handle missing quantity with default 0", () => {
@@ -803,7 +806,8 @@ describe("Generic Format", () => {
       symbolDataService.registerProvider(new OverridesDataProvider(overrides));
       const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
-      expect(result[0].symbol).toBe("US0378331005");
+      expect(result[0].symbol).toBe("");
+      expect(result[0].isin).toBe("US0378331005");
     });
 
     it("should make CUSIP uppercase when no override is found", () => {

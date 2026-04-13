@@ -21,6 +21,14 @@ Upcoming release.
 
 ### Added
 
+- **Support for ISIN field** (was added to **Wealthfolio** in v3.2.0):
+  - The converter now supports an `isin` field in the output CSV, which can be
+    used to provide ISIN as an alternative or a supplement to a ticker symbol.
+  - The Generic format plugin has been updated to copy the `ISIN` column from
+    the input CSV into the `isin` column of the output CSV, in addition to using
+    it for symbol resolution. If not present or empty, the `ISIN` column will be
+    converted to an empty value in the output CSV.
+
 - **Symbol resolution caching** - once a symbol is resolved, it will be cached
   in-memory for the duration of the converter's execution. This means that if
   the same symbol appears multiple times in the input CSV, it will only be

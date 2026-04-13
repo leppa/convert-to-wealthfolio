@@ -471,11 +471,13 @@ If you need more details for troubleshooting, increase log verbosity by setting 
 
 ### Symbol Required
 
-Some transaction types require a symbol (ticker):
+Some transaction types require either a ticker symbol or an ISIN:
 
-- `BUY`, `SELL`: Always required.
-- `DIVIDEND`, `TRANSFER_IN`, `TRANSFER_OUT`: Usually required.
+- `BUY`, `SELL`, `DIVIDEND`, `SPLIT`: Always required.
+- `TRANSFER_IN`, `TRANSFER_OUT`, `INTEREST`: Required for asset transactions.
 - `DEPOSIT`, `WITHDRAWAL`, `FEE`, `TAX`, `CREDIT`: Not required.
+
+**Note:** Symbol can also be resolved from ISIN, CUSIP, or company name using an override file. If you provide an ISIN that is mapped to a symbol, both the resolved symbol and the original ISIN will be included in the output CSV.
 
 ## Getting Format Information
 

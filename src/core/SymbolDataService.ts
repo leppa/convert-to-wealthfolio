@@ -158,12 +158,14 @@ export class SymbolDataService {
     }
 
     // Fallback: return the symbol based on the original query values in the priority order: symbol,
-    // ISIN, CUSIP, sanitized name
+    // CUSIP, sanitized name
     const symbol =
       normalizedQuery.symbol ||
-      normalizedQuery.isin ||
-      normalizedQuery.cusip ||
-      sanitizeName(normalizedQuery.name, UNKNOWN_SYMBOL);
+      // If ISIN is known, don't fallback to CUSIP or name, as ISIN should be included in the
+      // dedicated column of the output in this case
+      (normalizedQuery.isin
+        ? UNKNOWN_SYMBOL
+        : normalizedQuery.cusip || sanitizeName(normalizedQuery.name, UNKNOWN_SYMBOL));
 
     // When query has a symbol and resolution doesn't return a result, this only means that there is
     // no override for that symbol. So we only log when there is no symbol in the query.

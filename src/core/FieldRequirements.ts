@@ -144,6 +144,56 @@ function clearField(record: WealthfolioRecord, field: keyof WealthfolioRecord): 
 }
 
 /**
+ * Helper function for fields that are required when ISIN is not set
+ *
+ * Returns `FieldRequirement.Required` if ISIN is not set, otherwise returns `FieldRequirement.Optional`.
+ *
+ * @param record - The Wealthfolio record to check
+ * @returns Field requirement based on the presence of ISIN
+ */
+function requiredWhenNoIsinElseOptional(record: WealthfolioRecord): FieldRequirement {
+  return record.isin ? FieldRequirement.Optional : FieldRequirement.Required;
+}
+
+/**
+ * Helper function for fields that are required when symbol is not set
+ *
+ * Returns `FieldRequirement.Required` if symbol is not set, otherwise returns `FieldRequirement.Optional`.
+ *
+ * @param record - The Wealthfolio record to check
+ * @returns Field requirement based on the presence of symbol
+ */
+function requiredWhenNoSymbolElseOptional(record: WealthfolioRecord): FieldRequirement {
+  return record.symbol ? FieldRequirement.Optional : FieldRequirement.Required;
+}
+
+/**
+ * Helper function for fields that are required for asset transactions
+ *
+ * Returns `FieldRequirement.Required` when transaction is for an asset (symbol or ISIN is set),
+ * otherwise returns `FieldRequirement.Ignored`.
+ *
+ * @param record - The Wealthfolio record to check
+ * @returns Field requirement based on the presence of symbol or ISIN
+ */
+function requiredWhenAssetTransactionElseIgnored(record: WealthfolioRecord): FieldRequirement {
+  return !!record.symbol || !!record.isin ? FieldRequirement.Required : FieldRequirement.Ignored;
+}
+
+/**
+ * Helper function for fields that are optional for asset transactions
+ *
+ * Returns `FieldRequirement.Optional` when transaction is for an asset (symbol or ISIN is set),
+ * otherwise returns `FieldRequirement.Ignored`.
+ *
+ * @param record - The Wealthfolio record to check
+ * @returns Field requirement based on the presence of symbol or ISIN
+ */
+function optionalWhenAssetTransactionElseIgnored(record: WealthfolioRecord): FieldRequirement {
+  return !!record.symbol || !!record.isin ? FieldRequirement.Optional : FieldRequirement.Ignored;
+}
+
+/**
  * Field requirement levels in a Wealthfolio record
  */
 enum FieldRequirement {
@@ -188,7 +238,8 @@ const RECORD_FIELD_REQUIREMENTS: {
   [ActivityType.Buy]: {
     ...COMMON_FIELD_REQUIREMENTS,
     instrumentType: FieldRequirement.Optional,
-    symbol: FieldRequirement.Required,
+    symbol: requiredWhenNoIsinElseOptional,
+    isin: requiredWhenNoSymbolElseOptional,
     quantity: FieldRequirement.Required,
     unitPrice: FieldRequirement.Required,
     amount: FieldRequirement.Optional,
@@ -196,7 +247,8 @@ const RECORD_FIELD_REQUIREMENTS: {
   [ActivityType.Sell]: {
     ...COMMON_FIELD_REQUIREMENTS,
     instrumentType: FieldRequirement.Optional,
-    symbol: FieldRequirement.Required,
+    symbol: requiredWhenNoIsinElseOptional,
+    isin: requiredWhenNoSymbolElseOptional,
     quantity: FieldRequirement.Required,
     unitPrice: FieldRequirement.Required,
     amount: FieldRequirement.Optional,
@@ -204,7 +256,8 @@ const RECORD_FIELD_REQUIREMENTS: {
   [ActivityType.Dividend]: {
     ...COMMON_FIELD_REQUIREMENTS,
     instrumentType: FieldRequirement.Optional,
-    symbol: FieldRequirement.Required,
+    symbol: requiredWhenNoIsinElseOptional,
+    isin: requiredWhenNoSymbolElseOptional,
     quantity: FieldRequirement.Optional,
     unitPrice: (record) =>
       // DRIP and dividend in kind subtypes require unit price for cost basis calculation
@@ -222,13 +275,13 @@ const RECORD_FIELD_REQUIREMENTS: {
   },
   [ActivityType.Interest]: {
     ...COMMON_FIELD_REQUIREMENTS,
-    instrumentType: (record) =>
-      record.symbol ? FieldRequirement.Optional : FieldRequirement.Ignored,
+    instrumentType: optionalWhenAssetTransactionElseIgnored,
     symbol: FieldRequirement.Optional,
+    isin: FieldRequirement.Optional,
     quantity: FieldRequirement.Ignored,
     unitPrice: (record) =>
-      // Staking reward subtype requires unit price (fair market value at time of reward) for cost
-      // basis calculation
+      // Staking reward subtype requires unit price (fair market value at the time of reward) for
+      // cost basis calculation
       record.subtype === ActivitySubtype.StakingReward
         ? FieldRequirement.Required
         : FieldRequirement.Ignored,
@@ -239,6 +292,7 @@ const RECORD_FIELD_REQUIREMENTS: {
     ...COMMON_FIELD_REQUIREMENTS,
     instrumentType: FieldRequirement.Ignored,
     symbol: FieldRequirement.Ignored,
+    isin: FieldRequirement.Ignored,
     quantity: FieldRequirement.Ignored,
     unitPrice: FieldRequirement.Ignored,
     amount: FieldRequirement.Required,
@@ -247,32 +301,36 @@ const RECORD_FIELD_REQUIREMENTS: {
     ...COMMON_FIELD_REQUIREMENTS,
     instrumentType: FieldRequirement.Ignored,
     symbol: FieldRequirement.Ignored,
+    isin: FieldRequirement.Ignored,
     quantity: FieldRequirement.Ignored,
     unitPrice: FieldRequirement.Ignored,
     amount: FieldRequirement.Required,
   },
   [ActivityType.TransferIn]: {
     ...COMMON_FIELD_REQUIREMENTS,
-    instrumentType: (record) =>
-      record.symbol ? FieldRequirement.Optional : FieldRequirement.Ignored,
+    instrumentType: optionalWhenAssetTransactionElseIgnored,
     symbol: FieldRequirement.Optional,
-    quantity: (record) => (record.symbol ? FieldRequirement.Required : FieldRequirement.Ignored),
-    unitPrice: (record) => (record.symbol ? FieldRequirement.Required : FieldRequirement.Ignored),
-    amount: (record) => (record.symbol ? FieldRequirement.Ignored : FieldRequirement.Required),
+    isin: FieldRequirement.Optional,
+    quantity: requiredWhenAssetTransactionElseIgnored,
+    unitPrice: requiredWhenAssetTransactionElseIgnored,
+    amount: (record) =>
+      record.symbol || record.isin ? FieldRequirement.Ignored : FieldRequirement.Required,
   },
   [ActivityType.TransferOut]: {
     ...COMMON_FIELD_REQUIREMENTS,
-    instrumentType: (record) =>
-      record.symbol ? FieldRequirement.Optional : FieldRequirement.Ignored,
+    instrumentType: optionalWhenAssetTransactionElseIgnored,
     symbol: FieldRequirement.Optional,
-    quantity: (record) => (record.symbol ? FieldRequirement.Required : FieldRequirement.Ignored),
-    unitPrice: (record) => (record.symbol ? FieldRequirement.Required : FieldRequirement.Ignored),
-    amount: (record) => (record.symbol ? FieldRequirement.Ignored : FieldRequirement.Required),
+    isin: FieldRequirement.Optional,
+    quantity: requiredWhenAssetTransactionElseIgnored,
+    unitPrice: requiredWhenAssetTransactionElseIgnored,
+    amount: (record) =>
+      record.symbol || record.isin ? FieldRequirement.Ignored : FieldRequirement.Required,
   },
   [ActivityType.Fee]: {
     ...COMMON_FIELD_REQUIREMENTS,
     instrumentType: FieldRequirement.Ignored,
     symbol: FieldRequirement.Ignored,
+    isin: FieldRequirement.Ignored,
     quantity: FieldRequirement.Ignored,
     unitPrice: FieldRequirement.Ignored,
     // Amount or fee - we'll use the amount
@@ -284,6 +342,7 @@ const RECORD_FIELD_REQUIREMENTS: {
     ...COMMON_FIELD_REQUIREMENTS,
     instrumentType: FieldRequirement.Ignored,
     symbol: FieldRequirement.Ignored,
+    isin: FieldRequirement.Ignored,
     quantity: FieldRequirement.Ignored,
     unitPrice: FieldRequirement.Ignored,
     amount: FieldRequirement.Required,
@@ -292,7 +351,8 @@ const RECORD_FIELD_REQUIREMENTS: {
   [ActivityType.Split]: {
     ...COMMON_FIELD_REQUIREMENTS,
     instrumentType: FieldRequirement.Optional,
-    symbol: FieldRequirement.Required,
+    symbol: requiredWhenNoIsinElseOptional,
+    isin: requiredWhenNoSymbolElseOptional,
     quantity: FieldRequirement.Ignored,
     unitPrice: FieldRequirement.Ignored,
     currency: FieldRequirement.Ignored,
@@ -303,6 +363,7 @@ const RECORD_FIELD_REQUIREMENTS: {
     ...COMMON_FIELD_REQUIREMENTS,
     instrumentType: FieldRequirement.Ignored,
     symbol: FieldRequirement.Ignored,
+    isin: FieldRequirement.Ignored,
     quantity: FieldRequirement.Ignored,
     unitPrice: FieldRequirement.Ignored,
     amount: FieldRequirement.Required,
@@ -311,9 +372,9 @@ const RECORD_FIELD_REQUIREMENTS: {
   // Documentation just states that field requirement "Varies by use case"
   [ActivityType.Adjustment]: {
     ...COMMON_FIELD_REQUIREMENTS,
-    instrumentType: (record) =>
-      record.symbol ? FieldRequirement.Optional : FieldRequirement.Ignored,
+    instrumentType: optionalWhenAssetTransactionElseIgnored,
     symbol: FieldRequirement.Optional,
+    isin: FieldRequirement.Optional,
     quantity: FieldRequirement.Optional,
     unitPrice: FieldRequirement.Optional,
     currency: FieldRequirement.Optional,
@@ -324,9 +385,9 @@ const RECORD_FIELD_REQUIREMENTS: {
   // flagged for review". Either ignore the whole activity or simply pass all fields through?
   [ActivityType.Unknown]: {
     ...COMMON_FIELD_REQUIREMENTS,
-    instrumentType: (record) =>
-      record.symbol ? FieldRequirement.Optional : FieldRequirement.Ignored,
+    instrumentType: optionalWhenAssetTransactionElseIgnored,
     symbol: FieldRequirement.Optional,
+    isin: FieldRequirement.Optional,
     quantity: FieldRequirement.Optional,
     unitPrice: FieldRequirement.Optional,
     currency: FieldRequirement.Optional,

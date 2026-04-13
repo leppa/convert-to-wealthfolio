@@ -25,6 +25,7 @@ const createRecord = (overrides: Partial<WealthfolioRecord> = {}): WealthfolioRe
     date: new Date("2024-01-15"),
     instrumentType: instrumentType ?? InstrumentType.Unknown,
     symbol: "AAPL",
+    isin: "",
     quantity: 1,
     activityType: ActivityType.Buy,
     unitPrice: 10,
@@ -164,6 +165,74 @@ describe("FieldRequirements", () => {
       }
     });
 
+    it("should require symbol or ISIN for asset transactions", () => {
+      const activityTypes: ActivityType[] = [
+        ActivityType.Buy,
+        ActivityType.Sell,
+        ActivityType.Dividend,
+        ActivityType.Split,
+      ];
+
+      for (const activityType of activityTypes) {
+        const record = createRecord({
+          activityType,
+          symbol: "",
+          isin: "",
+          amount: 100,
+        });
+
+        const result = validateRecordFieldRequirements(record);
+
+        expect(result.valid).toBe(false);
+        expect(result.invalidFields.map((field) => field.name)).toContain("symbol");
+        expect(result.invalidFields.map((field) => field.name)).toContain("isin");
+      }
+    });
+
+    it("should allow empty symbol when ISIN is provided for asset transactions", () => {
+      const activityTypes: ActivityType[] = [
+        ActivityType.Buy,
+        ActivityType.Sell,
+        ActivityType.Dividend,
+        ActivityType.Split,
+      ];
+
+      for (const activityType of activityTypes) {
+        const record = createRecord({
+          activityType,
+          symbol: "",
+          isin: "US0378331005",
+          amount: 100,
+        });
+
+        const result = validateRecordFieldRequirements(record);
+
+        expect(result.valid).toBe(true);
+      }
+    });
+
+    it("should allow empty ISIN when symbol is provided for asset transactions", () => {
+      const activityTypes: ActivityType[] = [
+        ActivityType.Buy,
+        ActivityType.Sell,
+        ActivityType.Dividend,
+        ActivityType.Split,
+      ];
+
+      for (const activityType of activityTypes) {
+        const record = createRecord({
+          activityType,
+          symbol: "AAPL",
+          isin: "",
+          amount: 100,
+        });
+
+        const result = validateRecordFieldRequirements(record);
+
+        expect(result.valid).toBe(true);
+      }
+    });
+
     it("should allow ignored dividend unit price when subtype is not DRIP", () => {
       const record = createRecord({
         activityType: ActivityType.Dividend,
@@ -265,25 +334,37 @@ describe("FieldRequirements", () => {
         unitPrice: 10,
         amount: Number.NaN,
       });
+      const withISIN = createRecord({
+        activityType: ActivityType.TransferOut,
+        symbol: "",
+        isin: "US0378331005",
+        quantity: 1,
+        unitPrice: 10,
+        amount: Number.NaN,
+      });
       const withoutSymbol = createRecord({
         activityType: ActivityType.TransferIn,
         symbol: "",
+        isin: "",
         quantity: Number.NaN,
         unitPrice: Number.NaN,
         amount: 100,
       });
 
       const resultWithSymbol = validateRecordFieldRequirements(withSymbol);
+      const resultWithISIN = validateRecordFieldRequirements(withISIN);
       const resultWithoutSymbol = validateRecordFieldRequirements(withoutSymbol);
 
       expect(resultWithSymbol.valid).toBe(true);
+      expect(resultWithISIN.valid).toBe(true);
       expect(resultWithoutSymbol.valid).toBe(true);
     });
 
-    it("should require amount when transfer has no symbol", () => {
+    it("should require amount when transfer has both symbol and ISIN missing", () => {
       const record = createRecord({
         activityType: ActivityType.TransferOut,
         symbol: "",
+        isin: "",
         quantity: Number.NaN,
         unitPrice: Number.NaN,
         amount: Number.NaN,
@@ -295,24 +376,33 @@ describe("FieldRequirements", () => {
       expect(result.invalidFields.map((field) => field.name)).toContain("amount");
     });
 
-    it("should keep instrument type for adjustment activity when symbol is present", () => {
-      const record = createRecord({
+    it("should keep instrument type for adjustment activity when symbol or ISIN is present", () => {
+      const recordSymbol = createRecord({
         activityType: ActivityType.Adjustment,
         instrumentType: InstrumentType.Equity,
         symbol: "AAPL",
       });
+      const recordISIN = createRecord({
+        activityType: ActivityType.Adjustment,
+        instrumentType: InstrumentType.Equity,
+        isin: "US0378331005",
+      });
 
-      const result = validateRecordFieldRequirements(record, true);
+      const resultSymbol = validateRecordFieldRequirements(recordSymbol, true);
+      const resultISIN = validateRecordFieldRequirements(recordISIN, true);
 
-      expect(result.valid).toBe(true);
-      expect(record.instrumentType).toBe(InstrumentType.Equity);
+      expect(resultSymbol.valid).toBe(true);
+      expect(resultISIN.valid).toBe(true);
+      expect(recordSymbol.instrumentType).toBe(InstrumentType.Equity);
+      expect(recordISIN.instrumentType).toBe(InstrumentType.Equity);
     });
 
-    it("should ignore instrument type for adjustment activity when symbol is missing", () => {
+    it("should ignore instrument type for adjustment activity when symbol and ISIN are missing", () => {
       const record = createRecord({
         activityType: ActivityType.Adjustment,
         instrumentType: InstrumentType.Equity,
         symbol: "",
+        isin: "",
       });
 
       const result = validateRecordFieldRequirements(record, true);
@@ -321,24 +411,33 @@ describe("FieldRequirements", () => {
       expect(record.instrumentType).toBe(InstrumentType.Unknown);
     });
 
-    it("should keep instrument type for unknown activity when symbol is present", () => {
-      const record = createRecord({
+    it("should keep instrument type for unknown activity when symbol or ISIN is present", () => {
+      const recordSymbol = createRecord({
         activityType: ActivityType.Unknown,
         instrumentType: InstrumentType.Equity,
         symbol: "AAPL",
       });
+      const recordISIN = createRecord({
+        activityType: ActivityType.Unknown,
+        instrumentType: InstrumentType.Equity,
+        isin: "US0378331005",
+      });
 
-      const result = validateRecordFieldRequirements(record, true);
+      const resultSymbol = validateRecordFieldRequirements(recordSymbol, true);
+      const resultISIN = validateRecordFieldRequirements(recordISIN, true);
 
-      expect(result.valid).toBe(true);
-      expect(record.instrumentType).toBe(InstrumentType.Equity);
+      expect(resultSymbol.valid).toBe(true);
+      expect(resultISIN.valid).toBe(true);
+      expect(recordSymbol.instrumentType).toBe(InstrumentType.Equity);
+      expect(recordISIN.instrumentType).toBe(InstrumentType.Equity);
     });
 
-    it("should ignore instrument type for unknown activity when symbol is missing", () => {
+    it("should ignore instrument type for unknown activity when symbol and ISIN are missing", () => {
       const record = createRecord({
         activityType: ActivityType.Unknown,
         instrumentType: InstrumentType.Equity,
         symbol: "",
+        isin: "",
       });
 
       const result = validateRecordFieldRequirements(record, true);

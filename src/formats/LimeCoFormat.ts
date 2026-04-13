@@ -99,6 +99,7 @@ export class LimeCoFormat extends BaseFormat {
         // examples of how options are represented in the CSV
         instrumentType: InstrumentType.Unknown,
         symbol: record.symbol,
+        isin: "",
         quantity: this.maybeMakeAbsolute(record.quantity, activityType),
         activityType,
         unitPrice: this.maybeMakeAbsolute(record.price, activityType),

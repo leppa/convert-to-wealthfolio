@@ -51,7 +51,7 @@ export class MyCustomFormat extends BaseFormat {
     // Note: All CSV values are strings - convert types as needed during processing. You can also
     // define a more convenient data structure and convert to it by overriding `getParseOptions()`.
     return records.map((record) => {
-      let symbol = (record.ticker || "").trim().toUpperCase();
+      let symbol = record.ticker?.trim().toUpperCase() ?? "";
       // If symbol is empty, try to resolve it from other fields using the symbol data service
       if (!symbol && (record.isin || record.cusip || record.securityName)) {
         ({ symbol } = symbolDataService.querySymbolWithFallback({
@@ -65,6 +65,7 @@ export class MyCustomFormat extends BaseFormat {
         date: new Date(record.date),
         instrumentType: this.mapInstrumentType(record.instrumentType),
         symbol,
+        isin: record.isin?.trim().toUpperCase() ?? "",
         quantity: Math.abs(parseFloat(record.shares)),
         activityType: this.mapActivityType(record.action),
         unitPrice: Math.abs(parseFloat(record.price)),
@@ -237,6 +238,7 @@ interface WealthfolioRecord {
   date: Date; // Transaction date as Date object
   instrumentType: InstrumentType; // Instrument category enum (optional by activity)
   symbol: string; // Asset symbol / ticker (uppercase)
+  isin: string; // ISIN code (optional, can substitute symbol for asset transactions)
   quantity: number; // Number of shares / units
   activityType: ActivityType; // Transaction type enum
   unitPrice: number; // Unit price
@@ -356,6 +358,7 @@ export class MyCustomFormat extends BaseFormat {
         date: new Date(record.date),
         instrumentType: InstrumentType.Unknown,
         symbol, // Already resolved with overrides applied
+        isin: record.isin || "",
         quantity: parseFloat(record.shares),
         activityType: this.mapActivityType(record.action),
         unitPrice: parseFloat(record.unitPrice),

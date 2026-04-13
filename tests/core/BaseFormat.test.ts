@@ -28,9 +28,10 @@ class TestFormat extends BaseFormat {
       instrumentType: InstrumentType.Equity,
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
       symbol: record.testField ? String(record.testField) : "TEST",
+      isin: "",
       quantity: 100,
       activityType: ActivityType.Buy,
-      unitPrice: 150.0,
+      unitPrice: 150,
       currency: "EUR",
       fee: 0,
       amount: 15000,

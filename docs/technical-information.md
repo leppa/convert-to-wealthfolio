@@ -71,7 +71,7 @@ This document provides technical details about the architecture, design, and imp
   3. Checks the in-memory cache and returns the cached `SymbolResult` on a hit.
   4. Queries providers in registration order, caches the first match, and returns it.
   5. Returns `null` if no provider returns a match.
-- `querySymbolWithFallback()` calls `querySymbol()` and adds a fallback that returns the best available identifier (ISIN -> CUSIP -> sanitized name) when `querySymbol()` returns `null`.
+- `querySymbolWithFallback()` calls `querySymbol()` and adds a fallback that returns the best available identifier (CUSIP -> sanitized name) when `querySymbol()` returns `null`.
 - Exposes registered provider info for diagnostics and logging.
 - Logs successful resolutions at the `INFO` level, cache hits at the `TRACE` level, and unresolvable identifiers at the `WARN` level.
 
@@ -111,6 +111,7 @@ All converters produce CSV with these columns:
 - **date**: Transaction date (ISO format).
 - **instrumentType**: Asset category (see [Instrument Types](#instrument-types) below).
 - **symbol**: Asset symbol/ticker.
+- **isin**: ISIN code (International Securities Identification Number).
 - **quantity**: Number of shares/units.
 - **activityType**: Transaction type (see [Activity Types](#activity-types) below).
 - **unitPrice**: Price per unit.

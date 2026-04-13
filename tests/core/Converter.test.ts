@@ -74,9 +74,10 @@ describe("Converter", () => {
 
       // Check header
       const headers = lines[0].split(",");
-      expect(headers.length).toBe(13);
+      expect(headers.length).toBe(14);
       expect(headers).toContain("date");
       expect(headers).toContain("symbol");
+      expect(headers).toContain("isin");
       expect(headers).toContain("quantity");
       expect(headers).toContain("activityType");
       expect(headers).toContain("unitPrice");
@@ -167,6 +168,7 @@ describe("Converter", () => {
         date: new Date("2024-01-15"),
         instrumentType: InstrumentType.Equity,
         symbol: "", // Required for Buy
+        isin: "",
         quantity: 1,
         activityType: ActivityType.Buy,
         unitPrice: 10,
@@ -182,6 +184,7 @@ describe("Converter", () => {
         date: new Date("2024-01-20"),
         instrumentType: InstrumentType.Equity,
         symbol: "MSFT",
+        isin: "",
         quantity: 2,
         activityType: ActivityType.Buy,
         unitPrice: 20,
@@ -300,6 +303,7 @@ describe("Converter", () => {
           date: new Date("2024-01-15"),
           instrumentType: InstrumentType.Unknown,
           symbol: "  aapl  ",
+          isin: "",
           quantity: 100,
           activityType: ActivityType.Buy,
           unitPrice: 150.25,
@@ -387,6 +391,7 @@ describe("Converter", () => {
         date: new Date("2024-01-15"),
         instrumentType: InstrumentType.Equity,
         symbol: "AAPL",
+        isin: "",
         quantity: 1,
         activityType: ActivityType.Buy,
         unitPrice: 10.123456789,
@@ -402,6 +407,7 @@ describe("Converter", () => {
         date: new Date("2024-01-20"),
         instrumentType: InstrumentType.Equity,
         symbol: "MSFT",
+        isin: "",
         quantity: 2,
         activityType: ActivityType.Buy,
         unitPrice: 20,

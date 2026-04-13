@@ -134,9 +134,13 @@ describe("SymbolDataService", () => {
       cusip: " 38259p508 ",
       name: "Google LLC",
     });
+    const nameResult = service.querySymbolWithFallback({
+      name: "Google LLC",
+    });
 
-    expect(isinResult).toEqual({ symbol: "US0378331005", provider: "Fallback" });
+    expect(isinResult).toEqual({ symbol: "", provider: "Fallback" });
     expect(cusipResult).toEqual({ symbol: "38259P508", provider: "Fallback" });
+    expect(nameResult).toEqual({ symbol: "GOOGLE-LLC", provider: "Fallback" });
   });
 
   it("should return sanitized name when no symbol, ISIN, or CUSIP are provided", () => {
@@ -183,8 +187,8 @@ describe("SymbolDataService", () => {
   it("should re-evaluate fallback cache entries after a new provider is registered", () => {
     // First provider cannot resolve — result is cached as Fallback
     service.registerProvider(new TestProvider("ProviderA", () => null));
-    expect(service.querySymbolWithFallback({ isin: "US0378331005" })).toEqual({
-      symbol: "US0378331005",
+    expect(service.querySymbolWithFallback({ cusip: "037833100" })).toEqual({
+      symbol: "037833100",
       provider: "Fallback",
     });
 
@@ -193,7 +197,7 @@ describe("SymbolDataService", () => {
     service.registerProvider(new TestProvider("ProviderB", resolverB));
 
     // The fallback cache entry must have been cleared — ProviderB should now be queried
-    expect(service.querySymbolWithFallback({ isin: "US0378331005" })).toEqual({
+    expect(service.querySymbolWithFallback({ cusip: "037833100" })).toEqual({
       symbol: "AAPL",
       provider: "ProviderB",
     });
@@ -244,11 +248,11 @@ describe("SymbolDataService", () => {
     // Provider cannot resolve — result is cached as Fallback
     const resolver = jest.fn(() => null);
     service.registerProvider(new TestProvider("ProviderA", resolver));
-    service.querySymbolWithFallback({ isin: "US0378331005" });
+    service.querySymbolWithFallback({ cusip: "037833100" });
     expect(resolver).toHaveBeenCalledTimes(1);
 
     // Direct querySymbol() should hit the Fallback cache entry and return null immediately
-    const result = service.querySymbol({ isin: "US0378331005" });
+    const result = service.querySymbol({ cusip: "037833100" });
 
     expect(result).toBeNull();
     // Still only one call from the first query
@@ -256,10 +260,10 @@ describe("SymbolDataService", () => {
 
     // querySymbolWithFallback(), on the other hand, should hit the Fallback cache entry and return
     // the result
-    const resultWithFallback = service.querySymbolWithFallback({ isin: "US0378331005" });
+    const resultWithFallback = service.querySymbolWithFallback({ cusip: "037833100" });
 
     expect(resultWithFallback).toEqual({
-      symbol: "US0378331005",
+      symbol: "037833100",
       provider: "Fallback",
     });
     // Still only one call from the first query

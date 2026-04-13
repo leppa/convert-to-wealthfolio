@@ -131,6 +131,7 @@ export class GenericFormat extends BaseFormat {
         date: record.date,
         instrumentType: this.mapInstrumentType(record.instrumenttype),
         symbol,
+        isin: record.isin?.trim().toUpperCase() ?? "",
         quantity,
         activityType,
         unitPrice,
@@ -353,7 +354,7 @@ export class GenericFormat extends BaseFormat {
       {
         name: "ISIN",
         optional: true,
-        description: "International Securities Identification Number (requires override file)",
+        description: "International Securities Identification Number",
       },
       {
         name: "CUSIP",
