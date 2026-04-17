@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import { DataProvider, SymbolQuery } from "../../src/core/DataProvider";
+import { DataProvider, SymbolQuery, SymbolResult } from "../../src/core/DataProvider";
 import { SymbolDataService } from "../../src/core/SymbolDataService";
 
 // Silence logging during tests
@@ -11,12 +11,12 @@ import { Logger, LogLevel } from "../../src/core/Logger";
 Logger.setLogLevel(LogLevel.ERROR);
 
 class TestProvider extends DataProvider {
-  private readonly resolver: (query: SymbolQuery) => string | null;
+  private readonly resolver: (query: SymbolQuery) => SymbolResult;
   private readonly canHandleResolver: (query: SymbolQuery) => boolean;
 
   constructor(
     name: string,
-    resolver: (query: SymbolQuery) => string | null,
+    resolver: (query: SymbolQuery) => SymbolResult,
     canHandleResolver: (query: SymbolQuery) => boolean = () => true,
     description?: string,
   ) {
@@ -25,7 +25,7 @@ class TestProvider extends DataProvider {
     this.canHandleResolver = canHandleResolver;
   }
 
-  query(query: SymbolQuery): string | null {
+  query(query: SymbolQuery): SymbolResult {
     return this.resolver(query);
   }
 
@@ -45,7 +45,7 @@ describe("SymbolDataService", () => {
     service.registerProvider(
       new TestProvider(
         "ProviderA",
-        () => null,
+        () => ({}),
         () => true,
         "first",
       ),
@@ -53,7 +53,7 @@ describe("SymbolDataService", () => {
     service.registerProvider(
       new TestProvider(
         "ProviderB",
-        () => null,
+        () => ({}),
         () => true,
         "second",
       ),
@@ -67,7 +67,7 @@ describe("SymbolDataService", () => {
   });
 
   it("should clear providers", () => {
-    service.registerProvider(new TestProvider("ProviderA", () => null));
+    service.registerProvider(new TestProvider("ProviderA", () => ({})));
 
     service.clearProviders();
 
@@ -76,10 +76,10 @@ describe("SymbolDataService", () => {
   });
 
   it("should query providers in registration order and return first match", () => {
-    service.registerProvider(new TestProvider("First", () => "AAPL"));
-    service.registerProvider(new TestProvider("Second", () => "MSFT"));
+    service.registerProvider(new TestProvider("First", () => ({ symbol: "AAPL" })));
+    service.registerProvider(new TestProvider("Second", () => ({ symbol: "MSFT" })));
 
-    const result = service.querySymbol({ symbol: "AAPL" });
+    const result = service.querySymbol({ isin: "US0378331005" });
 
     expect(result).toEqual({ symbol: "AAPL", provider: "First" });
   });
@@ -88,11 +88,11 @@ describe("SymbolDataService", () => {
     service.registerProvider(
       new TestProvider(
         "SkipMe",
-        () => "AAPL",
+        () => ({ symbol: "AAPL" }),
         () => false,
       ),
     );
-    service.registerProvider(new TestProvider("Active", () => "MSFT"));
+    service.registerProvider(new TestProvider("Active", () => ({ symbol: "MSFT" })));
 
     const result = service.querySymbol({ symbol: "anything" });
 
@@ -100,36 +100,39 @@ describe("SymbolDataService", () => {
   });
 
   it("should return `null` when no providers resolve a symbol", () => {
-    service.registerProvider(new TestProvider("ProviderA", () => null));
-    service.registerProvider(new TestProvider("ProviderB", () => null));
+    service.registerProvider(new TestProvider("ProviderA", () => ({})));
+    service.registerProvider(new TestProvider("ProviderB", () => ({})));
 
     expect(service.querySymbol({ symbol: "UNKNOWN" })).toBeNull();
   });
 
   it("should return provider result in `querySymbolWithFallback()` when resolved", () => {
-    service.registerProvider(new TestProvider("ProviderA", () => "AAPL"));
+    service.registerProvider(new TestProvider("ProviderA", () => ({ symbol: "AAPL" })));
 
-    const result = service.querySymbolWithFallback({ symbol: "aapl" });
+    const result = service.querySymbolWithFallback({ isin: "US0378331005" });
 
     expect(result).toEqual({ symbol: "AAPL", provider: "ProviderA" });
   });
 
   it("should fallback to normalized symbol when providers do not resolve", () => {
-    service.registerProvider(new TestProvider("ProviderA", () => null));
+    service.registerProvider(new TestProvider("ProviderA", () => ({})));
 
     const result = service.querySymbolWithFallback({ symbol: "  msft  " });
 
     expect(result).toEqual({ symbol: "MSFT", provider: "Fallback" });
   });
 
-  it("should fallback in priority order when symbol is missing", () => {
-    service.registerProvider(new TestProvider("ProviderA", () => null));
+  it("should fallback to ISIN when symbol is missing and ISIN is provided", () => {
+    service.registerProvider(new TestProvider("ProviderA", () => ({})));
 
-    const isinResult = service.querySymbolWithFallback({
-      isin: " us0378331005 ",
-      cusip: "037833100",
-      name: "Apple Inc",
-    });
+    const result = service.querySymbolWithFallback({ isin: " us0378331005 " });
+
+    expect(result).toEqual({ isin: "US0378331005", provider: "Fallback" });
+  });
+
+  it("should fallback in priority order when both symbol and ISIN are missing", () => {
+    service.registerProvider(new TestProvider("ProviderA", () => ({})));
+
     const cusipResult = service.querySymbolWithFallback({
       cusip: " 38259p508 ",
       name: "Google LLC",
@@ -138,13 +141,12 @@ describe("SymbolDataService", () => {
       name: "Google LLC",
     });
 
-    expect(isinResult).toEqual({ symbol: "", provider: "Fallback" });
     expect(cusipResult).toEqual({ symbol: "38259P508", provider: "Fallback" });
     expect(nameResult).toEqual({ symbol: "GOOGLE-LLC", provider: "Fallback" });
   });
 
   it("should return sanitized name when no symbol, ISIN, or CUSIP are provided", () => {
-    service.registerProvider(new TestProvider("ProviderA", () => null));
+    service.registerProvider(new TestProvider("ProviderA", () => ({})));
 
     const result = service.querySymbolWithFallback({
       name: "ACME, Inc. / Class-A",
@@ -153,16 +155,14 @@ describe("SymbolDataService", () => {
     expect(result).toEqual({ symbol: "ACME-INC-CLASS-A", provider: "Fallback" });
   });
 
-  it("should return empty fallback symbol when query contains no usable fields", () => {
-    service.registerProvider(new TestProvider("ProviderA", () => null));
+  it("should return `null` from `querySymbol()` when query contains no usable fields", () => {
+    service.registerProvider(new TestProvider("ProviderA", () => ({})));
 
-    const result = service.querySymbol({});
-
-    expect(result).toEqual({ symbol: "", provider: "Fallback" });
+    expect(service.querySymbol({})).toBeNull();
   });
 
   it("should call provider only once for repeated identical queries", () => {
-    const resolver = jest.fn(() => "AAPL");
+    const resolver = jest.fn(() => ({ symbol: "AAPL" }));
     service.registerProvider(new TestProvider("ProviderA", resolver));
 
     service.querySymbol({ isin: "US0378331005" });
@@ -174,7 +174,7 @@ describe("SymbolDataService", () => {
   });
 
   it("should treat queries with different whitespace and casing as identical", () => {
-    const resolver = jest.fn(() => "AAPL");
+    const resolver = jest.fn(() => ({ symbol: "AAPL" }));
     service.registerProvider(new TestProvider("ProviderA", resolver));
 
     service.querySymbolWithFallback({ symbol: "  aapl  " });
@@ -186,14 +186,14 @@ describe("SymbolDataService", () => {
 
   it("should re-evaluate fallback cache entries after a new provider is registered", () => {
     // First provider cannot resolve — result is cached as Fallback
-    service.registerProvider(new TestProvider("ProviderA", () => null));
+    service.registerProvider(new TestProvider("ProviderA", () => ({})));
     expect(service.querySymbolWithFallback({ cusip: "037833100" })).toEqual({
       symbol: "037833100",
       provider: "Fallback",
     });
 
     // Register a second provider that can resolve
-    const resolverB = jest.fn(() => "AAPL");
+    const resolverB = jest.fn(() => ({ symbol: "AAPL" }));
     service.registerProvider(new TestProvider("ProviderB", resolverB));
 
     // The fallback cache entry must have been cleared — ProviderB should now be queried
@@ -206,13 +206,13 @@ describe("SymbolDataService", () => {
 
   it("should not evict non-fallback cache entries when a new provider is registered", () => {
     // ProviderA resolves the query — result is cached as ProviderA
-    const resolverA = jest.fn(() => "AAPL");
+    const resolverA = jest.fn(() => ({ symbol: "AAPL" }));
     service.registerProvider(new TestProvider("ProviderA", resolverA));
     service.querySymbolWithFallback({ isin: "US0378331005" });
     expect(resolverA).toHaveBeenCalledTimes(1);
 
     // Register a second provider
-    const resolverB = jest.fn(() => "MSFT");
+    const resolverB = jest.fn(() => ({ symbol: "MSFT" }));
     service.registerProvider(new TestProvider("ProviderB", resolverB));
     expect(service.querySymbolWithFallback({ isin: "US0378331005" })).toEqual({
       symbol: "AAPL",
@@ -226,7 +226,7 @@ describe("SymbolDataService", () => {
 
   it("should clear the entire cache when all providers are cleared", () => {
     // ProviderA resolves and the result gets cached
-    const resolverA = jest.fn(() => "AAPL");
+    const resolverA = jest.fn(() => ({ symbol: "AAPL" }));
     service.registerProvider(new TestProvider("ProviderA", resolverA));
     service.querySymbol({ isin: "US0378331005" });
     expect(resolverA).toHaveBeenCalledTimes(1);
@@ -235,7 +235,7 @@ describe("SymbolDataService", () => {
     service.clearProviders();
 
     // Register a new provider and re-query — new provider must be called
-    const resolverB = jest.fn(() => "MSFT");
+    const resolverB = jest.fn(() => ({ symbol: "MSFT" }));
     service.registerProvider(new TestProvider("ProviderB", resolverB));
     expect(service.querySymbolWithFallback({ isin: "US0378331005" })).toEqual({
       symbol: "MSFT",
@@ -244,9 +244,17 @@ describe("SymbolDataService", () => {
     expect(resolverB).toHaveBeenCalledTimes(1);
   });
 
+  it("should strip ISIN from provider result when it matches the query ISIN", () => {
+    // Provider echoes back the same ISIN that was in the query — should be stripped
+    service.registerProvider(new TestProvider("ProviderA", (q) => ({ isin: q.isin })));
+
+    // Both symbol and isin are stripped, so no provider result
+    expect(service.querySymbol({ isin: "US0378331005" })).toBeNull();
+  });
+
   it("should return `null` from `querySymbol()` without querying providers when a Fallback cache entry exists", () => {
     // Provider cannot resolve — result is cached as Fallback
-    const resolver = jest.fn(() => null);
+    const resolver = jest.fn(() => ({}));
     service.registerProvider(new TestProvider("ProviderA", resolver));
     service.querySymbolWithFallback({ cusip: "037833100" });
     expect(resolver).toHaveBeenCalledTimes(1);

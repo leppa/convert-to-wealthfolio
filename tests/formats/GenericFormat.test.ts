@@ -732,6 +732,32 @@ describe("Generic Format", () => {
       expect(result[0].symbol).toBe("AAPL");
     });
 
+    it("should convert company name to symbol using overrides", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          companyname: "Apple Inc.",
+          quantity: 100,
+          unitprice: 150.25,
+          amount: 15025,
+        },
+      ];
+
+      const overrides = {
+        symbols: new Map(),
+        isin: new Map(),
+        cusip: new Map(),
+        // Keys are always uppercased when loaded from an INI file
+        names: new Map([["APPLE INC.", "AAPL"]]),
+      };
+
+      symbolDataService.registerProvider(new OverridesDataProvider(overrides));
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+
+      expect(result[0].symbol).toBe("AAPL");
+    });
+
     it("should prefer symbol over ISIN when both are present", () => {
       const records = [
         {

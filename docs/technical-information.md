@@ -66,12 +66,16 @@ This document provides technical details about the architecture, design, and imp
 
 - Orchestrates symbol resolution across registered data providers.
 - `querySymbol()` follows these steps:
-  1. Normalizes the query: `symbol`, `ISIN`, and `CUSIP` are trimmed and uppercased; `name` is only trimmed. Queries differing only in whitespace or casing are therefore treated as identical.
-  2. Short-circuits when all fields are empty after normalization, returning `{ symbol: "", provider: "Fallback" }` without querying any provider.
-  3. Checks the in-memory cache and returns the cached `SymbolResult` on a hit.
+  1. Normalizes the query: `symbol`, `ISIN`, and `CUSIP` are trimmed and uppercased; `name` is only trimmed. Fields that become empty after normalization are set to `undefined`. Queries differing only in whitespace or casing are therefore treated as identical.
+  2. Short-circuits when all fields are empty after normalization, returning `null` without querying any provider.
+  3. Checks the in-memory cache and returns the cached `SymbolQueryResult` on a hit.
   4. Queries providers in registration order, caches the first match, and returns it.
   5. Returns `null` if no provider returns a match.
-- `querySymbolWithFallback()` calls `querySymbol()` and adds a fallback that returns the best available identifier (CUSIP -> sanitized name) when `querySymbol()` returns `null`.
+- `querySymbolWithFallback()` calls `querySymbol()` and adds a fallback when no provider has resolved the symbol:
+  1. If symbol is present in the query, it returns that symbol (normalized); if ISIN is also present in the query, it also returns that ISIN (normalized).
+  2. If ISIN is present in the query without a symbol, it returns that ISIN (normalized) and the symbol is set to `undefined`.
+  3. If no symbol and ISIN are present in the query, it uses the best available identifier in the priority order: CUSIP (normalized) -> sanitized company name -> `undefined`.
+  4. If all fields are empty in the query, both symbol and ISIN will be set to `undefined`.
 - Exposes registered provider info for diagnostics and logging.
 - Logs successful resolutions at the `INFO` level, cache hits at the `TRACE` level, and unresolvable identifiers at the `WARN` level.
 
@@ -97,7 +101,7 @@ The format name is configured through the base class constructor (`super("YourFo
 
 Data providers extend `DataProvider` and implement:
 
-- `query(query)` - Resolves symbol identifiers to a ticker or returns `null`.
+- `query(query)` - Resolves symbol identifiers to a `SymbolResult` (with optional `symbol` and `isin` fields); returns an empty object if cannot resolve.
 - `canHandle(query)` (optional) - Returns `true` if the provider can handle the query, `false` otherwise.
 
 The provider name is configured through the base class constructor (`super("YourProviderName", ...)`) and exposed through `getName()` inherited from `DataProvider`.

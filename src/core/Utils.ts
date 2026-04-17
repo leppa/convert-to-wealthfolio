@@ -50,23 +50,24 @@ export function parseNumber(value?: null | number | string, defaultValue: number
  *
  * This method performs the following transformations to the input name:
  *
- * - If the name is empty or undefined, return the provided `fallbackSymbol`
- * - Replace all non-alphanumeric characters with dashes (consecutive characters will be replaced with a single dash)
- * - Trim leading and trailing dashes
- * - Convert to uppercase
+ * - If the name is empty or undefined, return the provided `fallbackSymbol`.
+ * - Replace all non-alphanumeric characters with dashes (consecutive characters will be replaced
+ *   with a single dash).
+ * - Trim leading and trailing dashes.
+ * - Convert to uppercase.
  *
  * @param name - The name to sanitize
  * @param fallbackSymbol - The symbol to return if the name is empty or undefined
- * @returns Sanitized symbol string
+ * @returns Sanitized symbol string or `undefined` if the name is empty and no fallback is provided
  */
-export function sanitizeName(name?: string, fallbackSymbol: string = ""): string {
+export function sanitizeName(name?: string, fallbackSymbol?: string): string | undefined {
   if (!name) {
     return fallbackSymbol;
   }
 
   const sanitized = name
-    // Replace all non-alphanumeric characters with dashes (consecutive characters will be
-    // replaced with a single dash)
+    // Replace all non-alphanumeric characters with dashes (consecutive characters will be replaced
+    // with a single dash)
     .replaceAll(/[\W_]+/g, "-");
 
   return sanitized
@@ -99,5 +100,28 @@ export function formatLoggedValue(
   label: string = "",
   emptyLabel: string = "",
 ): string {
-  return value ? `${label}${bold(value)}` : emptyLabel;
+  return value ? label + bold(value) : emptyLabel;
+}
+
+/**
+ * Format a pair of values for logging with corresponding labels
+ *
+ * Formats a pair of values with corresponding labels for logging purposes. Each value will be
+ * formatted using `formatLoggedValue` with its respective label. If both values are present, they
+ * will be separated by the specified `separator`.
+ *
+ * @param values - A pair of values to format
+ * @param labels - A pair of labels corresponding to each value
+ * @param separator - The separator to use between values if both are present (default: ", ")
+ * @returns Formatted string for logging
+ */
+export function formatPair(
+  values: [string?, string?],
+  labels: [string, string],
+  separator: string = ", ",
+): string {
+  const [value1, value2] = values;
+  const [label1, label2] = labels;
+  const sep = value1 && value2 ? separator : "";
+  return formatLoggedValue(value1, label1) + sep + formatLoggedValue(value2, label2);
 }

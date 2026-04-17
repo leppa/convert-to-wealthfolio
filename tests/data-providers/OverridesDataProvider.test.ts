@@ -49,14 +49,14 @@ describe("OverridesDataProvider", () => {
   });
 
   it("should resolve by symbol", () => {
-    expect(provider.query({ symbol: "AAPL" })).toBe("AAPL.US");
+    expect(provider.query({ symbol: "AAPL" })).toEqual({ symbol: "AAPL.US" });
   });
 
-  it("should normalize lookup keys from query fields", () => {
-    expect(provider.query({ symbol: "  msft  " })).toBe("MSFT.US");
-    expect(provider.query({ isin: "  us0378331005 " })).toBe("AAPL.ISIN");
-    expect(provider.query({ cusip: "  594918104 " })).toBe("MSFT.CUSIP");
-    expect(provider.query({ name: "  apple inc " })).toBe("AAPL.NAME");
+  it("should resolve using various identifier types with pre-normalized inputs", () => {
+    expect(provider.query({ symbol: "MSFT" })).toEqual({ symbol: "MSFT.US" });
+    expect(provider.query({ isin: "US0378331005" })).toEqual({ symbol: "AAPL.ISIN" });
+    expect(provider.query({ cusip: "594918104" })).toEqual({ symbol: "MSFT.CUSIP" });
+    expect(provider.query({ name: "APPLE INC" })).toEqual({ symbol: "AAPL.NAME" });
   });
 
   it("should prefer symbol over ISIN, CUSIP, and name", () => {
@@ -67,7 +67,7 @@ describe("OverridesDataProvider", () => {
       name: "MICROSOFT CORPORATION",
     });
 
-    expect(result).toBe("AAPL.US");
+    expect(result).toEqual({ symbol: "AAPL.US" });
   });
 
   it("should prefer ISIN over CUSIP and name when symbol is not available", () => {
@@ -77,7 +77,7 @@ describe("OverridesDataProvider", () => {
       name: "APPLE INC",
     });
 
-    expect(result).toBe("MSFT.ISIN");
+    expect(result).toEqual({ symbol: "MSFT.ISIN" });
   });
 
   it("should prefer CUSIP over name when symbol and ISIN are not available", () => {
@@ -86,17 +86,17 @@ describe("OverridesDataProvider", () => {
       name: "MICROSOFT CORPORATION",
     });
 
-    expect(result).toBe("AAPL.CUSIP");
+    expect(result).toEqual({ symbol: "AAPL.CUSIP" });
   });
 
-  it("should return null when no override is found", () => {
+  it("should return empty result when no override is found", () => {
     expect(
       provider.query({
         name: "Non Existent Inc.",
         symbol: "UNKNOWN",
       }),
-    ).toBeNull();
-    expect(provider.query({})).toBeNull();
+    ).toEqual({ symbol: undefined });
+    expect(provider.query({})).toEqual({ symbol: undefined });
   });
 });
 

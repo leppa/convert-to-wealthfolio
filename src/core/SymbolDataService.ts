@@ -5,21 +5,20 @@
 
 import { bold } from "colorette";
 
-import { DataProvider, DataProviderInfo, SymbolQuery } from "./DataProvider";
+import { DataProvider, DataProviderInfo, SymbolQuery, SymbolResult } from "./DataProvider";
 import { Logger } from "./Logger";
-import { formatLoggedValue, sanitizeName } from "./Utils";
-
-// TODO: Should we use "UNKNOWN" or something similar here instead of an empty string?
-const UNKNOWN_SYMBOL = "";
+import { formatLoggedValue, formatPair, sanitizeName } from "./Utils";
 
 const FALLBACK_PROVIDER_NAME = "Fallback";
 
 /**
  * Result from a symbol query
  */
-export interface SymbolResult {
+export interface SymbolQueryResult {
   /** Resolved symbol */
-  symbol: string;
+  symbol?: string;
+  /** Resolved ISIN */
+  isin?: string;
   /** Which provider this result came from */
   provider: string;
 }
@@ -29,7 +28,7 @@ export interface SymbolResult {
  */
 export class SymbolDataService {
   private providers: DataProvider[] = [];
-  private resolutionCache: Record<string, SymbolResult> = {};
+  private resolutionCache: Record<string, SymbolQueryResult> = {};
 
   /**
    * Register a data provider
@@ -57,9 +56,8 @@ export class SymbolDataService {
    * only trimmed. Therefore, queries that differ only in whitespace or casing are treated as
    * identical.
    *
-   * **Note:** If all query fields end up missing or empty after normalization, providers are not
-   * queried and a result with an empty symbol is returned immediately, as there is no meaningful
-   * way to resolve an empty query.
+   * **Note:** If all query fields end up missing after normalization, providers are not queried and
+   * `null` is returned immediately, as there is no meaningful way to resolve an empty query.
    *
    * **Note:** If a cache hit contains result from the fallback provider, it will be treated as no
    * result from providers and `null` will be returned immediately. This is because fallback result
@@ -69,7 +67,7 @@ export class SymbolDataService {
    * @param query - Symbol query parameters
    * @returns Symbol result from the first provider that has data, or `null` if no provider could resolve the symbol
    */
-  querySymbol(query: SymbolQuery): SymbolResult | null {
+  querySymbol(query: SymbolQuery): SymbolQueryResult | null {
     const logger = Logger.getInstance();
 
     const normalizedQuery = this.normalizeQuery(query);
@@ -80,12 +78,9 @@ export class SymbolDataService {
       !normalizedQuery.name
     ) {
       logger.warn(
-        `Received a query with ${bold("all fields missing or empty")} -> returning ${bold("empty")} symbol`,
+        `Received a query with ${bold("all fields missing or empty")} -> returning ${bold("null")}`,
       );
-      return {
-        symbol: UNKNOWN_SYMBOL,
-        provider: FALLBACK_PROVIDER_NAME,
-      };
+      return null;
     }
 
     const formattedQuery = this.formatQueryForLogging(query);
@@ -96,12 +91,9 @@ export class SymbolDataService {
         // query last time it was attempted, so we can skip querying providers again
         return null;
       } else {
-        if (cachedResult.symbol !== query.symbol) {
-          // Log only if the resulting symbol is different from the original query symbol
-          logger.trace(
-            `Using cached result for ${formattedQuery} -> ${bold(cachedResult.symbol)} (provider: ${bold(cachedResult.provider)})`,
-          );
-        }
+        logger.trace(
+          `Using cached result for ${formattedQuery} -> ${formatPair([cachedResult.symbol, cachedResult.isin], ["Symbol ", "ISIN "])} (provider: ${bold(cachedResult.provider)})`,
+        );
 
         return cachedResult;
       }
@@ -109,22 +101,16 @@ export class SymbolDataService {
 
     // Try each provider in registration order
     for (const provider of this.providers) {
-      if (!provider.canHandle(normalizedQuery)) {
+      const result = this.queryProvider(provider, normalizedQuery);
+      if (!result) {
         continue;
       }
 
-      const symbol = provider.query(normalizedQuery);
-      if (symbol) {
-        const result = {
-          symbol,
-          provider: provider.getName(),
-        };
-        logger.info(
-          `Resolved ${formattedQuery} -> ${bold(result.symbol)} (provider: ${bold(result.provider)})`,
-        );
+      logger.info(
+        `Resolved ${formattedQuery} -> ${formatPair([result.symbol, result.isin], ["Symbol ", "ISIN "])} (provider: ${bold(result.provider)})`,
+      );
 
-        return this.addToCache(normalizedQuery, result);
-      }
+      return this.addToCache(normalizedQuery, result);
     }
 
     // No provider found a result
@@ -137,7 +123,7 @@ export class SymbolDataService {
    * @param query - Symbol query parameters
    * @returns Symbol result with fallback to original values, never null
    */
-  querySymbolWithFallback(query: SymbolQuery): SymbolResult {
+  querySymbolWithFallback(query: SymbolQuery): SymbolQueryResult {
     const result = this.querySymbol(query);
     if (result) {
       return result;
@@ -152,29 +138,32 @@ export class SymbolDataService {
       // `querySymbol()` will return `null` for fallback cache entries, so we need to re-check the
       // cache for a fallback result.
       logger.trace(
-        `Using cached result for ${formattedQuery} -> ${bold(cachedResult.symbol)} (provider: ${bold(cachedResult.provider)})`,
+        `Using cached result for ${formattedQuery} -> ${formatPair([cachedResult.symbol, cachedResult.isin], ["Symbol ", "ISIN "])} (provider: ${bold(cachedResult.provider)})`,
       );
       return cachedResult;
     }
 
     // Fallback: return the symbol based on the original query values in the priority order: symbol,
-    // CUSIP, sanitized name
+    // unknown symbol when ISIN is present, CUSIP, sanitized name
     const symbol =
       normalizedQuery.symbol ||
-      // If ISIN is known, don't fallback to CUSIP or name, as ISIN should be included in the
-      // dedicated column of the output in this case
+      // If ISIN is known, don't fallback to CUSIP or name, as ISIN will be returned in the result
+      // and should be included in the dedicated column of the output CSV
       (normalizedQuery.isin
-        ? UNKNOWN_SYMBOL
-        : normalizedQuery.cusip || sanitizeName(normalizedQuery.name, UNKNOWN_SYMBOL));
+        ? undefined
+        : normalizedQuery.cusip || sanitizeName(normalizedQuery.name));
 
     // When query has a symbol and resolution doesn't return a result, this only means that there is
     // no override for that symbol. So we only log when there is no symbol in the query.
     if (!normalizedQuery.symbol) {
-      logger.warn(`Couldn't resolve ${formattedQuery} -> falling back to ${bold(symbol)}`);
+      logger.warn(
+        `Couldn't resolve ${formattedQuery} -> falling back to ${formatPair([symbol, normalizedQuery.isin], ["symbol ", "ISIN "])}`,
+      );
     }
 
     return this.addToCache(normalizedQuery, {
       symbol,
+      isin: normalizedQuery.isin,
       provider: FALLBACK_PROVIDER_NAME,
     });
   }
@@ -210,6 +199,45 @@ export class SymbolDataService {
   }
 
   /**
+   * Query the data provider with additional guard against provider returning query values
+   *
+   * @param provider - Data provider to query
+   * @param normalizedQuery - Symbol query parameters
+   * @returns Resolved symbol result if provider returns a result, `null` otherwise
+   */
+  private queryProvider(
+    provider: DataProvider,
+    normalizedQuery: SymbolQuery,
+  ): SymbolQueryResult | null {
+    if (!provider.canHandle(normalizedQuery)) {
+      return null;
+    }
+
+    let { symbol, isin } = this.normalizeProviderResult(provider.query(normalizedQuery));
+
+    // In addition to empty values, guard against providers returning symbol and ISIN that are
+    // identical to the query (i.e. when they simply copy the query values)
+    if (!symbol || symbol === normalizedQuery.symbol) {
+      symbol = undefined;
+    }
+    if (!isin || isin === normalizedQuery.isin) {
+      isin = undefined;
+    }
+
+    if (!symbol && !isin) {
+      return null;
+    }
+
+    // Normalize the result from the provider as well in case the provider returns values with extra
+    // whitespace or inconsistent casing
+    return {
+      symbol,
+      isin,
+      provider: provider.getName(),
+    };
+  }
+
+  /**
    * Format a symbol query for logging
    *
    * The resulting string includes only non-empty fields with appropriate labels and formatting.
@@ -224,16 +252,34 @@ export class SymbolDataService {
   /**
    * Normalize a symbol query by trimming whitespace and uppercasing identifiers
    *
-   * `symbol`, `isin`, and `cusip` are trimmed and uppercased; `name` is only trimmed. This ensures
-   * that queries that differ only in whitespace or casing are treated as identical for caching and
-   * provider querying purposes.
+   * `symbol`, `isin`, and `cusip` are trimmed and uppercased; `name` is only trimmed. Empty values
+   * are converted to `undefined`. This ensures that queries that differ only in whitespace or
+   * casing are treated as identical for caching and provider querying purposes.
+   *
+   * @param query - Symbol query to normalize
+   * @returns Normalized symbol query
    */
   private normalizeQuery(query: SymbolQuery): SymbolQuery {
     return {
-      symbol: query.symbol?.trim().toUpperCase(),
-      isin: query.isin?.trim().toUpperCase(),
-      cusip: query.cusip?.trim().toUpperCase(),
-      name: query.name?.trim(),
+      symbol: query.symbol?.trim().toUpperCase() || undefined,
+      isin: query.isin?.trim().toUpperCase() || undefined,
+      cusip: query.cusip?.trim().toUpperCase() || undefined,
+      name: query.name?.trim() || undefined,
+    };
+  }
+
+  /**
+   * Normalize a symbol query result by trimming whitespace and uppercasing the symbol and ISIN
+   *
+   * All fields are trimmed and uppercased. Empty values are converted to `undefined`.
+   *
+   * @param result - Symbol query result to normalize
+   * @returns Normalized symbol query result
+   */
+  private normalizeProviderResult(result: SymbolResult): SymbolResult {
+    return {
+      symbol: result.symbol?.trim().toUpperCase() || undefined,
+      isin: result.isin?.trim().toUpperCase() || undefined,
     };
   }
 
@@ -247,7 +293,7 @@ export class SymbolDataService {
    * @param result - Symbol result to cache
    * @returns `query` that was passed as an argument (for method chaining)
    */
-  private addToCache(query: SymbolQuery, result: SymbolResult): SymbolResult {
+  private addToCache(query: SymbolQuery, result: SymbolQueryResult): SymbolQueryResult {
     const cacheKey = JSON.stringify(query);
     // Store a copy to prevent external mutations from affecting the cache
     this.resolutionCache[cacheKey] = { ...result };
@@ -263,7 +309,7 @@ export class SymbolDataService {
    * @param query - Symbol query, preferably normalized
    * @returns Cached symbol result if found, or `undefined` if not in cache
    */
-  private getFromCache(query: SymbolQuery): SymbolResult | undefined {
+  private getFromCache(query: SymbolQuery): SymbolQueryResult | undefined {
     const cacheKey = JSON.stringify(query);
     const result = this.resolutionCache[cacheKey];
     // Return a copy to prevent external mutations from affecting the cache

@@ -52,20 +52,27 @@ export class MyCustomFormat extends BaseFormat {
     // define a more convenient data structure and convert to it by overriding `getParseOptions()`.
     return records.map((record) => {
       let symbol = record.ticker?.trim().toUpperCase() ?? "";
+      let isin = record.isin?.trim().toUpperCase() ?? "";
       // If symbol is empty, try to resolve it from other fields using the symbol data service
       if (!symbol && (record.isin || record.cusip || record.securityName)) {
-        ({ symbol } = symbolDataService.querySymbolWithFallback({
+        const resolved = symbolDataService.querySymbolWithFallback({
           isin: record.isin,
           cusip: record.cusip,
           name: record.securityName,
-        }));
+        });
+        if (resolved.symbol) {
+          symbol = resolved.symbol;
+        }
+        if (resolved.isin) {
+          isin = resolved.isin;
+        }
       }
 
       return {
         date: new Date(record.date),
         instrumentType: this.mapInstrumentType(record.instrumentType),
         symbol,
-        isin: record.isin?.trim().toUpperCase() ?? "",
+        isin,
         quantity: Math.abs(parseFloat(record.shares)),
         activityType: this.mapActivityType(record.action),
         unitPrice: Math.abs(parseFloat(record.price)),
@@ -344,21 +351,28 @@ export class MyCustomFormat extends BaseFormat {
   ): WealthfolioRecord[] {
     return records.map((record) => {
       let symbol = record.symbol || "";
+      let isin = record.isin || "";
       // When symbol is empty, use `symbolDataService` to resolve one. It handles ISIN, CUSIP, or
       // company name lookups, and fallbacks.
       if (!symbol && (record.isin || record.cusip || record.name)) {
-        ({ symbol } = symbolDataService.querySymbolWithFallback({
+        const resolved = symbolDataService.querySymbolWithFallback({
           isin: record.isin,
           cusip: record.cusip,
           name: record.name,
-        }));
+        });
+        if (resolved.symbol) {
+          symbol = resolved.symbol;
+        }
+        if (resolved.isin) {
+          isin = resolved.isin;
+        }
       }
 
       return {
         date: new Date(record.date),
         instrumentType: InstrumentType.Unknown,
         symbol, // Already resolved with overrides applied
-        isin: record.isin || "",
+        isin,
         quantity: parseFloat(record.shares),
         activityType: this.mapActivityType(record.action),
         unitPrice: parseFloat(record.unitPrice),

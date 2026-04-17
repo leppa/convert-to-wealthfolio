@@ -117,21 +117,28 @@ export class GenericFormat extends BaseFormat {
         }
       }
 
-      let symbol = (record.symbol ?? "").trim().toUpperCase();
+      let symbol = record.symbol?.trim().toUpperCase() ?? "";
+      let isin = record.isin?.trim().toUpperCase() ?? "";
       // If symbol is empty, try to resolve it form other fields using the symbol data service
       if (!symbol && (record.isin || record.cusip || record.companyname)) {
-        ({ symbol } = symbolDataService.querySymbolWithFallback({
+        const result = symbolDataService.querySymbolWithFallback({
           isin: record.isin,
           cusip: record.cusip,
           name: record.companyname,
-        }));
+        });
+        if (result.symbol) {
+          symbol = result.symbol;
+        }
+        if (result.isin) {
+          isin = result.isin;
+        }
       }
 
       result.push({
         date: record.date,
         instrumentType: this.mapInstrumentType(record.instrumenttype),
         symbol,
-        isin: record.isin?.trim().toUpperCase() ?? "",
+        isin,
         quantity,
         activityType,
         unitPrice,

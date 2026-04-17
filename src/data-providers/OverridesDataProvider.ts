@@ -9,7 +9,7 @@ import path from "node:path";
 
 import { bold } from "colorette";
 
-import { DataProvider, SymbolQuery } from "../core/DataProvider";
+import { DataProvider, SymbolQuery, SymbolResult } from "../core/DataProvider";
 import { Logger } from "../core/Logger";
 
 /**
@@ -41,38 +41,28 @@ export class OverridesDataProvider extends DataProvider {
    * Query for a symbol in the overrides
    *
    * @param query - Symbol query parameters
-   * @returns Symbol result or `null` if not found
+   * @returns Resolved symbol result or empty object if cannot resolve
    */
-  query(query: SymbolQuery): string | null {
+  query(query: SymbolQuery): SymbolResult {
+    let symbol: string | undefined;
+
     if (query.symbol) {
-      const symbol = this.overrides.symbols.get(query.symbol.trim().toUpperCase());
-      if (symbol) {
-        return symbol;
-      }
+      symbol = this.overrides.symbols.get(query.symbol);
     }
 
-    if (query.isin) {
-      const symbol = this.overrides.isin.get(query.isin.trim().toUpperCase());
-      if (symbol) {
-        return symbol;
-      }
+    if (!symbol && query.isin) {
+      symbol = this.overrides.isin.get(query.isin);
     }
 
-    if (query.cusip) {
-      const symbol = this.overrides.cusip.get(query.cusip.trim().toUpperCase());
-      if (symbol) {
-        return symbol;
-      }
+    if (!symbol && query.cusip) {
+      symbol = this.overrides.cusip.get(query.cusip);
     }
 
-    if (query.name) {
-      const symbol = this.overrides.names.get(query.name.trim().toUpperCase());
-      if (symbol) {
-        return symbol;
-      }
+    if (!symbol && query.name) {
+      symbol = this.overrides.names.get(query.name.toUpperCase());
     }
 
-    return null;
+    return { symbol };
   }
 }
 

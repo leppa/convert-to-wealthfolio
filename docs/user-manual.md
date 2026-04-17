@@ -122,7 +122,7 @@ Convert a generic CSV with ISINs, CUSIPs, and company names:
 convert-to-wealthfolio convert examples/sample-generic-isin-cusip-name.csv output.csv
 ```
 
-You will get ISIN, CUSIP, or sanitized company name as a symbol. See [Override Symbols and Resolve Identifiers](#override-symbols-and-resolve-identifiers) section for information on how to resolve identifiers into symbols by using an INI file.
+When both no ticker symbol and no ISIN are present, the converter tries to synthesize a symbol from the following data (in the priority order): CUSIP → sanitized company name → empty symbol. When only ISIN is present, it will be copied to the `isin` column and the `symbol` column will be left empty. To get a proper symbol when it is missing, see [Override Symbols and Resolve Identifiers](#override-symbols-and-resolve-identifiers) section for information on how to resolve identifiers into symbols by using an INI file.
 
 #### Specify the Format Manually
 

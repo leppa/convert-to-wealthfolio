@@ -13,9 +13,11 @@ export interface DataProviderInfo {
 
 /**
  * Query parameters for symbol lookup
+ *
+ * At least one of `symbol`, `isin`, `cusip`, or `name` should be provided for a valid query.
  */
 export interface SymbolQuery {
-  /** Symbol/ticker name (e.g., AAPL, or can be the key for lookup) */
+  /** Symbol / ticker name */
   symbol?: string;
   /** ISIN code */
   isin?: string;
@@ -23,6 +25,18 @@ export interface SymbolQuery {
   cusip?: string;
   /** Company/asset name */
   name?: string;
+}
+
+/**
+ * Result of a symbol query
+ *
+ * At least one of `symbol` or `isin` will be present if the query was successfully resolved.
+ */
+export interface SymbolResult {
+  /** Resolved symbol / ticker name */
+  symbol?: string;
+  /** Resolved ISIN code */
+  isin?: string;
 }
 
 /**
@@ -56,9 +70,9 @@ export abstract class DataProvider {
    * Query for a symbol and related identifiers
    *
    * @param query - Symbol query parameters
-   * @returns Resolved symbol string or `null` if not found
+   * @returns Resolved symbol result or empty object if cannot resolve
    */
-  abstract query(query: SymbolQuery): string | null;
+  abstract query(query: SymbolQuery): SymbolResult;
 
   /**
    * Optional: Check if this provider can handle the query

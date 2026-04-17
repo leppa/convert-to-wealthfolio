@@ -4,6 +4,7 @@
  */
 
 import { ActivitySubtype, ActivityType } from "../../src/core/BaseFormat";
+import { DataProvider, SymbolQuery, SymbolResult } from "../../src/core/DataProvider";
 import { SymbolDataService } from "../../src/core/SymbolDataService";
 import { LimeCoFormat } from "../../src/formats/LimeCoFormat";
 
@@ -812,6 +813,68 @@ describe("Lime.co Format", () => {
 
       const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
       expect(result).toEqual([]);
+    });
+  });
+
+  describe("symbol resolution", () => {
+    test("should set ISIN from provider resolution", () => {
+      class ISINProvider extends DataProvider {
+        constructor() {
+          super("ISINProvider");
+        }
+        query(_: SymbolQuery): SymbolResult {
+          return { isin: "US0378331005" };
+        }
+      }
+      symbolDataService.registerProvider(new ISINProvider());
+
+      const records = [
+        {
+          date: new Date("2024-01-15T00:00:00"),
+          description: "Buy 10 AAPL @150",
+          symbol: "AAPL",
+          direction: "buy",
+          quantity: 10,
+          price: 150,
+          fees: 0,
+          amount: 1500,
+        },
+      ];
+
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+
+      expect(result[0].symbol).toBe("AAPL");
+      expect(result[0].isin).toBe("US0378331005");
+    });
+
+    test("should set symbol and ISIN from provider resolution when symbol is empty", () => {
+      class SymbolISINProvider extends DataProvider {
+        constructor() {
+          super("SymbolISINProvider");
+        }
+        query(_: SymbolQuery): SymbolResult {
+          return { symbol: "AAPL", isin: "US0378331005" };
+        }
+      }
+      symbolDataService.registerProvider(new SymbolISINProvider());
+
+      const records = [
+        {
+          date: new Date("2024-01-15T00:00:00"),
+          description: "Qualified Dividend APPLE INC 10",
+          symbol: "",
+          direction: "deposit",
+          quantity: Number.NaN,
+          price: Number.NaN,
+          fees: Number.NaN,
+          amount: 150,
+        },
+      ];
+
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+
+      expect(result[0].symbol).toBe("AAPL");
+      expect(result[0].isin).toBe("US0378331005");
     });
   });
 

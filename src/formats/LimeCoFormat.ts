@@ -366,10 +366,11 @@ export class LimeCoFormat extends BaseFormat {
   private updateSymbol(record: WealthfolioRecord, symbolDataService: SymbolDataService) {
     if (!this.isAssetTransaction(record)) {
       record.symbol = "";
+      record.isin = "";
       return;
     }
 
-    const { symbol } = record;
+    const { symbol, isin } = record;
     let name: string | undefined;
     if (!symbol && record.activityType === ActivityType.Dividend) {
       // Just in case, allow any printable ASCII characters in the name. So far I've only seen
@@ -388,10 +389,16 @@ export class LimeCoFormat extends BaseFormat {
 
     const result = symbolDataService.querySymbolWithFallback({
       symbol,
+      isin,
       name,
     });
 
-    record.symbol = result.symbol;
+    if (result.symbol) {
+      record.symbol = result.symbol;
+    }
+    if (result.isin) {
+      record.isin = result.isin;
+    }
   }
 
   getExpectedSchema(): ColumnSchema[] {

@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import { DataProvider, SymbolQuery } from "../../src/core/DataProvider";
+import { DataProvider, SymbolQuery, SymbolResult } from "../../src/core/DataProvider";
 
 class TestProvider extends DataProvider {
   constructor(description?: string) {
     super("Test", description);
   }
 
-  query(_: SymbolQuery): string | null {
-    return null;
+  query(_: SymbolQuery): SymbolResult {
+    return {};
   }
 }
 

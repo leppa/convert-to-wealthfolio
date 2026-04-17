@@ -7,6 +7,7 @@ import { bold } from "colorette";
 
 import {
   formatLoggedValue,
+  formatPair,
   parseNumber,
   roundToPrecision,
   sanitizeName,
@@ -130,7 +131,7 @@ describe("Utils", () => {
 
   describe("sanitizeName", () => {
     it("should return fallbackSymbol for undefined or empty name", () => {
-      expect(sanitizeName()).toBe("");
+      expect(sanitizeName()).toBeUndefined();
       expect(sanitizeName(undefined, "FB")).toBe("FB");
       expect(sanitizeName("", "FALLBACK")).toBe("FALLBACK");
     });
@@ -183,6 +184,34 @@ describe("Utils", () => {
     it("should return emptyLabel when value is absent", () => {
       expect(formatLoggedValue(undefined, "", "N/A")).toBe("N/A");
       expect(formatLoggedValue("", "Label: ", "missing")).toBe("missing");
+    });
+  });
+
+  describe("formatPair", () => {
+    it("should format both values with separator when both are present", () => {
+      expect(formatPair(["AAPL", "US0378331005"], ["Symbol ", "ISIN "])).toBe(
+        `Symbol ${bold("AAPL")}, ISIN ${bold("US0378331005")}`,
+      );
+    });
+
+    it("should use custom separator when both values are present", () => {
+      expect(formatPair(["AAPL", "US0378331005"], ["Symbol ", "ISIN "], " | ")).toBe(
+        `Symbol ${bold("AAPL")} | ISIN ${bold("US0378331005")}`,
+      );
+    });
+
+    it("should omit separator when only first value is present", () => {
+      expect(formatPair(["AAPL", undefined], ["Symbol ", "ISIN "])).toBe(`Symbol ${bold("AAPL")}`);
+    });
+
+    it("should omit separator when only second value is present", () => {
+      expect(formatPair([undefined, "US0378331005"], ["Symbol ", "ISIN "])).toBe(
+        `ISIN ${bold("US0378331005")}`,
+      );
+    });
+
+    it("should return empty string when both values are absent", () => {
+      expect(formatPair([undefined, undefined], ["Symbol ", "ISIN "])).toBe("");
     });
   });
 });

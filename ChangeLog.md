@@ -28,6 +28,9 @@ Upcoming release.
     the input CSV into the `isin` column of the output CSV, in addition to using
     it for symbol resolution. If not present or empty, the `ISIN` column will be
     converted to an empty value in the output CSV.
+  - Symbol resolution providers can now also resolve ISINs and return them as
+    part of the symbol resolution result. ISIN can be returned together with the
+    symbol or on its own if the symbol cannot be resolved.
 
 - **Symbol resolution caching** - once a symbol is resolved, it will be cached
   in-memory for the duration of the converter's execution. This means that if
@@ -49,6 +52,12 @@ Upcoming release.
   CLI options take precedence over environment variables when both are set.
 
 ### Changed
+
+- **Fallback symbol resolution** - The fallback for symbol resolution will no
+  longer copy ISIN value from the query into the symbol field when symbol cannot
+  be resolved. Instead, it will return the ISIN and leave the symbol unset. The
+  output CSV will then contain the ISIN value in the `isin` column and an empty
+  value in the `symbol` column.
 
 - **Symbol normalization** - before querying providers or looking up the cache,
   the converter now normalizes query fields: symbol, ISIN, and CUSIP are trimmed
