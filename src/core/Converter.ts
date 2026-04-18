@@ -16,7 +16,7 @@ import { Logger } from "./Logger";
 import { SymbolDataService } from "./SymbolDataService";
 import { parseNumber, roundToPrecision } from "./Utils";
 
-import { Overrides, OverridesDataProvider, parseOverridesFile } from "../data-providers";
+import { OverridesByType, OverridesDataProvider, parseOverridesFile } from "../data-providers";
 
 // https://wealthfolio.app/docs/concepts/activity-types/ states that
 // "eight-decimal precision is accepted"
@@ -139,7 +139,7 @@ export class Converter {
     }
 
     const symbolDataService = new SymbolDataService();
-    let overrides: Overrides | undefined;
+    let overrides: OverridesByType | undefined;
     // Load overrides if provided and register as a data provider
     if (overridesPath) {
       overrides = parseOverridesFile(overridesPath);
@@ -147,7 +147,7 @@ export class Converter {
     }
 
     // Convert records
-    const convertedRecords = format
+    let convertedRecords = format
       .convert(records, defaultCurrency, symbolDataService)
       // Filter all records that don't meet field requirements
       .filter((record, index) => {
@@ -162,35 +162,31 @@ export class Converter {
           }
         }
         return result.valid;
-      })
-      .map((record, index) => {
-        // If overrides file was provided, apply symbol overrides.
-        if (overrides?.symbols && overrides.symbols.size > 0) {
-          const newRecord = { ...record };
-          const key = newRecord.symbol.trim().toUpperCase();
-          if (!key) {
-            // Ignore empty symbols (usually cash transactions)
-            logger.trace(
-              `Skipping symbol override for record ${bold(index + 1)}: ${bold("empty")} symbol`,
-            );
-            return newRecord;
-          }
-          const mappedSymbol = overrides.symbols.get(key);
-          if (mappedSymbol) {
-            logger.debug(
-              `Overriding symbol for record ${bold(index + 1)}: ${bold(newRecord.symbol)} -> ${bold(mappedSymbol)}`,
-            );
-            newRecord.symbol = mappedSymbol;
-          } else if (newRecord.symbol !== key) {
-            logger.info(
-              `Normalizing symbol for record ${bold(index + 1)}: ${bold(newRecord.symbol)} -> ${bold(key)}`,
-            );
-            newRecord.symbol = key; // Ensure symbol is normalized, even if no override
-          }
-          return newRecord;
-        }
-        return record;
       });
+
+    const symbolOverrides = overrides?.symbol;
+    const isinOverrides = overrides?.isin;
+    if (
+      (symbolOverrides && symbolOverrides.symbols.size > 0) ||
+      (isinOverrides && isinOverrides.isins.size > 0)
+    ) {
+      // If overrides file was provided, apply symbol and ISIN overrides.
+      convertedRecords = convertedRecords.map((record, index) => {
+        const newRecord = { ...record };
+        if (symbolOverrides) {
+          newRecord.symbol = this.getOverrideFor(
+            newRecord.symbol,
+            symbolOverrides.symbols,
+            index,
+            "symbol",
+          );
+        }
+        if (isinOverrides) {
+          newRecord.isin = this.getOverrideFor(newRecord.isin, isinOverrides.isins, index, "ISIN");
+        }
+        return newRecord;
+      });
+    }
 
     // Write output CSV
     await this.writeCSV(outputPath, convertedRecords);
@@ -289,5 +285,45 @@ export class Converter {
    */
   getRegisteredFormats(): string[] {
     return this.formatPlugins.map((p) => p.getName());
+  }
+
+  /**
+   * Get override value for a given key from the overrides map
+   *
+   * @param key - Original value to check for override
+   * @param overridesMap - Map of overrides to check against
+   * @param recordIndex - Index of the record being processed (for logging)
+   * @param fieldName - Name of the field being overridden (for logging)
+   * @returns Overridden value if found, otherwise the original key (possibly normalized)
+   */
+  private getOverrideFor(
+    key: string,
+    overridesMap: Map<string, string>,
+    recordIndex: number,
+    fieldName: string,
+  ): string {
+    const logger = Logger.getInstance();
+
+    const normalizedKey = key.trim().toUpperCase();
+    if (!normalizedKey) {
+      logger.trace(
+        `Skipping ${italic(fieldName)} for record ${italic(recordIndex + 1)}: ${bold("empty")} value`,
+      );
+      return "";
+    }
+
+    const mappedValue = overridesMap.get(normalizedKey);
+    if (mappedValue) {
+      logger.debug(
+        `Overriding ${italic(fieldName)} for record ${italic(recordIndex + 1)}: ${bold(key)} -> ${bold(mappedValue)}`,
+      );
+      return mappedValue;
+    } else if (key !== normalizedKey) {
+      logger.info(
+        `Normalizing ${italic(fieldName)} for record ${italic(recordIndex + 1)}: ${bold(key)} -> ${bold(normalizedKey)}`,
+      );
+      return normalizedKey; // Normalize even if no override
+    }
+    return normalizedKey; // No change
   }
 }

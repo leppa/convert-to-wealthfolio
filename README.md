@@ -44,7 +44,7 @@ SPDX-License-Identifier: BSD-3-Clause
 - **Format Detection**: Automatically detects input format.
 - **Field Validation**: Validates all output records against activity type-specific field requirements.
 - **Symbol Resolution**: Supports pluggable data providers for symbol, ISIN, CUSIP, and company name lookups.
-- **Symbol Override and Mapping**: Allows overriding symbols and mapping them from ISINs, CUSIPs, and company names using an INI file.
+- **Symbol and ISIN Override and Mapping**: Allows using an INI file to override symbols and ISINs; map symbols from ISINs, CUSIPs, and company names; map ISINs from symbols, CUSIPs, and company names.
 - **Advanced Logging**: Colorized log output with configurable log verbosity levels.
 - **Comprehensive Testing**: Full test coverage to ensure reliability.
 - **Minimal Dependencies**: Only uses lean libraries as runtime dependencies with none or minimal transitive dependencies.

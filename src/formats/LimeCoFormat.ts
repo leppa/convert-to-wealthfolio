@@ -387,18 +387,11 @@ export class LimeCoFormat extends BaseFormat {
       return;
     }
 
-    const result = symbolDataService.querySymbolWithFallback({
+    ({ symbol: record.symbol, isin: record.isin } = symbolDataService.querySymbolWithFallback({
       symbol,
       isin,
       name,
-    });
-
-    if (result.symbol) {
-      record.symbol = result.symbol;
-    }
-    if (result.isin) {
-      record.isin = result.isin;
-    }
+    }));
   }
 
   getExpectedSchema(): ColumnSchema[] {

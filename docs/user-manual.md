@@ -16,7 +16,7 @@ SPDX-License-Identifier: BSD-3-Clause
     - [Format Auto-detection (default)](#format-auto-detection-default)
     - [Specify the Format Manually](#specify-the-format-manually)
     - [Specify the Default Currency](#specify-the-default-currency)
-    - [Override Symbols and Resolve Identifiers](#override-symbols-and-resolve-identifiers)
+    - [Override and Resolve Symbols and ISINs](#override-and-resolve-symbols-and-isins)
   - [List Supported Formats](#list-supported-formats)
   - [Get Format Information](#get-format-information)
   - [Get Help](#get-help)
@@ -122,7 +122,7 @@ Convert a generic CSV with ISINs, CUSIPs, and company names:
 convert-to-wealthfolio convert examples/sample-generic-isin-cusip-name.csv output.csv
 ```
 
-When both no ticker symbol and no ISIN are present, the converter tries to synthesize a symbol from the following data (in the priority order): CUSIP → sanitized company name → empty symbol. When only ISIN is present, it will be copied to the `isin` column and the `symbol` column will be left empty. To get a proper symbol when it is missing, see [Override Symbols and Resolve Identifiers](#override-symbols-and-resolve-identifiers) section for information on how to resolve identifiers into symbols by using an INI file.
+When both no ticker symbol and no ISIN are present, the converter tries to synthesize a symbol from the following data (in the priority order): CUSIP → sanitized company name → empty symbol. When only ISIN is present, it will be copied to the `isin` column and the `symbol` column will be left empty. To get a proper symbol when it is missing, see [Override and Resolve Symbols and ISINs](#override-and-resolve-symbols-and-isins) section for information on how to resolve identifiers into symbols by using an INI file.
 
 #### Specify the Format Manually
 
@@ -172,13 +172,12 @@ CTW_DEFAULT_CURRENCY=GBP convert-to-wealthfolio convert examples/sample-generic.
 
 **Note:** Some formats may ignore the default currency option and always use their own. Always refer to the documentation of the specific format you're using.
 
-#### Override Symbols and Resolve Identifiers
+#### Override and Resolve Symbols and ISINs
 
-You can override symbols and resolve ISINs, CUSIPs, and company names by passing an INI file to the `--overrides` option:
+You can override symbols and ISINs; resolve symbols from ISINs, CUSIPs, and company names; resolve ISINs from symbols, CUSIPs, and company names. To do this, pass an INI file to the `--overrides` option:
 
 ```bash
 convert-to-wealthfolio convert --overrides <overrides.ini> <input.csv> <output.csv>
-
 ```
 
 E.g., convert a generic CSV file with overrides:
@@ -192,27 +191,54 @@ You will get resolved identifiers, as long as they're present in the override fi
 The overrides file format:
 
 ```ini
-[Symbol]
+# Override ISIN
+[ISIN.ISIN]
+US38259P5089 = US02079K3059
+
+# Map symbol to ISIN
+[ISIN.Symbol]
+AAPL = US0378331005
+
+# Map CUSIP to ISIN
+[ISIN.CUSIP]
+38259P508 = US38259P5089
+
+# Map company name to ISIN
+[ISIN.Name]
+Alphabet Inc. = US02079K3059
+
+# Override symbol
+[Symbol.Symbol]
 FB = META
 
-[ISIN]
-US0378331005 = AAPL
+# Map ISIN to symbol
+[Symbol.ISIN]
+US02079K3059 = GOOGL
 
-[CUSIP]
+# Map CUSIP to symbol
+[Symbol.CUSIP]
 594918104 = MSFT
 
-[Name]
+# Map company name to symbol
+[Symbol.Name]
 Volkswagen AG Preferred = VOW3.DE
 ```
 
+ISIN lookups are performed before symbol lookups, which means that symbol lookups are performed with an already resolved ISIN.
+
 This option is useful for:
 
-- Correcting ticker symbol changes after mergers or rebranding
-- Fixing incorrect identifiers in the source data
-- Standardizing symbol naming across different data sources
-- Mapping ISIN, CUSIP, or company name to a symbol when the original symbol is missing in the source data
+- Correcting ticker symbol and ISIN changes after mergers or rebranding.
+- Fixing incorrect identifiers in the source data.
+- Standardizing symbol naming across different data sources.
+- Mapping ISIN, CUSIP, or company name to a symbol when the original symbol is missing in the source data.
+- Mapping symbol, CUSIP, or company name to an ISIN to complement a symbol.
 
 See [examples/overrides.ini](../examples/overrides.ini) for a template.
+
+**Note**: ISIN, CUSIP, and company name lookups are handled by plugins during conversion. Symbol and ISIN overrides, on the other hand, are done automatically _after_ the conversion. E.g., if you have an ISIN that resolves to a symbol, and that symbol is in the overrides, the override will be applied to the resolved symbol.
+
+**Note**: Symbol resolution results are cached in memory for the duration of the conversion. If the same combination of symbol, ISIN, CUSIP, and company name appears multiple times in the input CSV, the identifier is resolved only once and the result is reused for all matching rows. Cache hits are logged at the `TRACE` level; use `--trace` to see them.
 
 You can also set the path to the overrides file using the `CTW_OVERRIDES` environment variable:
 
@@ -221,10 +247,6 @@ CTW_OVERRIDES="examples/overrides.ini" convert-to-wealthfolio convert examples/s
 ```
 
 **Note:** The CLI option takes precedence over the environment variable if both are set.
-
-**Note**: ISIN, CUSIP, and company name lookups are handled by plugins during conversion. Symbol overrides, on the other hand, are done automatically _after_ the conversion. So if you have an ISIN that resolves to a symbol, and that symbol is in the overrides, the override will be applied to the resolved symbol.
-
-**Note**: Symbol resolution results are cached in memory for the duration of the conversion. If the same combination of symbol, ISIN, CUSIP, and company name appears multiple times in the input CSV, the identifier is resolved only once and the result is reused for all matching rows. Cache hits are logged at the `TRACE` level; use `--trace` to see them.
 
 ### List Supported Formats
 

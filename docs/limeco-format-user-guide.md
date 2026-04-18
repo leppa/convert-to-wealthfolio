@@ -160,7 +160,7 @@ Recommended mapping:
 2. Current symbol: `META`.
 3. Add symbol override: `FB -> META`.
 
-See [Override Symbols and Resolve Identifiers](user-manual.md#override-symbols-and-resolve-identifiers) for information on how to set up symbol overrides.
+See [Override and Resolve Symbols and ISINs](./user-manual.md#override-and-resolve-symbols-and-isins) for information on how to set up symbol overrides.
 
 ## Format Quirks
 
@@ -192,7 +192,7 @@ Typical interpretation:
 3. Calculated unit price: `25.00 / 100 = 0.25`.
 4. Recommended symbol mapping: `APPLE INC` -> `AAPL`. Without this mapping, dividend symbol will become `APPLE-INC` and a warning will be logged.
 
-See [Override Symbols and Resolve Identifiers](user-manual.md#override-symbols-and-resolve-identifiers) for information on how to set up company name to symbol mappings.
+See [Override and Resolve Symbols and ISINs](./user-manual.md#override-and-resolve-symbols-and-isins) for information on how to set up company name to symbol mappings.
 
 ### Forward and reverse splits are calculated from paired `in` and `out` records<!-- omit from toc -->
 

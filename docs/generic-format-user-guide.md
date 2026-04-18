@@ -17,6 +17,7 @@ This format supports standard transaction types such as buys, sells, dividends, 
 
 - [CSV Structure](#csv-structure)
   - [Required Columns](#required-columns)
+  - [Conditionally Required Columns](#conditionally-required-columns)
   - [Optional Columns](#optional-columns)
   - [Column Ordering](#column-ordering)
   - [Header Row](#header-row)
@@ -46,7 +47,7 @@ This format supports standard transaction types such as buys, sells, dividends, 
   - [Missing Required Columns](#missing-required-columns)
   - [Unknown Transaction Type](#unknown-transaction-type)
   - [Invalid Date Format](#invalid-date-format)
-  - [Symbol Required](#symbol-required)
+  - [Symbol or ISIN Required](#symbol-or-isin-required)
 - [Getting Format Information](#getting-format-information)
 - [See Also](#see-also)
 
@@ -60,9 +61,21 @@ The following columns **must** be present in your CSV file:
 | --- | --- | --- |
 | `Date` | Transaction date and, optionally, time (see [Date and Time](#date-and-time) below) | `2024-03-10 13:25:10`, `2024-01-15` |
 | `TransactionType` | Type of transaction (see [Transaction Types](#transaction-types) below) | `BUY`, `SELL`, `DIVIDEND` |
-| `Symbol` | Ticker symbol (empty for cash transactions) | `AAPL`, `MSFT`, `GOOGL` |
 | `Quantity` | Number of shares / units (see [Quantities and Prices](#quantities-and-prices) below) | `100`, `50.5` |
 | `UnitPrice` | Price per share / unit (see [Quantities and Prices](#quantities-and-prices) below) | `150.25`, `1380.50` |
+
+### Conditionally Required Columns
+
+At least one of these columns **must** be present in the CSV file:
+
+| Column | Description | Example |
+| --- | --- | --- |
+| `Symbol` | Ticker symbol | `AAPL`, `MSFT`, `GOOGL` |
+| `ISIN` | International Securities Identification Number | `US0378331005`, `US5949181045` |
+| `CUSIP` | Committee on Uniform Securities Identification Procedures | `037833100`, `594918104` |
+| `CompanyName` | Company name | `Apple Inc.`, `Microsoft Corporation` |
+
+If only `CUSIP` or `CompanyName` is provided, the converter will attempt to resolve the symbol and ISIN using registered data providers. If no data provider can resolve them, the converter will synthesize a symbol by using the best available identifier in the order: CUSIP -> sanitized company name -> no symbol (empty string).
 
 ### Optional Columns
 
@@ -386,7 +399,7 @@ Ensure every row has values for:
 
 - Date
 - TransactionType
-- Symbol (except for cash-only transactions)
+- Symbol, ISIN, or other identifiers from which symbol or ISIN can be resolved (except for cash-only transactions)
 - Quantity
 - UnitPrice
 
@@ -455,7 +468,7 @@ If you need more details for troubleshooting, increase log verbosity by setting 
 
 **Error:** Validation fails with missing column error.
 
-**Solution:** Ensure your CSV has all required columns: `Date`, `TransactionType`, `Symbol`, `Quantity`, and `UnitPrice`.
+**Solution:** Ensure your CSV has all required columns: `Date`, `TransactionType`, `Quantity`, and `UnitPrice`; as well as at least one of `Symbol`, `ISIN`, `CUSIP`, or `CompanyName`. Check for typos in column names and verify that the header row is correctly formatted.
 
 ### Unknown Transaction Type
 
@@ -469,7 +482,7 @@ If you need more details for troubleshooting, increase log verbosity by setting 
 
 **Solution:** See the [Date and Time](#date-and-time) section with recommendations on how to avoid ambiguity.
 
-### Symbol Required
+### Symbol or ISIN Required
 
 Some transaction types require either a ticker symbol or an ISIN:
 
@@ -477,7 +490,7 @@ Some transaction types require either a ticker symbol or an ISIN:
 - `TRANSFER_IN`, `TRANSFER_OUT`, `INTEREST`: Required for asset transactions.
 - `DEPOSIT`, `WITHDRAWAL`, `FEE`, `TAX`, `CREDIT`: Not required.
 
-**Note:** Symbol can also be resolved from ISIN, CUSIP, or company name using an override file. If you provide an ISIN that is mapped to a symbol, both the resolved symbol and the original ISIN will be included in the output CSV.
+**Note:** Symbols and ISINs can also be resolved from other identifiers using an override file. See [Override and Resolve Symbols and ISINs](./user-manual.md#override-and-resolve-symbols-and-isins) for information on how to set up symbol overrides.
 
 ## Getting Format Information
 

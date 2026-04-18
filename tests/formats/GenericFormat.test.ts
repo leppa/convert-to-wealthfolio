@@ -695,10 +695,12 @@ describe("Generic Format", () => {
       ];
 
       const overrides = {
-        symbols: new Map(),
-        isin: new Map([["US0378331005", "AAPL"]]),
-        cusip: new Map(),
-        names: new Map(),
+        symbol: {
+          symbols: new Map(),
+          isins: new Map([["US0378331005", "AAPL"]]),
+          cusips: new Map(),
+          names: new Map(),
+        },
       };
 
       symbolDataService.registerProvider(new OverridesDataProvider(overrides));
@@ -720,10 +722,12 @@ describe("Generic Format", () => {
       ];
 
       const overrides = {
-        symbols: new Map(),
-        isin: new Map(),
-        cusip: new Map([["037833100", "AAPL"]]),
-        names: new Map(),
+        symbol: {
+          symbols: new Map(),
+          isins: new Map(),
+          cusips: new Map([["037833100", "AAPL"]]),
+          names: new Map(),
+        },
       };
 
       symbolDataService.registerProvider(new OverridesDataProvider(overrides));
@@ -745,11 +749,13 @@ describe("Generic Format", () => {
       ];
 
       const overrides = {
-        symbols: new Map(),
-        isin: new Map(),
-        cusip: new Map(),
-        // Keys are always uppercased when loaded from an INI file
-        names: new Map([["APPLE INC.", "AAPL"]]),
+        symbol: {
+          symbols: new Map(),
+          isins: new Map(),
+          cusips: new Map(),
+          // Keys are always uppercased when loaded from an INI file
+          names: new Map([["APPLE INC.", "AAPL"]]),
+        },
       };
 
       symbolDataService.registerProvider(new OverridesDataProvider(overrides));
@@ -772,10 +778,12 @@ describe("Generic Format", () => {
       ];
 
       const overrides = {
-        symbols: new Map(),
-        isin: new Map([["US0378331005", "DIFFERENT"]]),
-        cusip: new Map(),
-        names: new Map(),
+        symbol: {
+          symbols: new Map(),
+          isins: new Map([["US0378331005", "DIFFERENT"]]),
+          cusips: new Map(),
+          names: new Map(),
+        },
       };
 
       symbolDataService.registerProvider(new OverridesDataProvider(overrides));
@@ -798,10 +806,12 @@ describe("Generic Format", () => {
       ];
 
       const overrides = {
-        symbols: new Map(),
-        isin: new Map([["US0378331005", "AAPL"]]),
-        cusip: new Map([["037833100", "CUSIP_APPLE"]]),
-        names: new Map(),
+        symbol: {
+          symbols: new Map(),
+          isins: new Map([["US0378331005", "AAPL"]]),
+          cusips: new Map([["037833100", "CUSIP_APPLE"]]),
+          names: new Map(),
+        },
       };
 
       symbolDataService.registerProvider(new OverridesDataProvider(overrides));
@@ -823,10 +833,12 @@ describe("Generic Format", () => {
       ];
 
       const overrides = {
-        symbols: new Map(),
-        isin: new Map(),
-        cusip: new Map(),
-        names: new Map(),
+        symbol: {
+          symbols: new Map(),
+          isins: new Map(),
+          cusips: new Map(),
+          names: new Map(),
+        },
       };
 
       symbolDataService.registerProvider(new OverridesDataProvider(overrides));
@@ -849,10 +861,12 @@ describe("Generic Format", () => {
       ];
 
       const overrides = {
-        symbols: new Map(),
-        isin: new Map(),
-        cusip: new Map(),
-        names: new Map(),
+        symbol: {
+          symbols: new Map(),
+          isins: new Map(),
+          cusips: new Map(),
+          names: new Map(),
+        },
       };
 
       symbolDataService.registerProvider(new OverridesDataProvider(overrides));
@@ -876,6 +890,36 @@ describe("Generic Format", () => {
       const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
       expect(result[0].symbol).toBe("AAPL");
+    });
+
+    it("should resolve ISIN when symbol is present but ISIN is missing", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          symbol: "AAPL",
+          cusip: "037833100",
+          quantity: 100,
+          unitprice: 150.25,
+          amount: 15025,
+        },
+      ];
+
+      const overrides = {
+        isin: {
+          symbols: new Map([["AAPL", "US0378331005"]]),
+          isins: new Map(),
+          cusips: new Map(),
+          names: new Map(),
+        },
+      };
+
+      symbolDataService.registerProvider(new OverridesDataProvider(overrides));
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+
+      // Symbol stays as-is; ISIN is resolved from the isin section via symbol key
+      expect(result[0].symbol).toBe("AAPL");
+      expect(result[0].isin).toBe("US0378331005");
     });
   });
 });

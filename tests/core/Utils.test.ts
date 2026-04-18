@@ -131,7 +131,7 @@ describe("Utils", () => {
 
   describe("sanitizeName", () => {
     it("should return fallbackSymbol for undefined or empty name", () => {
-      expect(sanitizeName()).toBeUndefined();
+      expect(sanitizeName()).toBe("");
       expect(sanitizeName(undefined, "FB")).toBe("FB");
       expect(sanitizeName("", "FALLBACK")).toBe("FALLBACK");
     });

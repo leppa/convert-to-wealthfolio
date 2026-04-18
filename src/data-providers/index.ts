@@ -8,4 +8,9 @@
  * Import and export all available data provider plugins
  */
 
-export { Overrides, OverridesDataProvider, parseOverridesFile } from "./OverridesDataProvider";
+export {
+  Overrides,
+  OverridesByType,
+  OverridesDataProvider,
+  parseOverridesFile,
+} from "./OverridesDataProvider";

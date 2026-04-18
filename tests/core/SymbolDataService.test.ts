@@ -106,12 +106,42 @@ describe("SymbolDataService", () => {
     expect(service.querySymbol({ symbol: "UNKNOWN" })).toBeNull();
   });
 
+  it("should return empty result in `querySymbolWithFallback()` when all fields are missing", () => {
+    expect(service.querySymbolWithFallback({})).toEqual({
+      symbol: "",
+      isin: "",
+      provider: "Fallback",
+    });
+  });
+
+  it("should return empty result in `querySymbolWithFallback()` when all fields are empty strings", () => {
+    expect(service.querySymbolWithFallback({ symbol: "", isin: "", cusip: "", name: "" })).toEqual({
+      symbol: "",
+      isin: "",
+      provider: "Fallback",
+    });
+  });
+
+  it("should return empty result in `querySymbolWithFallback()` when all fields are whitespace", () => {
+    expect(
+      service.querySymbolWithFallback({ symbol: "  ", isin: "  ", cusip: "  ", name: "  " }),
+    ).toEqual({
+      symbol: "",
+      isin: "",
+      provider: "Fallback",
+    });
+  });
+
   it("should return provider result in `querySymbolWithFallback()` when resolved", () => {
     service.registerProvider(new TestProvider("ProviderA", () => ({ symbol: "AAPL" })));
 
     const result = service.querySymbolWithFallback({ isin: "US0378331005" });
 
-    expect(result).toEqual({ symbol: "AAPL", provider: "ProviderA" });
+    expect(result).toEqual({
+      symbol: "AAPL",
+      isin: "US0378331005",
+      provider: "ProviderA",
+    });
   });
 
   it("should fallback to normalized symbol when providers do not resolve", () => {
@@ -119,7 +149,11 @@ describe("SymbolDataService", () => {
 
     const result = service.querySymbolWithFallback({ symbol: "  msft  " });
 
-    expect(result).toEqual({ symbol: "MSFT", provider: "Fallback" });
+    expect(result).toEqual({
+      symbol: "MSFT",
+      isin: "",
+      provider: "Fallback",
+    });
   });
 
   it("should fallback to ISIN when symbol is missing and ISIN is provided", () => {
@@ -127,7 +161,11 @@ describe("SymbolDataService", () => {
 
     const result = service.querySymbolWithFallback({ isin: " us0378331005 " });
 
-    expect(result).toEqual({ isin: "US0378331005", provider: "Fallback" });
+    expect(result).toEqual({
+      symbol: "",
+      isin: "US0378331005",
+      provider: "Fallback",
+    });
   });
 
   it("should fallback in priority order when both symbol and ISIN are missing", () => {
@@ -141,8 +179,16 @@ describe("SymbolDataService", () => {
       name: "Google LLC",
     });
 
-    expect(cusipResult).toEqual({ symbol: "38259P508", provider: "Fallback" });
-    expect(nameResult).toEqual({ symbol: "GOOGLE-LLC", provider: "Fallback" });
+    expect(cusipResult).toEqual({
+      symbol: "38259P508",
+      isin: "",
+      provider: "Fallback",
+    });
+    expect(nameResult).toEqual({
+      symbol: "GOOGLE-LLC",
+      isin: "",
+      provider: "Fallback",
+    });
   });
 
   it("should return sanitized name when no symbol, ISIN, or CUSIP are provided", () => {
@@ -152,7 +198,11 @@ describe("SymbolDataService", () => {
       name: "ACME, Inc. / Class-A",
     });
 
-    expect(result).toEqual({ symbol: "ACME-INC-CLASS-A", provider: "Fallback" });
+    expect(result).toEqual({
+      symbol: "ACME-INC-CLASS-A",
+      isin: "",
+      provider: "Fallback",
+    });
   });
 
   it("should return `null` from `querySymbol()` when query contains no usable fields", () => {
@@ -189,6 +239,7 @@ describe("SymbolDataService", () => {
     service.registerProvider(new TestProvider("ProviderA", () => ({})));
     expect(service.querySymbolWithFallback({ cusip: "037833100" })).toEqual({
       symbol: "037833100",
+      isin: "",
       provider: "Fallback",
     });
 
@@ -199,6 +250,7 @@ describe("SymbolDataService", () => {
     // The fallback cache entry must have been cleared — ProviderB should now be queried
     expect(service.querySymbolWithFallback({ cusip: "037833100" })).toEqual({
       symbol: "AAPL",
+      isin: "",
       provider: "ProviderB",
     });
     expect(resolverB).toHaveBeenCalledTimes(1);
@@ -216,6 +268,7 @@ describe("SymbolDataService", () => {
     service.registerProvider(new TestProvider("ProviderB", resolverB));
     expect(service.querySymbolWithFallback({ isin: "US0378331005" })).toEqual({
       symbol: "AAPL",
+      isin: "US0378331005",
       provider: "ProviderA",
     });
 
@@ -239,6 +292,7 @@ describe("SymbolDataService", () => {
     service.registerProvider(new TestProvider("ProviderB", resolverB));
     expect(service.querySymbolWithFallback({ isin: "US0378331005" })).toEqual({
       symbol: "MSFT",
+      isin: "US0378331005",
       provider: "ProviderB",
     });
     expect(resolverB).toHaveBeenCalledTimes(1);
@@ -272,6 +326,7 @@ describe("SymbolDataService", () => {
 
     expect(resultWithFallback).toEqual({
       symbol: "037833100",
+      isin: "",
       provider: "Fallback",
     });
     // Still only one call from the first query

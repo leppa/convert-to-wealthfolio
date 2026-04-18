@@ -333,7 +333,7 @@ As a plugin developer, you should:
 
 The validation happens automatically after your `convert()` method returns the records, so you can trust that only valid records will be written to the output file.
 
-## Symbol Overrides and Identifier Resolution
+## Symbol and ISIN Overrides and Resolution
 
 Your plugin can use the `SymbolDataService` passed to the `convert()` method to resolve ISINs, CUSIPs, and company names. This automatically applies user-provided mapping from INI file and enables custom data providers.
 
@@ -389,7 +389,7 @@ export class MyCustomFormat extends BaseFormat {
 }
 ```
 
-**Note:** If you don't need symbol resolution, you can ignore the `symbolDataService` parameter. You only need it if you want to resolve ISINs, CUSIPs, or company names to symbols. Resolution results are cached in memory by `SymbolDataService` — calling `querySymbolWithFallback()` multiple times with the same query parameters is efficient and will not repeat provider lookups. Symbol overrides from the INI file are applied automatically after conversion, so you don't need to handle symbol override logic manually in your format plugin.
+**Note:** If you don't need symbol resolution, you can ignore the `symbolDataService` parameter. You only need it if you want to resolve ISINs, CUSIPs, or company names to symbols. Resolution results are cached in memory by `SymbolDataService` — calling `querySymbolWithFallback()` multiple times with the same query parameters is efficient and will not repeat provider lookups. Symbol and ISIN overrides from the INI file are applied automatically after conversion, so you don't need to handle symbol override logic manually in your format plugin.
 
 ## Best Practices
 
@@ -398,7 +398,7 @@ export class MyCustomFormat extends BaseFormat {
 - **Type conversion**: Convert string values to appropriate types (numbers, dates, etc.) during parsing (see [Customizing CSV parse options](#customizing-csv-parse-options)).
 - **Format detection**: Make your `validate()` method robust to detect only your CSV format. In other words, try to avoid false positives for other formats.
 - **Default currency**: If your format doesn't include a currency column, use the `defaultCurrency` parameter provided to `convert()` method.
-- **Symbol Resolution**: Use `symbolDataService.querySymbol()` or `symbolDataService.querySymbolWithFallback()` to resolve symbols from ISIN, CUSIP, and company name fields (see [Symbol Overrides and Identifier Resolution](#symbol-overrides-and-identifier-resolution)).
+- **Symbol and ISIN Resolution**: Use `symbolDataService.querySymbol()` or `symbolDataService.querySymbolWithFallback()` to resolve symbols and ISINs from ISIN, CUSIP, and company name fields (see [Symbol and ISIN Overrides and Resolution](#symbol-and-isin-overrides-and-resolution)).
 - **Error handling**: Provide clear error messages for invalid input.
 - **Documentation**: Document your format requirements and any assumptions.
 - **Testing**: Test with sample CSV files before submitting.

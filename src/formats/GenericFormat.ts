@@ -119,19 +119,17 @@ export class GenericFormat extends BaseFormat {
 
       let symbol = record.symbol?.trim().toUpperCase() ?? "";
       let isin = record.isin?.trim().toUpperCase() ?? "";
-      // If symbol is empty, try to resolve it form other fields using the symbol data service
-      if (!symbol && (record.isin || record.cusip || record.companyname)) {
-        const result = symbolDataService.querySymbolWithFallback({
+      // If symbol or ISIN are empty, try to resolve from other fields using the symbol data service
+      if (
+        (!symbol && (record.isin || record.cusip || record.companyname)) ||
+        (!isin && (record.symbol || record.cusip || record.companyname))
+      ) {
+        ({ symbol, isin } = symbolDataService.querySymbolWithFallback({
+          symbol: record.symbol,
           isin: record.isin,
           cusip: record.cusip,
           name: record.companyname,
-        });
-        if (result.symbol) {
-          symbol = result.symbol;
-        }
-        if (result.isin) {
-          isin = result.isin;
-        }
+        }));
       }
 
       result.push({

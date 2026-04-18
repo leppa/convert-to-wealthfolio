@@ -118,33 +118,60 @@ export class SymbolDataService {
   }
 
   /**
-   * Query with fallback - returns a result with fallback to original query values
+   * Returns a result with fallback to the original query values
+   *
+   * `symbol` and `isin` will never be `undefined` in the returned result — if they are missing from
+   * the provider result, they will be replaced with the original query values or empty strings.
+   *
+   * This simplifies the logic for format plugins that want to use symbol resolution as returned
+   * values can be used directly without additional checks and fallbacks.
    *
    * @param query - Symbol query parameters
-   * @returns Symbol result with fallback to original values, never null
+   * @returns Symbol result with fallback to the original query values or empty strings
    */
-  querySymbolWithFallback(query: SymbolQuery): SymbolQueryResult {
+  querySymbolWithFallback(query: SymbolQuery): Required<SymbolQueryResult> {
+    const logger = Logger.getInstance();
+    const normalizedQuery = this.normalizeQuery(query);
+    if (
+      !normalizedQuery.symbol &&
+      !normalizedQuery.isin &&
+      !normalizedQuery.cusip &&
+      !normalizedQuery.name
+    ) {
+      logger.warn(
+        `Received a query with ${bold("all fields missing or empty")} -> returning ${bold("empty")} result`,
+      );
+
+      return {
+        symbol: "",
+        isin: "",
+        provider: FALLBACK_PROVIDER_NAME,
+      };
+    }
+
+    const fallbackSymbol = normalizedQuery.symbol || "";
+    const fallbackISIN = normalizedQuery.isin || "";
+
     const result = this.querySymbol(query);
     if (result) {
+      return this.withFallbackValues(result, fallbackSymbol, fallbackISIN);
+    }
+
+    const formattedQuery = this.formatQueryForLogging(query);
+
+    // `querySymbol()` will return `null` for fallback cache entries, so we need to re-check the
+    // cache for a fallback result.
+    const cachedResult = this.getFromCache(normalizedQuery);
+    if (cachedResult) {
+      const result = this.withFallbackValues(cachedResult, fallbackSymbol, fallbackISIN);
+      logger.trace(
+        `Using cached result for ${formattedQuery} -> ${formatPair([result.symbol, result.isin], ["Symbol ", "ISIN "])} (provider: ${bold(result.provider)})`,
+      );
       return result;
     }
 
-    const logger = Logger.getInstance();
-    const normalizedQuery = this.normalizeQuery(query);
-    const formattedQuery = this.formatQueryForLogging(query);
-
-    const cachedResult = this.getFromCache(normalizedQuery);
-    if (cachedResult) {
-      // `querySymbol()` will return `null` for fallback cache entries, so we need to re-check the
-      // cache for a fallback result.
-      logger.trace(
-        `Using cached result for ${formattedQuery} -> ${formatPair([cachedResult.symbol, cachedResult.isin], ["Symbol ", "ISIN "])} (provider: ${bold(cachedResult.provider)})`,
-      );
-      return cachedResult;
-    }
-
-    // Fallback: return the symbol based on the original query values in the priority order: symbol,
-    // unknown symbol when ISIN is present, CUSIP, sanitized name
+    // For fallback, synthesize a symbol based on the original query values in the priority order:
+    // symbol, empty symbol when ISIN is present, CUSIP, sanitized name
     const symbol =
       normalizedQuery.symbol ||
       // If ISIN is known, don't fallback to CUSIP or name, as ISIN will be returned in the result
@@ -153,19 +180,25 @@ export class SymbolDataService {
         ? undefined
         : normalizedQuery.cusip || sanitizeName(normalizedQuery.name));
 
+    const fallbackResult = this.withFallbackValues(
+      this.addToCache(normalizedQuery, {
+        symbol,
+        isin: normalizedQuery.isin,
+        provider: FALLBACK_PROVIDER_NAME,
+      }),
+      fallbackSymbol,
+      fallbackISIN,
+    );
+
     // When query has a symbol and resolution doesn't return a result, this only means that there is
     // no override for that symbol. So we only log when there is no symbol in the query.
     if (!normalizedQuery.symbol) {
       logger.warn(
-        `Couldn't resolve ${formattedQuery} -> falling back to ${formatPair([symbol, normalizedQuery.isin], ["symbol ", "ISIN "])}`,
+        `Couldn't resolve ${formattedQuery} -> falling back to ${formatPair([fallbackResult.symbol, fallbackResult.isin], ["symbol ", "ISIN "])}`,
       );
     }
 
-    return this.addToCache(normalizedQuery, {
-      symbol,
-      isin: normalizedQuery.isin,
-      provider: FALLBACK_PROVIDER_NAME,
-    });
+    return fallbackResult;
   }
 
   /**
@@ -338,5 +371,25 @@ export class SymbolDataService {
         delete this.resolutionCache[key];
       }
     }
+  }
+
+  /**
+   * Combine a symbol query result with fallback values for missing fields
+   *
+   * @param result - Symbol query result to combine with fallback values
+   * @param symbol - Fallback symbol to use if `result.symbol` is missing
+   * @param isin - Fallback ISIN to use if `result.isin` is missing
+   * @returns A new symbol query result with fallback values for missing fields, guaranteed to have `symbol` and `isin`
+   */
+  private withFallbackValues(
+    result: SymbolQueryResult,
+    symbol: string,
+    isin: string,
+  ): Required<SymbolQueryResult> {
+    return {
+      symbol: result.symbol || symbol,
+      isin: result.isin || isin,
+      provider: result.provider,
+    };
   }
 }

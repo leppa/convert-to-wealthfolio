@@ -58,9 +58,9 @@ export function parseNumber(value?: null | number | string, defaultValue: number
  *
  * @param name - The name to sanitize
  * @param fallbackSymbol - The symbol to return if the name is empty or undefined
- * @returns Sanitized symbol string or `undefined` if the name is empty and no fallback is provided
+ * @returns Sanitized symbol or empty string
  */
-export function sanitizeName(name?: string, fallbackSymbol?: string): string | undefined {
+export function sanitizeName(name?: string, fallbackSymbol: string = ""): string {
   if (!name) {
     return fallbackSymbol;
   }

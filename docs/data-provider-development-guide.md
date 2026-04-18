@@ -75,7 +75,12 @@ export class MyCustomProvider extends DataProvider {
 Add your provider to `src/data-providers/index.ts`:
 
 ```typescript
-export { Overrides, OverridesDataProvider, parseOverridesFile } from "./OverridesDataProvider";
+export {
+  Overrides,
+  OverridesByType,
+  OverridesDataProvider,
+  parseOverridesFile,
+} from "./OverridesDataProvider";
 export { MyCustomProvider } from "./MyCustomProvider";
 ```
 
@@ -137,7 +142,7 @@ interface SymbolQuery {
 
 - At least one field will be non-empty (an all-empty query is rejected before providers are called).
 - All fields are optional - check which ones are available before using.
-- `symbol`, `isin`, and `cusip` are always trimmed and uppercased before your method is called; `name` is always trimmed. You do not need to normalize these fields yourself.
+- `symbol`, `isin`, and `cusip` are always trimmed and uppercased before your method is called; `name` is always trimmed. Returned `symbol` and `isin` values are also trimmed and uppercased automatically. You do not need to normalize these fields yourself, but it's still a good practice to already return them in a normalized form.
 - Company names may be partial or have variations (e.g., "Apple Inc", "Apple, Inc.").
 
 **Common query patterns:**
@@ -178,9 +183,9 @@ return {};
 
 **Important details:**
 
-- Set `symbol` when you have resolved a ticker (uppercase recommended), `isin` when you have resolved an ISIN, or both when you have resolved both. At least one field must be set for the result to be considered a successful resolution.
+- Set `symbol` when you have resolved a ticker, `isin` when you have resolved an ISIN, or both when you have resolved both. At least one field must be set for the result to be considered a successful resolution.
 - Only set a field when your provider has resolved a value that _differs_ from the corresponding query field. Do not echo `query.symbol` or `query.isin` back — it adds no information and the `SymbolDataService` will strip them anyway.
-- Returning `{}` (empty object) allows the system to try other registered providers or fall back to the original value.
+- Returning empty `SymbolResult` (`{}`) allows the system to try other registered providers or fall back to the original value.
 - The `SymbolDataService` tracks which provider returned the result and caches it in memory — your `query()` method is called at most once per unique identifier combination per conversion run.
 
 ## Example
@@ -219,14 +224,14 @@ export class JsonFileProvider extends DataProvider {
 
   query(query: SymbolQuery): SymbolResult {
     if (query.isin) {
-      const symbol = this.cache.get(`ISIN:${query.isin.toUpperCase()}`);
+      const symbol = this.cache.get(`ISIN:${query.isin}`);
       if (symbol) {
         return { symbol };
       }
     }
 
     if (query.cusip) {
-      const symbol = this.cache.get(`CUSIP:${query.cusip.toUpperCase()}`);
+      const symbol = this.cache.get(`CUSIP:${query.cusip}`);
       if (symbol) {
         return { symbol };
       }
@@ -239,7 +244,7 @@ export class JsonFileProvider extends DataProvider {
 
 ## Best Practices
 
-- **Return empty object on failure**: Don't throw errors, return `{}` (empty object) if symbol cannot be resolved.
+- **Return empty object on failure**: Don't throw errors, return empty `SymbolResult` (`{}`) if symbol cannot be resolved.
 - **Do not echo query values back as resolution results**: Don't simply copy `query.symbol` or `query.isin` to their respective fields in the result without actual resolution. `SymbolDataService` strips any result field that is identical to the corresponding query field and treats a result with no remaining fields as "no resolution", then continues to the next provider. Only set a field when you have genuinely resolved or enriched it from a data source.
 - **Cache data, not queries**: `SymbolDataService` automatically caches resolution results in memory for the duration of the run, so your `query()` method is called at most once per unique identifier combination. However, if your provider loads data from an external source (files, APIs, databases), cache that data internally (as in the `JsonFileProvider` example above) to avoid reloading it on every query call. Consider a persistent cache to retain data across runs for providers that make expensive external lookups.
 - **Use `canHandle()`**: Implement `canHandle()` so that converter can skip your provider when it can't handle specific query types.

@@ -277,7 +277,7 @@ describe("Converter", () => {
       const overridesFile = path.join(tmpDir, "test-overrides.ini");
 
       // Create a temporary overrides file that maps AAPL (which exists in sample-generic.csv)
-      fs.writeFileSync(overridesFile, "[Symbol]\nAAPL=AAPL.OVERRIDE\n", "utf-8");
+      fs.writeFileSync(overridesFile, "[Symbol.Symbol]\nAAPL=AAPL.OVERRIDE\n", "utf-8");
 
       await converter.convert(inputFile, outputFile, DEFAULT_CURRENCY, undefined, overridesFile);
 
@@ -318,7 +318,7 @@ describe("Converter", () => {
       ];
 
       // Create an overrides file that doesn't contain a mapping for AAPL
-      fs.writeFileSync(overridesFile, "[Symbol]\nOTHER=MAPPED\n", "utf-8");
+      fs.writeFileSync(overridesFile, "[Symbol.Symbol]\nOTHER=MAPPED\n", "utf-8");
 
       const testFormat = new TestFormat(records);
       const customConverter = new Converter([testFormat]);
@@ -332,6 +332,44 @@ describe("Converter", () => {
       // Symbol should be normalized to AAPL (trimmed and uppercase)
       expect(content).toContain("AAPL");
       expect(content).not.toContain("  aapl  ");
+    });
+
+    it("should apply ISIN overrides when `overridesPath` is provided", async () => {
+      const overridesFile = path.join(tmpDir, "test-isin-overrides.ini");
+
+      const records: WealthfolioRecord[] = [
+        {
+          date: new Date("2024-01-15"),
+          instrumentType: InstrumentType.Unknown,
+          symbol: "AAPL",
+          isin: "US0378331005",
+          quantity: 100,
+          activityType: ActivityType.Buy,
+          unitPrice: 150.25,
+          currency: "EUR",
+          fee: 0,
+          amount: 15025,
+          fxRate: Number.NaN,
+          subtype: ActivitySubtype.None,
+          comment: "",
+          metadata: {},
+        },
+      ];
+
+      // Create an overrides file with ISIN.ISIN section only
+      fs.writeFileSync(overridesFile, "[ISIN.ISIN]\nUS0378331005=US9999999999\n", "utf-8");
+
+      const testFormat = new TestFormat(records);
+      const customConverter = new Converter([testFormat]);
+
+      const inputFile = path.join(tmpDir, "dummy-input.csv");
+      fs.writeFileSync(inputFile, "dummy,data", "utf-8");
+
+      await customConverter.convert(inputFile, outputFile, "EUR", undefined, overridesFile);
+
+      const content = fs.readFileSync(outputFile, "utf-8");
+      expect(content).toContain("US9999999999");
+      expect(content).not.toContain("US0378331005");
     });
 
     it("should throw error when explicit format name not found", async () => {

@@ -32,6 +32,23 @@ Upcoming release.
     part of the symbol resolution result. ISIN can be returned together with the
     symbol or on its own if the symbol cannot be resolved.
 
+- **ISIN overrides and mapping** - the overrides INI file can now also contain
+  ISIN overrides and mapping sections, which allow you to override ISIN values
+  and map symbols, CUSIPs, and company names to ISINs. This allows you to
+  provide a custom ISIN for a transaction that has an incorrect or missing ISIN
+  in the input CSV. The following sections were added:
+  - `[ISIN.ISIN]` - contains ISIN overrides;
+  - `[ISIN.Symbol]` - maps symbols to ISINs;
+  - `[ISIN.CUSIP]` - maps CUSIPs to ISINs;
+  - `[ISIN.Name]` - maps company names to ISINs.
+
+  ISIN lookups are performed before symbol lookups, which means that symbol
+  lookups are performed with an already resolved ISIN.
+
+  **Note:** The names of the symbol mapping sections were also renamed to be
+  consistent with ISIN section naming, see the breaking change in the
+  **Changed** section below for more details.
+
 - **Symbol resolution caching** - once a symbol is resolved, it will be cached
   in-memory for the duration of the converter's execution. This means that if
   the same symbol appears multiple times in the input CSV, it will only be
@@ -52,6 +69,18 @@ Upcoming release.
   CLI options take precedence over environment variables when both are set.
 
 ### Changed
+
+- **BREAKING**: **Overrides INI file format** - The flat top-level sections
+  (`[Symbol]`, `[ISIN]`, `[CUSIP]`, `[Name]`) are no longer supported. They are
+  replaced by nested sections that explicitly declare both the output type and
+  the key type:
+
+  | Old section | New section       | Meaning                       |
+  | ----------- | ----------------- | ----------------------------- |
+  | `[Symbol]`  | `[Symbol.Symbol]` | Contains symbol overrides     |
+  | `[ISIN]`    | `[Symbol.ISIN]`   | Maps ISINs to symbols         |
+  | `[CUSIP]`   | `[Symbol.CUSIP]`  | Maps CUSIPs to symbols        |
+  | `[Name]`    | `[Symbol.Name]`   | Maps company names to symbols |
 
 - **Fallback symbol resolution** - The fallback for symbol resolution will no
   longer copy ISIN value from the query into the symbol field when symbol cannot

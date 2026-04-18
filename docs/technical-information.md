@@ -66,16 +66,16 @@ This document provides technical details about the architecture, design, and imp
 
 - Orchestrates symbol resolution across registered data providers.
 - `querySymbol()` follows these steps:
-  1. Normalizes the query: `symbol`, `ISIN`, and `CUSIP` are trimmed and uppercased; `name` is only trimmed. Fields that become empty after normalization are set to `undefined`. Queries differing only in whitespace or casing are therefore treated as identical.
+  1. Normalizes the query: `symbol`, `ISIN`, and `CUSIP` are trimmed and uppercased; `name` is only trimmed. Fields that become empty after normalization are set to `undefined`. Queries differing only in whitespace (all fields) or casing (all fields, except for `name`) are therefore treated as identical.
   2. Short-circuits when all fields are empty after normalization, returning `null` without querying any provider.
   3. Checks the in-memory cache and returns the cached `SymbolQueryResult` on a hit.
   4. Queries providers in registration order, caches the first match, and returns it.
   5. Returns `null` if no provider returns a match.
-- `querySymbolWithFallback()` calls `querySymbol()` and adds a fallback when no provider has resolved the symbol:
+- `querySymbolWithFallback()` calls `querySymbol()` and adds a fallback when no provider could resolve a symbol or ISIN:
   1. If symbol is present in the query, it returns that symbol (normalized); if ISIN is also present in the query, it also returns that ISIN (normalized).
-  2. If ISIN is present in the query without a symbol, it returns that ISIN (normalized) and the symbol is set to `undefined`.
-  3. If no symbol and ISIN are present in the query, it uses the best available identifier in the priority order: CUSIP (normalized) -> sanitized company name -> `undefined`.
-  4. If all fields are empty in the query, both symbol and ISIN will be set to `undefined`.
+  2. If ISIN is present in the query without a symbol, it returns that ISIN (normalized) and the symbol is set to an empty string.
+  3. If no symbol and ISIN are present in the query, it uses the best available identifier in the priority order: CUSIP (normalized) -> sanitized company name -> empty string.
+  4. If all fields are empty in the query, both symbol and ISIN will be set to an empty string.
 - Exposes registered provider info for diagnostics and logging.
 - Logs successful resolutions at the `INFO` level, cache hits at the `TRACE` level, and unresolvable identifiers at the `WARN` level.
 

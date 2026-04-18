@@ -9,7 +9,7 @@ import path from "node:path";
 
 import { Logger, LogLevel } from "../../src/core/Logger";
 import {
-  Overrides,
+  OverridesByType,
   OverridesDataProvider,
   parseOverridesFile,
 } from "../../src/data-providers/OverridesDataProvider";
@@ -17,27 +17,29 @@ import {
 Logger.setLogLevel(LogLevel.ERROR);
 
 describe("OverridesDataProvider", () => {
-  let overrides: Overrides;
+  let overrides: OverridesByType;
   let provider: OverridesDataProvider;
 
   beforeEach(() => {
     overrides = {
-      symbols: new Map([
-        ["AAPL", "AAPL.US"],
-        ["MSFT", "MSFT.US"],
-      ]),
-      isin: new Map([
-        ["US0378331005", "AAPL.ISIN"],
-        ["US5949181045", "MSFT.ISIN"],
-      ]),
-      cusip: new Map([
-        ["037833100", "AAPL.CUSIP"],
-        ["594918104", "MSFT.CUSIP"],
-      ]),
-      names: new Map([
-        ["APPLE INC", "AAPL.NAME"],
-        ["MICROSOFT CORPORATION", "MSFT.NAME"],
-      ]),
+      symbol: {
+        symbols: new Map([
+          ["AAPL", "AAPL.US"],
+          ["MSFT", "MSFT.US"],
+        ]),
+        isins: new Map([
+          ["US0378331005", "AAPL.ISIN"],
+          ["US5949181045", "MSFT.ISIN"],
+        ]),
+        cusips: new Map([
+          ["037833100", "AAPL.CUSIP"],
+          ["594918104", "MSFT.CUSIP"],
+        ]),
+        names: new Map([
+          ["APPLE INC", "AAPL.NAME"],
+          ["MICROSOFT CORPORATION", "MSFT.NAME"],
+        ]),
+      },
     };
 
     provider = new OverridesDataProvider(overrides);
@@ -46,10 +48,6 @@ describe("OverridesDataProvider", () => {
   it("should expose provider metadata", () => {
     expect(provider.getName()).toBe("Overrides");
     expect(provider.getDescription()).toContain("INI file");
-  });
-
-  it("should resolve by symbol", () => {
-    expect(provider.query({ symbol: "AAPL" })).toEqual({ symbol: "AAPL.US" });
   });
 
   it("should resolve using various identifier types with pre-normalized inputs", () => {
@@ -98,6 +96,92 @@ describe("OverridesDataProvider", () => {
     ).toEqual({ symbol: undefined });
     expect(provider.query({})).toEqual({ symbol: undefined });
   });
+
+  it("should resolve ISIN from isin section by ISIN key", () => {
+    const isinProvider = new OverridesDataProvider({
+      isin: {
+        symbols: new Map(),
+        isins: new Map([["US0378331005", "US0378331005-OVERRIDE"]]),
+        cusips: new Map(),
+        names: new Map(),
+      },
+    });
+
+    expect(isinProvider.query({ isin: "US0378331005" })).toEqual({
+      symbol: undefined,
+      isin: "US0378331005-OVERRIDE",
+    });
+  });
+
+  it("should resolve ISIN from isin section by symbol key", () => {
+    const isinProvider = new OverridesDataProvider({
+      isin: {
+        symbols: new Map([["AAPL", "US0378331005"]]),
+        isins: new Map(),
+        cusips: new Map(),
+        names: new Map(),
+      },
+    });
+
+    expect(isinProvider.query({ symbol: "AAPL" })).toEqual({
+      symbol: undefined,
+      isin: "US0378331005",
+    });
+  });
+
+  it("should resolve both symbol and ISIN when both sections are populated", () => {
+    const combinedProvider = new OverridesDataProvider({
+      symbol: {
+        symbols: new Map([["AAPL", "AAPL.US"]]),
+        isins: new Map(),
+        cusips: new Map(),
+        names: new Map(),
+      },
+      isin: {
+        symbols: new Map([["AAPL", "US0378331005"]]),
+        isins: new Map(),
+        cusips: new Map(),
+        names: new Map(),
+      },
+    });
+
+    expect(combinedProvider.query({ symbol: "AAPL" })).toEqual({
+      symbol: "AAPL.US",
+      isin: "US0378331005",
+    });
+  });
+
+  it("should resolve ISIN from isin section by CUSIP key", () => {
+    const isinProvider = new OverridesDataProvider({
+      isin: {
+        symbols: new Map(),
+        isins: new Map(),
+        cusips: new Map([["037833100", "US0378331005"]]),
+        names: new Map(),
+      },
+    });
+
+    expect(isinProvider.query({ cusip: "037833100" })).toEqual({
+      symbol: undefined,
+      isin: "US0378331005",
+    });
+  });
+
+  it("should resolve ISIN from isin section by name key", () => {
+    const isinProvider = new OverridesDataProvider({
+      isin: {
+        symbols: new Map(),
+        isins: new Map(),
+        cusips: new Map(),
+        names: new Map([["APPLE INC", "US0378331005"]]),
+      },
+    });
+
+    expect(isinProvider.query({ name: "Apple Inc" })).toEqual({
+      symbol: undefined,
+      isin: "US0378331005",
+    });
+  });
 });
 
 describe("parseOverridesFile", () => {
@@ -111,23 +195,23 @@ describe("parseOverridesFile", () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it("should parse and normalize Symbol, ISIN, CUSIP, and Name sections", () => {
+  it("should parse and normalize [Symbol.*] sections", () => {
     const iniPath = path.join(tmpDir, "overrides.ini");
 
     fs.writeFileSync(
       iniPath,
       [
-        "[Symbol]",
+        "[Symbol.Symbol]",
         " aapl = aapl.us ",
         "MsFt= msft.us",
         "",
-        "[ISIN]",
+        "[Symbol.ISIN]",
         " us0378331005 = aapl-isin ",
         "",
-        "[CUSIP]",
+        "[Symbol.CUSIP]",
         " 037833100 = aapl-cusip ",
         "",
-        "[Name]",
+        "[Symbol.Name]",
         " apple inc = aapl-name ",
         "",
       ].join("\n"),
@@ -136,23 +220,79 @@ describe("parseOverridesFile", () => {
 
     const parsed = parseOverridesFile(iniPath);
 
-    expect(parsed.symbols.get("AAPL")).toBe("AAPL.US");
-    expect(parsed.symbols.get("MSFT")).toBe("MSFT.US");
-    expect(parsed.isin.get("US0378331005")).toBe("AAPL-ISIN");
-    expect(parsed.cusip.get("037833100")).toBe("AAPL-CUSIP");
-    expect(parsed.names.get("APPLE INC")).toBe("AAPL-NAME");
+    expect(parsed.symbol).toBeDefined();
+    expect(parsed.symbol?.symbols.get("AAPL")).toBe("AAPL.US");
+    expect(parsed.symbol?.symbols.get("MSFT")).toBe("MSFT.US");
+    expect(parsed.symbol?.isins.get("US0378331005")).toBe("AAPL-ISIN");
+    expect(parsed.symbol?.cusips.get("037833100")).toBe("AAPL-CUSIP");
+    expect(parsed.symbol?.names.get("APPLE INC")).toBe("AAPL-NAME");
   });
 
-  it("should return empty maps when sections are missing", () => {
+  it("should parse and normalize [ISIN.*] sections", () => {
+    const iniPath = path.join(tmpDir, "isin-overrides.ini");
+
+    fs.writeFileSync(
+      iniPath,
+      [
+        "[ISIN.ISIN]",
+        " us0378331005 = us0378331005-new ",
+        "",
+        "[ISIN.Symbol]",
+        " aapl = us0378331005 ",
+        "",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    const parsed = parseOverridesFile(iniPath);
+
+    expect(parsed.isin).toBeDefined();
+    expect(parsed.isin?.isins.get("US0378331005")).toBe("US0378331005-NEW");
+    expect(parsed.isin?.symbols.get("AAPL")).toBe("US0378331005");
+    expect(parsed.symbol).toBeUndefined();
+  });
+
+  it("should parse both [Symbol.*] and [ISIN.*] sections from a single file", () => {
+    const iniPath = path.join(tmpDir, "combined-overrides.ini");
+
+    fs.writeFileSync(
+      iniPath,
+      [
+        "[Symbol.Symbol]",
+        "aapl = aapl.us",
+        "",
+        "[Symbol.ISIN]",
+        "us0378331005 = aapl-isin",
+        "",
+        "[ISIN.Symbol]",
+        "aapl = us0378331005",
+        "",
+        "[ISIN.ISIN]",
+        "us0378331005 = us0378331005-new",
+        "",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    const parsed = parseOverridesFile(iniPath);
+
+    expect(parsed.symbol).toBeDefined();
+    expect(parsed.symbol?.symbols.get("AAPL")).toBe("AAPL.US");
+    expect(parsed.symbol?.isins.get("US0378331005")).toBe("AAPL-ISIN");
+
+    expect(parsed.isin).toBeDefined();
+    expect(parsed.isin?.symbols.get("AAPL")).toBe("US0378331005");
+    expect(parsed.isin?.isins.get("US0378331005")).toBe("US0378331005-NEW");
+  });
+
+  it("should return undefined for symbol and isin when sections are missing", () => {
     const iniPath = path.join(tmpDir, "minimal.ini");
     fs.writeFileSync(iniPath, "[Other]\nA=B\n", "utf-8");
 
     const parsed = parseOverridesFile(iniPath);
 
-    expect(parsed.symbols.size).toBe(0);
-    expect(parsed.isin.size).toBe(0);
-    expect(parsed.cusip.size).toBe(0);
-    expect(parsed.names.size).toBe(0);
+    expect(parsed.symbol).toBeUndefined();
+    expect(parsed.isin).toBeUndefined();
   });
 
   it("should throw when overrides file does not exist", () => {
