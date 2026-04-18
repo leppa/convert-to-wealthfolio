@@ -6,6 +6,7 @@
 
 import { bold, dim, red } from "colorette";
 import { InvalidArgumentError, Option, program } from "commander";
+import { isISO4217 } from "validator";
 
 import { Converter } from "./core/Converter";
 import { Logger } from "./core/Logger";
@@ -69,9 +70,9 @@ program
       "3-letter ISO 4217 currency code to use when input CSV doesn't specify one",
     )
       .argParser((currency) => {
-        if (!/^[A-Za-z]{3}$/.test(currency)) {
+        if (!isISO4217(currency)) {
           throw new InvalidArgumentError(
-            `Invalid currency: ${currency}. Use a 3-letter ISO 4217 currency code.`,
+            `Invalid currency: ${currency}. Use a valid 3-letter ISO 4217 currency code.`,
           );
         }
         return currency.toUpperCase();

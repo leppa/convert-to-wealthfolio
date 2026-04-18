@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import { bold } from "colorette";
-
+import { bold, italic, red } from "colorette";
 import { OptionsWithColumns } from "csv-parse";
+import { isISIN, isISO4217 } from "validator";
+
 import {
   ActivitySubtype,
   ActivityType,
@@ -18,6 +19,7 @@ import {
 import { canHaveActivitySubtype } from "../core/FieldRequirements";
 import { Logger } from "../core/Logger";
 import { SymbolDataService } from "../core/SymbolDataService";
+import { isCUSIP } from "../core/Utils";
 
 interface ParsedRecord extends Record<string, unknown> {
   date: Date;
@@ -78,7 +80,15 @@ export class GenericFormat extends BaseFormat {
 
     for (let i = 0; i < records.length; i++) {
       const record = records[i];
-      const activityType = this.mapActivityType(record.transactiontype);
+      let activityType: ActivityType;
+      try {
+        activityType = this.mapActivityType(record.transactiontype);
+      } catch (error) {
+        Logger.getInstance().warn(
+          `${bold("Skipping")} record ${italic(i + 1)} due to error: ${red((error as Error).message)}`,
+        );
+        continue;
+      }
       const subtype = this.mapActivitySubtype(record, activityType);
       let quantity = record.quantity;
       let unitPrice = record.unitprice;
@@ -117,8 +127,8 @@ export class GenericFormat extends BaseFormat {
         }
       }
 
-      let symbol = record.symbol?.trim().toUpperCase() ?? "";
-      let isin = record.isin?.trim().toUpperCase() ?? "";
+      let symbol = record.symbol ?? "";
+      let isin = record.isin ?? "";
       // If symbol or ISIN are empty, try to resolve from other fields using the symbol data service
       if (
         (!symbol && (record.isin || record.cusip || record.companyname)) ||
@@ -158,7 +168,7 @@ export class GenericFormat extends BaseFormat {
     if (!type) {
       return InstrumentType.Unknown;
     }
-    switch (type.trim().toLowerCase()) {
+    switch (type.toLowerCase()) {
       case "equity":
       case "stock":
       case "etf":
@@ -197,7 +207,7 @@ export class GenericFormat extends BaseFormat {
     if (!type) {
       throw new Error("No activity type");
     }
-    switch (type.trim().toLowerCase()) {
+    switch (type.toLowerCase()) {
       case "buy":
       case "purchase":
       case "acquisition":
@@ -245,7 +255,7 @@ export class GenericFormat extends BaseFormat {
       return ActivitySubtype.None;
     }
 
-    const activitySubtype = record.transactionsubtype.trim().toLowerCase();
+    const activitySubtype = record.transactionsubtype.toLowerCase();
     if (activityType === ActivityType.Dividend) {
       switch (activitySubtype) {
         case "drip":
@@ -414,19 +424,51 @@ export class GenericFormat extends BaseFormat {
       // Trim whitespaces and convert column names to lowercase
       columns: (header: string[]) => header.map((column) => column.trim().toLowerCase()),
       cast: (value, context) => {
-        if (context.column === "date") {
-          return new Date(value.trim());
-        } else if (
-          context.column === "quantity" ||
-          context.column === "unitprice" ||
-          context.column === "fee" ||
-          context.column === "amount" ||
-          context.column === "fxrate"
-        ) {
-          return Number.parseFloat(value);
+        const logger = Logger.getInstance();
+        // csv-parse doesn't trim whitespace inside quoted fields
+        const trimmedValue = value.trim();
+        switch (context.column) {
+          case "date":
+            return new Date(trimmedValue);
+          case "quantity":
+          case "unitprice":
+          case "fee":
+          case "total":
+          case "fxrate":
+            return Number.parseFloat(trimmedValue);
+          case "symbol":
+            return trimmedValue.toUpperCase();
+          case "isin": {
+            const isin = trimmedValue.toUpperCase();
+            if (isin && !isISIN(isin)) {
+              logger.warn(
+                `${red("Invalid ISIN")} in line ${italic(context.lines)} of input file: ${bold(trimmedValue)} - check the source data or use an override to correct it`,
+              );
+            }
+            return isin;
+          }
+          case "cusip": {
+            const cusip = trimmedValue.toUpperCase();
+            if (cusip && !isCUSIP(cusip)) {
+              logger.warn(
+                `${red("Invalid CUSIP")} in line ${italic(context.lines)} of input file: ${bold(trimmedValue)} - check the source data`,
+              );
+            }
+            return cusip;
+          }
+          case "currency": {
+            const currency = trimmedValue.toUpperCase();
+            if (currency && !isISO4217(currency)) {
+              logger.warn(
+                `${red("Invalid currency code")} in line ${italic(context.lines)} of input file: ${bold(trimmedValue)} - will be replaced with the default currency`,
+              );
+              return ""; // Don't set - will be replaced with the default currency later
+            }
+            return currency;
+          }
+          default:
+            return trimmedValue;
         }
-
-        return value.trim();
       },
     };
   }

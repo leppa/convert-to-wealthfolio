@@ -306,6 +306,19 @@ describe("SymbolDataService", () => {
     expect(service.querySymbol({ isin: "US0378331005" })).toBeNull();
   });
 
+  it("should ignore invalid ISIN value returned by a provider", () => {
+    service.registerProvider(
+      new TestProvider("ProviderA", () => ({ symbol: "AAPL", isin: "NOTANISIN" })),
+    );
+
+    const result = service.querySymbol({ isin: "US0378331005" });
+
+    // Symbol is kept but invalid ISIN is discarded
+    expect(result).not.toBeNull();
+    expect(result?.symbol).toBe("AAPL");
+    expect(result?.isin).toBeUndefined();
+  });
+
   it("should return `null` from `querySymbol()` without querying providers when a Fallback cache entry exists", () => {
     // Provider cannot resolve — result is cached as Fallback
     const resolver = jest.fn(() => ({}));

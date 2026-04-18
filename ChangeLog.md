@@ -104,6 +104,43 @@ Upcoming release.
   - All subsequent queries (cache hits) will be logged with the `TRACE` level to
     reduce noise in the logs.
 
+- **Data validation** - The input and output data validation logic has been
+  refactored and improved to be more consistent. It will now also validate
+  non-empty fields that can be validated (e.g., currency, ISIN):
+  - Currency codes provided to the `--default-currency` CLI option are now
+    validated against the [ISO 4217][] standard. If an invalid currency code is
+    provided, the converter will abort with an error message.
+  - ISINs from the symbol resolution results are now validated including
+    calculation of the check digit. If a provider returns an invalid ISIN, it
+    will be treated as not resolved with a warning logged.
+  - ISIN _values_ (right side of `=`) in the overrides file are now validated as
+    well. If an invalid ISIN value is provided, it will be ignored with a
+    warning. ISIN _keys_ (left side of `=`) are not validated to allow fixing
+    invalid ISINs in the input data.
+  - Output field validation now also validates optional fields. If an optional
+    field is invalid, it will be cleared with a warning.
+  - The Generic format plugin now validates ISINs and CUSIPs in the input CSV.
+    Invalid values are logged with a warning but are still used. If an invalid
+    ISIN is not corrected using overrides or symbol resolution, it will fail
+    output field validation and cause the respective transaction to be skipped
+    from the output CSV.
+  - The Generic format plugin now also validates currency codes in the input CSV
+    against the [ISO 4217][] standard. If an invalid currency code is
+    encountered, a warning will be logged and it will be replaced with the
+    default currency.
+
+  As a consequence, some validation log messages have also changed.
+
+### Fixed
+
+- **The Generic format plugin no longer aborts on unknown activity types** -
+  Previously, if the Generic format plugin encountered an unknown activity type
+  in the input CSV, it would throw an error which would abort the whole
+  conversion process. Now, it will log a warning and skip the transaction,
+  allowing the rest of the transactions to be processed.
+
+[ISO 4217]: https://www.iso.org/iso-4217-currency-codes.html
+
 ## [0.2.0] - 2026-04-09
 
 This release adds support for transaction history exported from the

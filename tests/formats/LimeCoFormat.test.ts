@@ -905,7 +905,7 @@ describe("Lime.co Format", () => {
       expect(caster(" aapl ", { column: "symbol" })).toBe("AAPL");
       expect(caster(" BUY ", { column: "direction" })).toBe("buy");
       expect(caster(" -10.50", { column: "quantity" })).toBe(-10.5);
-      expect(caster("", { column: "price" })).toBe(0);
+      expect(caster("", { column: "price" })).toBeNaN();
       expect(caster("-1.25 ", { column: "fees" })).toBe(-1.25);
       expect(caster("-100", { column: "amount" })).toBe(-100);
       expect(caster(" note ", { column: "description" })).toBe("note");

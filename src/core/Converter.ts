@@ -11,10 +11,16 @@ import { CsvError, OptionsWithColumns, parse } from "csv-parse";
 import { stringify } from "csv-stringify/sync";
 
 import { BaseFormat, WealthfolioRecord } from "./BaseFormat";
-import { validateRecordFieldRequirements } from "./FieldRequirements";
+import {
+  clearField,
+  FieldRequirementLevel,
+  FieldRequirementViolationKind,
+  FieldValidationResult,
+  validateRecordFieldRequirements,
+} from "./FieldRequirements";
 import { Logger } from "./Logger";
 import { SymbolDataService } from "./SymbolDataService";
-import { parseNumber, roundToPrecision } from "./Utils";
+import { assertUnreachable, parseNumber, roundToPrecision, stringifyForLogging } from "./Utils";
 
 import { OverridesByType, OverridesDataProvider, parseOverridesFile } from "../data-providers";
 
@@ -155,13 +161,30 @@ export class Converter {
         logger.trace(
           `Validating record ${bold(index + 1)}: ${result.valid ? green("passed") : red("failed")}`,
         );
+        let skip = false;
         if (!result.valid) {
-          logger.warn(`Skipping record ${bold(index + 1)} due to field errors:`);
+          skip = result.invalidFields.some(
+            (field) => field.requirementLevel === FieldRequirementLevel.Required,
+          );
+          if (skip) {
+            logger.warn(
+              `${bold("Skipping")} record ${italic(index + 1)} due to invalid required fields:`,
+            );
+          } else {
+            logger.warn(
+              `Record ${italic(index + 1)} has invalid optional fields, they ${bold("will be cleared")}:`,
+            );
+          }
           for (const field of result.invalidFields) {
-            logger.warn(`  - ${bold(field.name)} - ${red(field.error)}, value:`, field.value);
+            logger.warn(`  - ${formatFieldValidationResult(field)}`);
+            if (!skip && field.requirementLevel === FieldRequirementLevel.Optional) {
+              // Clear the optional invalid field
+              // WARNING: Modifies original records in-place
+              clearField(record, field.name);
+            }
           }
         }
-        return result.valid;
+        return !skip;
       });
 
     const symbolOverrides = overrides?.symbol;
@@ -174,7 +197,7 @@ export class Converter {
       convertedRecords = convertedRecords.map((record, index) => {
         const newRecord = { ...record };
         if (symbolOverrides) {
-          newRecord.symbol = this.getOverrideFor(
+          newRecord.symbol = getOverrideFor(
             newRecord.symbol,
             symbolOverrides.symbols,
             index,
@@ -182,7 +205,7 @@ export class Converter {
           );
         }
         if (isinOverrides) {
-          newRecord.isin = this.getOverrideFor(newRecord.isin, isinOverrides.isins, index, "ISIN");
+          newRecord.isin = getOverrideFor(newRecord.isin, isinOverrides.isins, index, "ISIN");
         }
         return newRecord;
       });
@@ -286,44 +309,85 @@ export class Converter {
   getRegisteredFormats(): string[] {
     return this.formatPlugins.map((p) => p.getName());
   }
+}
 
-  /**
-   * Get override value for a given key from the overrides map
-   *
-   * @param key - Original value to check for override
-   * @param overridesMap - Map of overrides to check against
-   * @param recordIndex - Index of the record being processed (for logging)
-   * @param fieldName - Name of the field being overridden (for logging)
-   * @returns Overridden value if found, otherwise the original key (possibly normalized)
-   */
-  private getOverrideFor(
-    key: string,
-    overridesMap: Map<string, string>,
-    recordIndex: number,
-    fieldName: string,
-  ): string {
-    const logger = Logger.getInstance();
+/**
+ * Get override value for a given key from the overrides map
+ *
+ * @param key - Original value to check for override
+ * @param overridesMap - Map of overrides to check against
+ * @param recordIndex - Index of the record being processed (for logging)
+ * @param fieldName - Name of the field being overridden (for logging)
+ * @returns Overridden value if found, otherwise the original key (possibly normalized)
+ */
+function getOverrideFor(
+  key: string,
+  overridesMap: Map<string, string>,
+  recordIndex: number,
+  fieldName: string,
+): string {
+  const logger = Logger.getInstance();
 
-    const normalizedKey = key.trim().toUpperCase();
-    if (!normalizedKey) {
-      logger.trace(
-        `Skipping ${italic(fieldName)} for record ${italic(recordIndex + 1)}: ${bold("empty")} value`,
-      );
-      return "";
-    }
-
-    const mappedValue = overridesMap.get(normalizedKey);
-    if (mappedValue) {
-      logger.debug(
-        `Overriding ${italic(fieldName)} for record ${italic(recordIndex + 1)}: ${bold(key)} -> ${bold(mappedValue)}`,
-      );
-      return mappedValue;
-    } else if (key !== normalizedKey) {
-      logger.info(
-        `Normalizing ${italic(fieldName)} for record ${italic(recordIndex + 1)}: ${bold(key)} -> ${bold(normalizedKey)}`,
-      );
-      return normalizedKey; // Normalize even if no override
-    }
-    return normalizedKey; // No change
+  const normalizedKey = key.trim().toUpperCase();
+  if (!normalizedKey) {
+    logger.trace(
+      `Skipping ${italic(fieldName)} override for record ${italic(recordIndex + 1)}: ${bold("empty")} value`,
+    );
+    return "";
   }
+
+  const mappedValue = overridesMap.get(normalizedKey);
+  if (mappedValue) {
+    logger.debug(
+      `Overriding ${italic(fieldName)} for record ${italic(recordIndex + 1)}: ${bold(key)} -> ${bold(mappedValue)}`,
+    );
+    return mappedValue;
+  }
+  if (key !== normalizedKey) {
+    logger.info(
+      `Normalizing ${italic(fieldName)} for record ${italic(recordIndex + 1)}: ${bold(key)} -> ${bold(normalizedKey)}`,
+    );
+  }
+  return normalizedKey; // Normalize even if no override
+}
+
+/**
+ * Format a field validation result for logging
+ *
+ * @param result - Field validation result
+ * @returns Formatted log message
+ */
+// Export to make the function testable, even though it's only used in this file for now
+export function formatFieldValidationResult(result: FieldValidationResult): string {
+  let requirementLevel = "";
+  switch (result.requirementLevel) {
+    case FieldRequirementLevel.Required:
+      requirementLevel = "required";
+      break;
+    case FieldRequirementLevel.Optional:
+      requirementLevel = "optional";
+      break;
+    case FieldRequirementLevel.Ignored:
+      requirementLevel = "ignored";
+      break;
+    default:
+      assertUnreachable(result.requirementLevel);
+  }
+
+  let errorMessage = "";
+  switch (result.violationKind) {
+    case FieldRequirementViolationKind.Valid:
+      errorMessage = green("Valid");
+      break;
+    case FieldRequirementViolationKind.Unset:
+      errorMessage = red("Empty value");
+      break;
+    case FieldRequirementViolationKind.Invalid:
+      errorMessage = red(`Invalid value: ${bold(stringifyForLogging(result.value))}`);
+      break;
+    default:
+      assertUnreachable(result.violationKind);
+  }
+
+  return `${bold(result.name)} (${italic(requirementLevel)}) - ${errorMessage}`;
 }

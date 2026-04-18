@@ -444,18 +444,26 @@ Before importing:
 
 ## Field Validation
 
-The converter automatically validates all records based on transaction type-specific field requirements. This means:
+The converter automatically validates all records based on transaction-type-specific field requirements. Fields fall into three categories:
 
-- **Required fields** for each transaction type are checked (e.g., `Symbol` is required for `BUY` but not for `DEPOSIT`).
-- **Ignored fields** are automatically cleared (e.g., `Symbol` is cleared for cash-only activities).
-- **Invalid records** with missing required fields are filtered out and not included in the output.
-- **Warnings** are logged for any validation failures, including the record number and specific field errors.
+- **Required** — must be set and valid. Records with missing or invalid required fields are **skipped** and not included in the output.
+- **Optional** — may be absent, but must be valid if set. Records with invalid optional fields have those fields **cleared** (set to an empty value), but the record is still included in the output.
+- **Ignored** — not used for the given activity type and are automatically cleared.
 
-When a record fails validation, you'll see a warning message like:
+**Warnings** are logged for any validation failures, including the record number and the specific field errors.
+
+When a record is skipped due to an invalid required field:
 
 ```text
-Skipping record 42 due to field errors:
-  - unitPrice - Invalid value, value: NaN
+Skipping record 42 due to invalid required fields:
+  - unitPrice (required) - Empty value
+```
+
+When a record has an invalid optional field that gets cleared:
+
+```text
+Record 42 has invalid optional fields, they will be cleared:
+  - isin (optional) - Invalid value: NOT_AN_ISIN
 ```
 
 This helps you identify and fix data issues in your source CSV file.
@@ -472,7 +480,7 @@ If you need more details for troubleshooting, increase log verbosity by setting 
 
 ### Unknown Transaction Type
 
-**Error:** `Unknown transaction type: XYZ`
+**Warning:** `Skipping record N due to error: Unknown activity type: XYZ`
 
 **Solution:** Check the [Transaction Types](#transaction-types) section for supported values. Transaction type names are flexible but must match one of the documented options.
 

@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import { bold } from "colorette";
+import { bold, red } from "colorette";
+import { isISIN } from "validator";
 
 import { DataProvider, DataProviderInfo, SymbolQuery, SymbolResult } from "./DataProvider";
 import { Logger } from "./Logger";
@@ -254,6 +255,12 @@ export class SymbolDataService {
       symbol = undefined;
     }
     if (!isin || isin === normalizedQuery.isin) {
+      isin = undefined;
+    }
+    if (isin && !isISIN(isin)) {
+      Logger.getInstance().warn(
+        `${bold("Ignoring")} ${red("invalid ISIN")} for ${this.formatQueryForLogging(normalizedQuery)} -> ${bold(isin)} (provider: ${bold(provider.getName())})`,
+      );
       isin = undefined;
     }
 

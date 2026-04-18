@@ -7,7 +7,8 @@ import ini from "ini";
 import fs from "node:fs";
 import path from "node:path";
 
-import { bold } from "colorette";
+import { bold, red } from "colorette";
+import { isISIN } from "validator";
 
 import { DataProvider, SymbolQuery, SymbolResult } from "../core/DataProvider";
 import { Logger } from "../core/Logger";
@@ -140,7 +141,7 @@ export function parseOverridesFile(overridesPath: string): OverridesByType {
 
   const overrides: OverridesByType = {};
   if (parsed.ISIN) {
-    overrides.isin = parseSection(parsed.ISIN as Record<string, Record<string, string>>);
+    overrides.isin = parseSection(parsed.ISIN as Record<string, Record<string, string>>, isISIN);
     logOverridesSummary(overrides.isin, "ISIN", overridesPath);
   }
   if (parsed.Symbol) {
@@ -151,7 +152,17 @@ export function parseOverridesFile(overridesPath: string): OverridesByType {
   return overrides;
 }
 
-function parseSection(section: Record<string, Record<string, string>>): Overrides {
+/**
+ * Parse a section of the INI file and validate values if a validator is provided
+ *
+ * @param section - Section of the INI file to parse
+ * @param valueValidator - Optional function to validate values
+ * @returns Parsed overrides for the section
+ */
+function parseSection(
+  section: Record<string, Record<string, string>>,
+  valueValidator?: (value: string) => boolean,
+): Overrides {
   const overrides: Overrides = {
     symbols: new Map(),
     isins: new Map(),
@@ -160,29 +171,46 @@ function parseSection(section: Record<string, Record<string, string>>): Override
   };
 
   if (section.Symbol) {
-    for (const [key, value] of Object.entries(section.Symbol)) {
-      overrides.symbols.set(key.trim().toUpperCase(), String(value).trim().toUpperCase());
-    }
+    overrides.symbols = parseSubsection(section.Symbol, valueValidator);
   }
 
   if (section.ISIN) {
-    for (const [key, value] of Object.entries(section.ISIN)) {
-      overrides.isins.set(key.trim().toUpperCase(), String(value).trim().toUpperCase());
-    }
+    overrides.isins = parseSubsection(section.ISIN, valueValidator);
   }
 
   if (section.CUSIP) {
-    for (const [key, value] of Object.entries(section.CUSIP)) {
-      overrides.cusips.set(key.trim().toUpperCase(), String(value).trim().toUpperCase());
-    }
+    overrides.cusips = parseSubsection(section.CUSIP, valueValidator);
   }
 
   if (section.Name) {
-    for (const [key, value] of Object.entries(section.Name)) {
-      overrides.names.set(key.trim().toUpperCase(), String(value).trim().toUpperCase());
-    }
+    overrides.names = parseSubsection(section.Name, valueValidator);
   }
 
+  return overrides;
+}
+
+/**
+ * Parse a subsection of the INI file and validate values if a validator is provided
+ *
+ * @param section - Subsection of the INI file to parse
+ * @param valueValidator - Optional function to validate values
+ * @returns Map of parsed and validated overrides
+ */
+function parseSubsection(
+  section: Record<string, string>,
+  valueValidator?: (value: string) => boolean,
+): Map<string, string> {
+  const overrides = new Map<string, string>();
+  for (const [key, value] of Object.entries(section)) {
+    const normalizedValue = value.trim().toUpperCase();
+    if (normalizedValue && (!valueValidator || valueValidator(normalizedValue))) {
+      overrides.set(key.trim().toUpperCase(), normalizedValue);
+    } else {
+      Logger.getInstance().warn(
+        `${red("Invalid value")} for key ${bold(key)} in overrides file: ${bold(value)} - will be ${bold("ignored")}`,
+      );
+    }
+  }
   return overrides;
 }
 

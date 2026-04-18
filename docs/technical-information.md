@@ -52,6 +52,14 @@ This document provides technical details about the architecture, design, and imp
 **Field Requirements** (`src/core/FieldRequirements.ts`)
 
 - Validates records against activity type-specific field requirements.
+- Each field has one of three requirement levels for a given activity type:
+  - **Required** — must be set and valid; records with missing or invalid required fields are skipped.
+  - **Optional** — may be absent, but must be valid if set.
+  - **Ignored** — not used for the given activity type; automatically cleared when `clearIgnoredFields` is enabled.
+- Some requirements are **conditional** and depend on other field values at runtime. Some examples:
+  - For asset transactions: `symbol` is required only when `isin` is absent, and vice versa — at least one of the two must be set.
+  - For transfers (`TRANSFER_IN` / `TRANSFER_OUT`): when `symbol` or `isin` is set, the transfer is treated as an asset transfer and requires `quantity` and `unitPrice` to be set, while `amount` is ignored; when both `symbol` and `isin` are absent the transfer is treated as a cash transfer and requires `amount` to be set, while `quantity` and `unitPrice` are ignored.
+  - For all transactions: `instrumentType` is kept only when `symbol` or `isin` is set; otherwise it is cleared.
 - Automatically clears ignored fields based on activity type.
 - Filters out invalid records with detailed error reporting.
 
@@ -218,6 +226,7 @@ These dependencies are required for the converter to run:
 - **[Day.js](https://day.js.org/)**: Date parsing and formatting.
 - **[ini](https://github.com/npm/ini)**: INI file parsing.
 - **[NodeCSV](https://csv.js.org/)** (**csv-parse** & **csv-stringify**): CSV operations.
+- **[validator.js](https://github.com/validatorjs/validator.js)**: String validation and sanitization.
 
 I try to keep runtime dependencies lean, with no or minimal transitive dependencies, to ensure that the converter remains lightweight and easy to maintain.
 

@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+import validator from "validator";
+
 import { bold } from "colorette";
 
 /**
@@ -70,14 +72,95 @@ export function sanitizeName(name?: string, fallbackSymbol: string = ""): string
     // with a single dash)
     .replaceAll(/[\W_]+/g, "-");
 
-  return sanitized
-    .slice(
-      // Trim leading dash (there can be only one due to the regex above)...
-      sanitized.startsWith("-") ? 1 : 0,
-      // ...and trailing dash (same here, only one possible)
-      sanitized.endsWith("-") ? -1 : undefined,
-    )
-    .toUpperCase();
+  return validator.trim(sanitized, "-").toUpperCase();
+}
+
+/**
+ * Validate a CUSIP identifier
+ *
+ * @param value - The string to validate
+ * @returns `true` if the value is a valid CUSIP, `false` otherwise
+ */
+export function isCUSIP(value: string): boolean {
+  // While I and O are discouraged in CUSIPs, they are not strictly invalid, thus included in the
+  // regex range
+  if (!/^[0-9A-Z*@#]{8}\d$/i.test(value)) {
+    return false;
+  }
+
+  const upper = value.toUpperCase();
+  let sum = 0;
+  const zeroCode = "0".codePointAt(0)!;
+  const aCode = "A".codePointAt(0)!;
+
+  for (let i = 0; i < 8; i++) {
+    const char = upper[i];
+    let v: number;
+    if (char >= "0" && char <= "9") {
+      v = char.codePointAt(0)! - zeroCode;
+    } else if (char >= "A" && char <= "Z") {
+      v = char.codePointAt(0)! - aCode + 10;
+    } else if (char === "*") {
+      v = 36;
+    } else if (char === "@") {
+      v = 37;
+    } else /* char === "#" */ {
+      v = 38;
+    }
+
+    // Double values at 1-based even positions (which are 0-based odd indices)
+    if (i % 2 === 1) {
+      v *= 2;
+    }
+
+    sum += Math.floor(v / 10) + (v % 10);
+  }
+
+  const checkDigit = (10 - (sum % 10)) % 10;
+  return checkDigit === Number.parseInt(upper[8], 10);
+}
+
+/**
+ * Stringify a value for logging purposes
+ *
+ * This function converts various types of values into a string format suitable for logging:
+ * - `undefined` is represented as `<undefined>`, and `null` as `<null>`.
+ * - Strings are returned as-is.
+ * - Dates are converted to ISO string format.
+ * - Objects are stringified using `JSON.stringify()`, with a fallback to string coercion if
+ *   stringification fails (e.g., due to circular references).
+ * - Other types are converted to strings using `String()`.
+ *
+ * @param value - The value to stringify
+ * @returns A string representation of the value for logging
+ */
+export function stringifyForLogging(value: unknown): string {
+  if (value === undefined) {
+    return "<undefined>";
+  }
+  if (value === null) {
+    return "<null>";
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  if (value instanceof Date) {
+    try {
+      return value.toISOString();
+    } catch {
+      return "<invalid date>";
+    }
+  }
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      // No-op - fallback to string coercion below
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
+  return String(value);
 }
 
 /**
@@ -124,4 +207,15 @@ export function formatPair(
   const [label1, label2] = labels;
   const sep = value1 && value2 ? separator : "";
   return formatLoggedValue(value1, label1) + sep + formatLoggedValue(value2, label2);
+}
+
+/**
+ * Assert that a value is of type `never`, indicating that it should be unreachable
+ *
+ * This function is used as a type guard to ensure that all possible cases have been handled in
+ * control flow, such as in a `switch` statement. If the function is called, it will throw an error
+ * indicating that an unreachable code path has been executed.
+ */
+export function assertUnreachable(_: never): never {
+  throw new Error("Value is expected to be unreachable");
 }

@@ -7,13 +7,13 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { Logger, LogLevel } from "../../src/core/Logger";
 import {
   OverridesByType,
   OverridesDataProvider,
   parseOverridesFile,
 } from "../../src/data-providers/OverridesDataProvider";
 
+import { Logger, LogLevel } from "../../src/core/Logger";
 Logger.setLogLevel(LogLevel.ERROR);
 
 describe("OverridesDataProvider", () => {
@@ -235,7 +235,7 @@ describe("parseOverridesFile", () => {
       iniPath,
       [
         "[ISIN.ISIN]",
-        " us0378331005 = us0378331005-new ",
+        " us0378331005 = us5949181045 ",
         "",
         "[ISIN.Symbol]",
         " aapl = us0378331005 ",
@@ -247,7 +247,7 @@ describe("parseOverridesFile", () => {
     const parsed = parseOverridesFile(iniPath);
 
     expect(parsed.isin).toBeDefined();
-    expect(parsed.isin?.isins.get("US0378331005")).toBe("US0378331005-NEW");
+    expect(parsed.isin?.isins.get("US0378331005")).toBe("US5949181045");
     expect(parsed.isin?.symbols.get("AAPL")).toBe("US0378331005");
     expect(parsed.symbol).toBeUndefined();
   });
@@ -268,7 +268,7 @@ describe("parseOverridesFile", () => {
         "aapl = us0378331005",
         "",
         "[ISIN.ISIN]",
-        "us0378331005 = us0378331005-new",
+        "us0378331005 = us5949181045",
         "",
       ].join("\n"),
       "utf-8",
@@ -282,7 +282,34 @@ describe("parseOverridesFile", () => {
 
     expect(parsed.isin).toBeDefined();
     expect(parsed.isin?.symbols.get("AAPL")).toBe("US0378331005");
-    expect(parsed.isin?.isins.get("US0378331005")).toBe("US0378331005-NEW");
+    expect(parsed.isin?.isins.get("US0378331005")).toBe("US5949181045");
+  });
+
+  it("should ignore invalid ISIN values in [ISIN.*] sections", () => {
+    const iniPath = path.join(tmpDir, "invalid-isin.ini");
+
+    fs.writeFileSync(
+      iniPath,
+      [
+        "[ISIN.ISIN]",
+        "US0378331005 = NOTANISIN",
+        "[ISIN.Symbol]",
+        "AAPL = INVALID_ISIN",
+        "[ISIN.CUSIP]",
+        "037833100 = NOT_AN_ISIN",
+        "[ISIN.Name]",
+        "APPLE INC = WRONG_ISIN",
+        "",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    const parsed = parseOverridesFile(iniPath);
+    expect(parsed.isin).toBeDefined();
+    expect(parsed.isin?.isins.get("US0378331005")).toBeUndefined();
+    expect(parsed.isin?.symbols.get("AAPL")).toBeUndefined();
+    expect(parsed.isin?.cusips.get("037833100")).toBeUndefined();
+    expect(parsed.isin?.names.get("APPLE INC")).toBeUndefined();
   });
 
   it("should return undefined for symbol and isin when sections are missing", () => {

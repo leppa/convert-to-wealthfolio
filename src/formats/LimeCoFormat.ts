@@ -108,7 +108,7 @@ export class LimeCoFormat extends BaseFormat {
         amount: this.maybeMakeAbsolute(record.amount, activityType),
         fxRate: Number.NaN, // Not applicable, as Lime.co only supports USD
         subtype: this.getActivitySubtype(record, activityType),
-        comment: record.description.trim(),
+        comment: record.description,
         metadata,
       };
 
@@ -343,11 +343,7 @@ export class LimeCoFormat extends BaseFormat {
   }
 
   private combineDescriptions(first: string, second: string): string {
-    if (first === second) {
-      return first.trim();
-    } else {
-      return `${first.trim()} / ${second.trim()}`;
-    }
+    return first === second ? first : `${first} / ${second}`;
   }
 
   private isAssetTransaction(record: WealthfolioRecord): boolean {
@@ -414,22 +410,24 @@ export class LimeCoFormat extends BaseFormat {
       from_line: 2, // Skip "sep=;" row
       columns: (header: string[]) => header.map((column) => column.trim().toLowerCase()),
       cast: (value, context) => {
+        // csv-parse doesn't trim whitespace inside quoted fields
+        const trimmedValue = value.trim();
         switch (context.column) {
           case "date":
             // All timestamps have 00:00:00 time and don't include a timezone, so we assume the US
             // stock markets closing time of 16:00 US Eastern Time
-            return dayjs.tz(value, "US/Eastern").add(16, "h").toDate();
+            return dayjs.tz(trimmedValue, "US/Eastern").add(16, "h").toDate();
           case "symbol":
-            return value.trim().toUpperCase();
+            return trimmedValue.toUpperCase();
           case "direction":
-            return value.trim().toLowerCase();
+            return trimmedValue.toLowerCase();
           case "quantity":
           case "price":
           case "fees":
           case "amount":
-            return Number.parseFloat(value) || 0;
+            return Number.parseFloat(trimmedValue);
           default:
-            return value.trim();
+            return trimmedValue;
         }
       },
     };

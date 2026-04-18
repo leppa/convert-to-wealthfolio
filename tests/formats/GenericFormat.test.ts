@@ -3,7 +3,14 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
+import { bold } from "colorette";
+
 import { ActivitySubtype, ActivityType, InstrumentType } from "../../src/core/BaseFormat";
+import { Converter } from "../../src/core/Converter";
 import { SymbolDataService } from "../../src/core/SymbolDataService";
 import { OverridesDataProvider } from "../../src/data-providers";
 import { GenericFormat } from "../../src/formats/GenericFormat";
@@ -164,25 +171,6 @@ describe("Generic Format", () => {
       expect(result[2].symbol).toBe("AAPL");
     });
 
-    it("should normalize symbols to uppercase", () => {
-      const records = [
-        {
-          date: new Date("2024-01-15"),
-          transactiontype: "BUY",
-          symbol: "aapl",
-          isin: "us0378331005",
-          quantity: 100,
-          unitprice: 150.25,
-          amount: 15025,
-        },
-      ];
-
-      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
-
-      expect(result[0].symbol).toBe("AAPL");
-      expect(result[0].isin).toBe("US0378331005");
-    });
-
     it("should handle `NaN` values", () => {
       const records = [
         {
@@ -341,7 +329,7 @@ describe("Generic Format", () => {
       });
     });
 
-    it("should throw error for unknown activity type", () => {
+    it("should warn and skip record with unknown activity type", () => {
       const records = [
         {
           date: new Date("2024-01-15"),
@@ -353,12 +341,17 @@ describe("Generic Format", () => {
         },
       ];
 
-      expect(() => format.convert(records, DEFAULT_CURRENCY, symbolDataService)).toThrow(
-        "Unknown activity type: UNKNOWN_TYPE",
-      );
+      const warnSpy = jest.spyOn(Logger.getInstance(), "warn").mockImplementation(() => undefined);
+      try {
+        const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+        expect(result).toHaveLength(0);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Unknown activity type"));
+      } finally {
+        warnSpy.mockRestore();
+      }
     });
 
-    it("should throw error for missing activity type", () => {
+    it("should warn and skip record with missing activity type", () => {
       const records = [
         {
           date: new Date("2024-01-15"),
@@ -370,9 +363,14 @@ describe("Generic Format", () => {
         },
       ];
 
-      expect(() => format.convert(records, DEFAULT_CURRENCY, symbolDataService)).toThrow(
-        "No activity type",
-      );
+      const warnSpy = jest.spyOn(Logger.getInstance(), "warn").mockImplementation(() => undefined);
+      try {
+        const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+        expect(result).toHaveLength(0);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("No activity type"));
+      } finally {
+        warnSpy.mockRestore();
+      }
     });
 
     it("should use total field when provided", () => {
@@ -520,6 +518,101 @@ describe("Generic Format", () => {
         fee: Number.NaN,
       });
     });
+
+    describe("special cases", () => {
+      let tmpDir: string;
+      let outputFile: string;
+      let converter: Converter;
+
+      beforeEach(() => {
+        converter = new Converter([format]);
+        symbolDataService = new SymbolDataService();
+        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "generic-format-test-"));
+        outputFile = path.join(tmpDir, "test-output.csv");
+      });
+
+      afterEach(() => {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      });
+
+      it("should trim whitespace from input values", async () => {
+        const inputFile = path.join(tmpDir, "whitespace.csv");
+        fs.writeFileSync(
+          inputFile,
+          [
+            "Date,TransactionType,Symbol,Quantity,UnitPrice,Comment",
+            '2024-01-15,   buy ,  "AAPL  ","  100.5",\t120, "\nUntrimmed comment\t"',
+          ].join("\n"),
+          "utf-8",
+        );
+
+        await converter.convert(inputFile, outputFile, DEFAULT_CURRENCY, "Generic");
+
+        const content = fs.readFileSync(outputFile, "utf-8");
+        const lines = content.trim().split("\n");
+        expect(lines).toHaveLength(2); // Header + 1 data row
+
+        const headers = lines[0].split(",");
+        const symbolIndex = headers.indexOf("symbol");
+        const quantityIndex = headers.indexOf("quantity");
+        const activityTypeIndex = headers.indexOf("activityType");
+        const unitPriceIndex = headers.indexOf("unitPrice");
+        const amountIndex = headers.indexOf("amount");
+        const commentIndex = headers.indexOf("comment");
+
+        expect(symbolIndex).toBeGreaterThanOrEqual(0);
+        expect(quantityIndex).toBeGreaterThanOrEqual(0);
+        expect(activityTypeIndex).toBeGreaterThanOrEqual(0);
+        expect(unitPriceIndex).toBeGreaterThanOrEqual(0);
+        expect(amountIndex).toBeGreaterThanOrEqual(0);
+        expect(commentIndex).toBeGreaterThanOrEqual(0);
+
+        const dataRow = lines[1].split(",");
+        expect(dataRow[symbolIndex]).toBe("AAPL");
+        expect(dataRow[quantityIndex]).toBe("100.5");
+        expect(dataRow[activityTypeIndex]).toBe("BUY");
+        expect(dataRow[unitPriceIndex]).toBe("120");
+        expect(dataRow[amountIndex]).toBe("12060"); // 100.5 * 120
+        expect(dataRow[commentIndex]).toBe("Untrimmed comment");
+      });
+
+      it("should load invalid ISINs and fix the one that has overrides", async () => {
+        const inputFile = path.join(tmpDir, "invalid-isins.csv");
+        const overridesFile = path.join(tmpDir, "isin-overrides.ini");
+
+        fs.writeFileSync(
+          inputFile,
+          [
+            "Date,TransactionType,ISIN,Quantity,UnitPrice",
+            // Wrong check digit but has override
+            "2024-01-15,buy,US0378331000,100,120",
+            // Invalid ISIN without override
+            "2024-01-16,buy,INVALID_ISIN,50,200",
+          ].join("\n"),
+          "utf-8",
+        );
+        fs.writeFileSync(overridesFile, "[ISIN.ISIN]\nUS0378331000=US0378331005\n", "utf-8");
+
+        const warnSpy = jest
+          .spyOn(Logger.getInstance(), "warn")
+          .mockImplementation(() => undefined);
+
+        try {
+          await converter.convert(inputFile, outputFile, "EUR", "Generic", overridesFile);
+
+          const content = fs.readFileSync(outputFile, "utf-8");
+          const lines = content.trim().split("\n");
+          expect(lines).toHaveLength(2); // Header + 1 valid record
+          expect(lines[1]).toContain("US0378331005");
+
+          expect(warnSpy).toHaveBeenCalledWith(
+            expect.stringContaining(`Invalid value: ${bold("INVALID_ISIN")}`),
+          );
+        } finally {
+          warnSpy.mockRestore();
+        }
+      });
+    });
   });
 
   describe("getParseOptions", () => {
@@ -558,7 +651,106 @@ describe("Generic Format", () => {
       expect(dateValue.toISOString()).toContain("2024-02-10");
       expect(quantityValue).toBe(12.5);
       expect(feeValue).toBe(1.25);
-      expect(defaultValue).toBe("abc");
+      expect(defaultValue).toBe("ABC");
+    });
+
+    it("should return normalized ISIN for a valid ISIN value", () => {
+      const options = format.getParseOptions();
+      expect(typeof options.cast).toBe("function");
+      if (typeof options.cast !== "function") {
+        return;
+      }
+
+      const cast = options.cast;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+      expect(cast("us0378331005", { column: "isin", lines: 2 } as any)).toBe("US0378331005");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+      expect(cast("", { column: "isin", lines: 2 } as any)).toBe("");
+    });
+
+    it("should warn and return the value as-is for an invalid ISIN value", () => {
+      const options = format.getParseOptions();
+      expect(typeof options.cast).toBe("function");
+      if (typeof options.cast !== "function") {
+        return;
+      }
+
+      const cast = options.cast;
+      const warnSpy = jest.spyOn(Logger.getInstance(), "warn").mockImplementation(() => undefined);
+
+      try {
+        // Wrong check digit
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+        expect(cast("US0378331006", { column: "isin", lines: 2 } as any)).toBe("US0378331006");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+        expect(cast("NOTANISIN", { column: "isin", lines: 2 } as any)).toBe("NOTANISIN");
+
+        expect(warnSpy).toHaveBeenCalledTimes(2);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid ISIN"));
+      } finally {
+        warnSpy.mockRestore();
+      }
+    });
+
+    it("should return normalized CUSIP for a valid CUSIP value", () => {
+      const options = format.getParseOptions();
+      expect(typeof options.cast).toBe("function");
+      if (typeof options.cast !== "function") {
+        return;
+      }
+
+      const cast = options.cast;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+      expect(cast("30303m102", { column: "cusip", lines: 2 } as any)).toBe("30303M102");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+      expect(cast("", { column: "cusip", lines: 2 } as any)).toBe("");
+    });
+
+    it("should warn and return the value as-is for an invalid CUSIP value", () => {
+      const options = format.getParseOptions();
+      expect(typeof options.cast).toBe("function");
+      if (typeof options.cast !== "function") {
+        return;
+      }
+
+      const cast = options.cast;
+      const warnSpy = jest.spyOn(Logger.getInstance(), "warn").mockImplementation(() => undefined);
+
+      try {
+        // Wrong check digit
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+        expect(cast("037833102", { column: "cusip", lines: 2 } as any)).toBe("037833102");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+        expect(cast("NOTACUSIP!", { column: "cusip", lines: 2 } as any)).toBe("NOTACUSIP!");
+
+        expect(warnSpy).toHaveBeenCalledTimes(2);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid CUSIP"));
+      } finally {
+        warnSpy.mockRestore();
+      }
+    });
+
+    it("should warn and return empty string for invalid currency", () => {
+      const options = format.getParseOptions();
+      expect(typeof options.cast).toBe("function");
+      if (typeof options.cast !== "function") {
+        return;
+      }
+
+      const cast = options.cast;
+      const warnSpy = jest.spyOn(Logger.getInstance(), "warn").mockImplementation(() => undefined);
+
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+        expect(cast("INVALID", { column: "currency", lines: 2 } as any)).toBe("");
+        // Three letters but not a valid currency code
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+        expect(cast("ZZZ", { column: "currency", lines: 2 } as any)).toBe("");
+        expect(warnSpy).toHaveBeenCalledTimes(2);
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid currency code"));
+      } finally {
+        warnSpy.mockRestore();
+      }
     });
   });
 

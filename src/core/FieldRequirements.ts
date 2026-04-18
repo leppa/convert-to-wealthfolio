@@ -3,50 +3,90 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+import { isISIN, isISO4217 } from "validator";
+
 import { bold } from "colorette";
 
 import { ActivitySubtype, ActivityType, WealthfolioRecord } from "./BaseFormat";
 import { Logger } from "./Logger";
 
-export interface FieldValidationResult {
-  name: string;
-  value: unknown;
-  error: string;
+/**
+ * Violation kinds for field requirements
+ */
+export enum FieldRequirementViolationKind {
+  Valid,
+  Unset,
+  Invalid,
 }
 
+/**
+ * Field requirement levels
+ */
+export enum FieldRequirementLevel {
+  Required,
+  Optional,
+  Ignored,
+}
+
+/**
+ * Validation result for a single field
+ *
+ * Includes the field name, value, requirement level, and violation kind (valid, unset, or invalid).
+ */
+export interface FieldValidationResult {
+  name: keyof WealthfolioRecord;
+  value: unknown;
+  requirementLevel: FieldRequirementLevel;
+  violationKind: FieldRequirementViolationKind;
+}
+
+/**
+ * Validation result for a Wealthfolio record against the field requirements
+ *
+ * Includes a boolean indicating overall validity and an array of fields that failed the validation,
+ * along with details on the violations.
+ */
 export interface RecordValidationResult {
   valid: boolean;
   invalidFields: FieldValidationResult[];
 }
 
+/**
+ * Validates a Wealthfolio record against the field requirements
+ */
 export function validateRecordFieldRequirements(
   record: WealthfolioRecord,
   clearIgnoredFields: boolean = true,
 ): RecordValidationResult {
-  const logger = Logger.getInstance();
   const fieldRequirements = RECORD_FIELD_REQUIREMENTS[record.activityType];
   const invalidFields: FieldValidationResult[] = [];
   const ignoredFields: (keyof WealthfolioRecord)[] = [];
 
   for (const field in fieldRequirements) {
-    const requirement = fieldRequirements[field as keyof WealthfolioRecord];
-    const value = record[field as keyof WealthfolioRecord];
+    const fieldKey = field as keyof WealthfolioRecord;
+    const requirement = fieldRequirements[fieldKey];
+    const value = record[fieldKey];
     const requirementLevel = typeof requirement === "function" ? requirement(record) : requirement;
 
+    const violationKind = validateFieldValue(fieldKey, value);
     if (
-      requirementLevel === FieldRequirement.Required &&
-      !validateRequiredFieldValue(field, value)
+      // Required fields must be set and valid
+      (requirementLevel === FieldRequirementLevel.Required &&
+        violationKind !== FieldRequirementViolationKind.Valid) ||
+      // Optional fields can be unset but not invalid
+      (requirementLevel === FieldRequirementLevel.Optional &&
+        violationKind === FieldRequirementViolationKind.Invalid)
     ) {
-      logger.warn(`Required field ${bold(field)} has invalid value:`, value);
       invalidFields.push({
-        name: field,
+        name: fieldKey,
         value,
-        error: "Invalid value",
+        requirementLevel,
+        violationKind,
       });
     }
 
-    if (requirementLevel === FieldRequirement.Ignored && clearIgnoredFields) {
-      ignoredFields.push(field as keyof WealthfolioRecord);
+    if (requirementLevel === FieldRequirementLevel.Ignored && clearIgnoredFields) {
+      ignoredFields.push(fieldKey);
     }
   }
 
@@ -60,41 +100,49 @@ export function validateRecordFieldRequirements(
 }
 
 /**
- * Validates the field value of a required field, failing if it's `undefined`, `null`, empty, not a
- * finite number, or an invalid date.
+ * Validates the field value
+ *
+ * The validation will return `FieldRequirementViolationKind.Unset` for empty strings (including
+ * all-whitespace strings) and `FieldRequirementViolationKind.Invalid` for invalid values.
  *
  * @param field - The name of the field being validated
  * @param value - The value to validate
- * @returns `true` if the value is valid, `false` otherwise
+ * @returns Validation result indicating whether the value is valid, unset, or invalid
  */
-export function validateRequiredFieldValue(field: string, value: unknown): boolean {
+export function validateFieldValue(
+  field: keyof WealthfolioRecord,
+  value: unknown,
+): FieldRequirementViolationKind {
   const logger = Logger.getInstance();
   logger.trace(`Validating field ${bold(field)} with type ${bold(typeof value)} and value:`, value);
-  // TODO: Any way to check activityType and subtype enums?
   switch (typeof value) {
     case "string":
-      if (value.trim().length === 0) {
-        return false;
-      }
-      if (field === "subtype") {
-        // This will actually never fail because `None` is "" and will fail the previous
-        // validation. However, just in case we set `None` to something else in the future, we can
-        // still validate it here.
-        return (value as ActivitySubtype) !== ActivitySubtype.None;
-      }
-      return true;
+      return validateStringFieldValue(field, value);
     case "number":
-      return Number.isFinite(value);
+      if (Number.isNaN(value)) {
+        // We use NaN to indicate unset numeric fields
+        return FieldRequirementViolationKind.Unset;
+      }
+      return Number.isFinite(value)
+        ? FieldRequirementViolationKind.Valid
+        : FieldRequirementViolationKind.Invalid;
     case "object":
       if (value === null) {
-        return false;
+        // `WealthfolioRecord` has no nullable fields
+        return FieldRequirementViolationKind.Invalid;
       }
       if (value instanceof Date) {
-        // Should be a valid date
-        return !Number.isNaN(value.getTime());
+        return Number.isNaN(value.getTime())
+          ? FieldRequirementViolationKind.Invalid
+          : FieldRequirementViolationKind.Valid;
       }
       // Should not be an empty object (e.g., when metadata is required)
-      return Object.keys(value).length !== 0;
+      return Object.keys(value).length === 0
+        ? FieldRequirementViolationKind.Unset
+        : FieldRequirementViolationKind.Valid;
+    case "undefined":
+      // `WealthfolioRecord` has no optional fields
+      return FieldRequirementViolationKind.Invalid;
     // `WealthfolioRecord` has no fields of these types
     case "boolean":
     case "bigint":
@@ -102,9 +150,8 @@ export function validateRequiredFieldValue(field: string, value: unknown): boole
     case "function":
       logger.warn(`Unexpected type for field ${bold(field)}: ${bold(typeof value)}`);
     // eslint-disable-next-line no-fallthrough
-    case "undefined":
     default:
-      return false;
+      return FieldRequirementViolationKind.Invalid;
   }
 }
 
@@ -113,16 +160,27 @@ export function validateRequiredFieldValue(field: string, value: unknown): boole
  *
  * This function is meant for checking whether the activity *may* have a subtype, not whether it
  * actually has one. For example, it will always return `true` if subtype requirement is a function,
- * even if the function may return `FieldRequirement.Ignored` for some records.
+ * even if the function may return `FieldRequirementLevel.Ignored` for some records.
  *
  * @param activityType - The activity type to check
  * @returns `true` if the activity can have a subtype, `false` otherwise
  */
 export function canHaveActivitySubtype(activityType: ActivityType): boolean {
-  return RECORD_FIELD_REQUIREMENTS[activityType].subtype !== FieldRequirement.Ignored;
+  return RECORD_FIELD_REQUIREMENTS[activityType].subtype !== FieldRequirementLevel.Ignored;
 }
 
-function clearField(record: WealthfolioRecord, field: keyof WealthfolioRecord): void {
+/**
+ * Clears the value of a field in a Wealthfolio record based on its type
+ *
+ * - For string fields, sets to an empty string (`""`).
+ * - For number fields, sets to `NaN`.
+ * - For Date fields, sets to an invalid date (`new Date(NaN)`).
+ * - For object fields, sets to an empty object (`{}`).
+ *
+ * @param record - The Wealthfolio record to modify
+ * @param field - The name of the field to clear
+ */
+export function clearField(record: WealthfolioRecord, field: keyof WealthfolioRecord): void {
   switch (typeof record[field]) {
     case "string":
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
@@ -144,71 +202,107 @@ function clearField(record: WealthfolioRecord, field: keyof WealthfolioRecord): 
 }
 
 /**
+ * Validates string field values based on the field name
+ *
+ * Assumes that input values are normalized: whitespaces are trimmed; ISINs, CUSIPs, and currency
+ * codes are uppercased.
+ *
+ * @param field - The name of the field being validated
+ * @param value - The normalized string value to validate
+ * @returns Validation result indicating whether the value is valid, unset, or invalid
+ */
+function validateStringFieldValue(
+  field: keyof WealthfolioRecord,
+  value: string,
+): FieldRequirementViolationKind {
+  if (value.trim().length === 0) {
+    // All-whitespace string is considered empty / unset
+    return FieldRequirementViolationKind.Unset;
+  }
+  if (field === "subtype") {
+    // `None` will actually never reach here because it's mapped to an empty string ("") and will
+    // fail the previous validation. However, just in case `None` becomes something else in the
+    // future, we should still validate it here.
+    /* istanbul ignore next: unreachable safeguard */
+    if ((value as ActivitySubtype) === ActivitySubtype.None) {
+      return FieldRequirementViolationKind.Unset;
+    }
+    return FieldRequirementViolationKind.Valid;
+  }
+  if (field === "isin") {
+    return isISIN(value)
+      ? FieldRequirementViolationKind.Valid
+      : FieldRequirementViolationKind.Invalid;
+  }
+  if (field === "currency") {
+    return isISO4217(value)
+      ? FieldRequirementViolationKind.Valid
+      : FieldRequirementViolationKind.Invalid;
+  }
+  return FieldRequirementViolationKind.Valid;
+}
+
+/**
  * Helper function for fields that are required when ISIN is not set
  *
- * Returns `FieldRequirement.Required` if ISIN is not set, otherwise returns `FieldRequirement.Optional`.
+ * Returns `FieldRequirementLevel.Required` if ISIN is not set, otherwise returns `FieldRequirementLevel.Optional`.
  *
  * @param record - The Wealthfolio record to check
  * @returns Field requirement based on the presence of ISIN
  */
-function requiredWhenNoIsinElseOptional(record: WealthfolioRecord): FieldRequirement {
-  return record.isin ? FieldRequirement.Optional : FieldRequirement.Required;
+function requiredWhenNoIsinElseOptional(record: WealthfolioRecord): FieldRequirementLevel {
+  return record.isin ? FieldRequirementLevel.Optional : FieldRequirementLevel.Required;
 }
 
 /**
  * Helper function for fields that are required when symbol is not set
  *
- * Returns `FieldRequirement.Required` if symbol is not set, otherwise returns `FieldRequirement.Optional`.
+ * Returns `FieldRequirementLevel.Required` if symbol is not set, otherwise returns `FieldRequirementLevel.Optional`.
  *
  * @param record - The Wealthfolio record to check
  * @returns Field requirement based on the presence of symbol
  */
-function requiredWhenNoSymbolElseOptional(record: WealthfolioRecord): FieldRequirement {
-  return record.symbol ? FieldRequirement.Optional : FieldRequirement.Required;
+function requiredWhenNoSymbolElseOptional(record: WealthfolioRecord): FieldRequirementLevel {
+  return record.symbol ? FieldRequirementLevel.Optional : FieldRequirementLevel.Required;
 }
 
 /**
  * Helper function for fields that are required for asset transactions
  *
- * Returns `FieldRequirement.Required` when transaction is for an asset (symbol or ISIN is set),
- * otherwise returns `FieldRequirement.Ignored`.
+ * Returns `FieldRequirementLevel.Required` when transaction is for an asset (symbol or ISIN is set),
+ * otherwise returns `FieldRequirementLevel.Ignored`.
  *
  * @param record - The Wealthfolio record to check
  * @returns Field requirement based on the presence of symbol or ISIN
  */
-function requiredWhenAssetTransactionElseIgnored(record: WealthfolioRecord): FieldRequirement {
-  return !!record.symbol || !!record.isin ? FieldRequirement.Required : FieldRequirement.Ignored;
+function requiredWhenAssetTransactionElseIgnored(record: WealthfolioRecord): FieldRequirementLevel {
+  return !!record.symbol || !!record.isin
+    ? FieldRequirementLevel.Required
+    : FieldRequirementLevel.Ignored;
 }
 
 /**
  * Helper function for fields that are optional for asset transactions
  *
- * Returns `FieldRequirement.Optional` when transaction is for an asset (symbol or ISIN is set),
- * otherwise returns `FieldRequirement.Ignored`.
+ * Returns `FieldRequirementLevel.Optional` when transaction is for an asset (symbol or ISIN is set),
+ * otherwise returns `FieldRequirementLevel.Ignored`.
  *
  * @param record - The Wealthfolio record to check
  * @returns Field requirement based on the presence of symbol or ISIN
  */
-function optionalWhenAssetTransactionElseIgnored(record: WealthfolioRecord): FieldRequirement {
-  return !!record.symbol || !!record.isin ? FieldRequirement.Optional : FieldRequirement.Ignored;
-}
-
-/**
- * Field requirement levels in a Wealthfolio record
- */
-enum FieldRequirement {
-  Required,
-  Optional,
-  Ignored,
+function optionalWhenAssetTransactionElseIgnored(record: WealthfolioRecord): FieldRequirementLevel {
+  return !!record.symbol || !!record.isin
+    ? FieldRequirementLevel.Optional
+    : FieldRequirementLevel.Ignored;
 }
 
 /**
  * For more complex requirements, a function can be used based on the record content
  */
-type FieldRequirementFunction = (record: WealthfolioRecord) => FieldRequirement;
+type FieldRequirementFunction = (record: WealthfolioRecord) => FieldRequirementLevel;
 
 type WealthfolioRecordFieldRequirements = {
-  [key in keyof WealthfolioRecord]: FieldRequirement | FieldRequirementFunction;
+  [key in keyof WealthfolioRecord]: FieldRequirementLevel | FieldRequirementFunction;
 };
 
 // Most common requirements to avoid repetition
@@ -216,14 +310,14 @@ const COMMON_FIELD_REQUIREMENTS: Pick<
   WealthfolioRecordFieldRequirements,
   "date" | "activityType" | "fee" | "fxRate" | "subtype" | "comment" | "metadata" | "currency"
 > = {
-  date: FieldRequirement.Required,
-  activityType: FieldRequirement.Required,
-  fee: FieldRequirement.Optional,
-  fxRate: FieldRequirement.Optional,
-  subtype: FieldRequirement.Ignored, // Optional only for some activities
-  comment: FieldRequirement.Optional,
-  metadata: FieldRequirement.Optional,
-  currency: FieldRequirement.Required,
+  date: FieldRequirementLevel.Required,
+  activityType: FieldRequirementLevel.Required,
+  fee: FieldRequirementLevel.Optional,
+  fxRate: FieldRequirementLevel.Optional,
+  subtype: FieldRequirementLevel.Ignored, // Optional only for some activities
+  comment: FieldRequirementLevel.Optional,
+  metadata: FieldRequirementLevel.Optional,
+  currency: FieldRequirementLevel.Required,
 };
 
 /**
@@ -237,161 +331,161 @@ const RECORD_FIELD_REQUIREMENTS: {
 } = {
   [ActivityType.Buy]: {
     ...COMMON_FIELD_REQUIREMENTS,
-    instrumentType: FieldRequirement.Optional,
+    instrumentType: FieldRequirementLevel.Optional,
     symbol: requiredWhenNoIsinElseOptional,
     isin: requiredWhenNoSymbolElseOptional,
-    quantity: FieldRequirement.Required,
-    unitPrice: FieldRequirement.Required,
-    amount: FieldRequirement.Optional,
+    quantity: FieldRequirementLevel.Required,
+    unitPrice: FieldRequirementLevel.Required,
+    amount: FieldRequirementLevel.Optional,
   },
   [ActivityType.Sell]: {
     ...COMMON_FIELD_REQUIREMENTS,
-    instrumentType: FieldRequirement.Optional,
+    instrumentType: FieldRequirementLevel.Optional,
     symbol: requiredWhenNoIsinElseOptional,
     isin: requiredWhenNoSymbolElseOptional,
-    quantity: FieldRequirement.Required,
-    unitPrice: FieldRequirement.Required,
-    amount: FieldRequirement.Optional,
+    quantity: FieldRequirementLevel.Required,
+    unitPrice: FieldRequirementLevel.Required,
+    amount: FieldRequirementLevel.Optional,
   },
   [ActivityType.Dividend]: {
     ...COMMON_FIELD_REQUIREMENTS,
-    instrumentType: FieldRequirement.Optional,
+    instrumentType: FieldRequirementLevel.Optional,
     symbol: requiredWhenNoIsinElseOptional,
     isin: requiredWhenNoSymbolElseOptional,
-    quantity: FieldRequirement.Optional,
+    quantity: FieldRequirementLevel.Optional,
     unitPrice: (record) =>
       // DRIP and dividend in kind subtypes require unit price for cost basis calculation
       record.subtype === ActivitySubtype.DRIP || record.subtype === ActivitySubtype.DividendInKind
-        ? FieldRequirement.Required
-        : FieldRequirement.Ignored,
-    amount: FieldRequirement.Required,
-    subtype: FieldRequirement.Optional,
+        ? FieldRequirementLevel.Required
+        : FieldRequirementLevel.Ignored,
+    amount: FieldRequirementLevel.Required,
+    subtype: FieldRequirementLevel.Optional,
     metadata: (record) =>
       // Dividend in kind requires metadata with `received_asset_id` to know which asset was
       // received as dividends
       record.subtype === ActivitySubtype.DividendInKind
-        ? FieldRequirement.Required
-        : FieldRequirement.Optional,
+        ? FieldRequirementLevel.Required
+        : FieldRequirementLevel.Optional,
   },
   [ActivityType.Interest]: {
     ...COMMON_FIELD_REQUIREMENTS,
     instrumentType: optionalWhenAssetTransactionElseIgnored,
-    symbol: FieldRequirement.Optional,
-    isin: FieldRequirement.Optional,
-    quantity: FieldRequirement.Ignored,
+    symbol: FieldRequirementLevel.Optional,
+    isin: FieldRequirementLevel.Optional,
+    quantity: FieldRequirementLevel.Ignored,
     unitPrice: (record) =>
       // Staking reward subtype requires unit price (fair market value at the time of reward) for
       // cost basis calculation
       record.subtype === ActivitySubtype.StakingReward
-        ? FieldRequirement.Required
-        : FieldRequirement.Ignored,
-    amount: FieldRequirement.Required,
-    subtype: FieldRequirement.Optional,
+        ? FieldRequirementLevel.Required
+        : FieldRequirementLevel.Ignored,
+    amount: FieldRequirementLevel.Required,
+    subtype: FieldRequirementLevel.Optional,
   },
   [ActivityType.Deposit]: {
     ...COMMON_FIELD_REQUIREMENTS,
-    instrumentType: FieldRequirement.Ignored,
-    symbol: FieldRequirement.Ignored,
-    isin: FieldRequirement.Ignored,
-    quantity: FieldRequirement.Ignored,
-    unitPrice: FieldRequirement.Ignored,
-    amount: FieldRequirement.Required,
+    instrumentType: FieldRequirementLevel.Ignored,
+    symbol: FieldRequirementLevel.Ignored,
+    isin: FieldRequirementLevel.Ignored,
+    quantity: FieldRequirementLevel.Ignored,
+    unitPrice: FieldRequirementLevel.Ignored,
+    amount: FieldRequirementLevel.Required,
   },
   [ActivityType.Withdrawal]: {
     ...COMMON_FIELD_REQUIREMENTS,
-    instrumentType: FieldRequirement.Ignored,
-    symbol: FieldRequirement.Ignored,
-    isin: FieldRequirement.Ignored,
-    quantity: FieldRequirement.Ignored,
-    unitPrice: FieldRequirement.Ignored,
-    amount: FieldRequirement.Required,
+    instrumentType: FieldRequirementLevel.Ignored,
+    symbol: FieldRequirementLevel.Ignored,
+    isin: FieldRequirementLevel.Ignored,
+    quantity: FieldRequirementLevel.Ignored,
+    unitPrice: FieldRequirementLevel.Ignored,
+    amount: FieldRequirementLevel.Required,
   },
   [ActivityType.TransferIn]: {
     ...COMMON_FIELD_REQUIREMENTS,
     instrumentType: optionalWhenAssetTransactionElseIgnored,
-    symbol: FieldRequirement.Optional,
-    isin: FieldRequirement.Optional,
+    symbol: FieldRequirementLevel.Optional,
+    isin: FieldRequirementLevel.Optional,
     quantity: requiredWhenAssetTransactionElseIgnored,
     unitPrice: requiredWhenAssetTransactionElseIgnored,
     amount: (record) =>
-      record.symbol || record.isin ? FieldRequirement.Ignored : FieldRequirement.Required,
+      record.symbol || record.isin ? FieldRequirementLevel.Ignored : FieldRequirementLevel.Required,
   },
   [ActivityType.TransferOut]: {
     ...COMMON_FIELD_REQUIREMENTS,
     instrumentType: optionalWhenAssetTransactionElseIgnored,
-    symbol: FieldRequirement.Optional,
-    isin: FieldRequirement.Optional,
+    symbol: FieldRequirementLevel.Optional,
+    isin: FieldRequirementLevel.Optional,
     quantity: requiredWhenAssetTransactionElseIgnored,
     unitPrice: requiredWhenAssetTransactionElseIgnored,
     amount: (record) =>
-      record.symbol || record.isin ? FieldRequirement.Ignored : FieldRequirement.Required,
+      record.symbol || record.isin ? FieldRequirementLevel.Ignored : FieldRequirementLevel.Required,
   },
   [ActivityType.Fee]: {
     ...COMMON_FIELD_REQUIREMENTS,
-    instrumentType: FieldRequirement.Ignored,
-    symbol: FieldRequirement.Ignored,
-    isin: FieldRequirement.Ignored,
-    quantity: FieldRequirement.Ignored,
-    unitPrice: FieldRequirement.Ignored,
+    instrumentType: FieldRequirementLevel.Ignored,
+    symbol: FieldRequirementLevel.Ignored,
+    isin: FieldRequirementLevel.Ignored,
+    quantity: FieldRequirementLevel.Ignored,
+    unitPrice: FieldRequirementLevel.Ignored,
     // Amount or fee - we'll use the amount
-    fee: FieldRequirement.Ignored,
-    amount: FieldRequirement.Required,
-    subtype: FieldRequirement.Optional,
+    fee: FieldRequirementLevel.Ignored,
+    amount: FieldRequirementLevel.Required,
+    subtype: FieldRequirementLevel.Optional,
   },
   [ActivityType.Tax]: {
     ...COMMON_FIELD_REQUIREMENTS,
-    instrumentType: FieldRequirement.Ignored,
-    symbol: FieldRequirement.Ignored,
-    isin: FieldRequirement.Ignored,
-    quantity: FieldRequirement.Ignored,
-    unitPrice: FieldRequirement.Ignored,
-    amount: FieldRequirement.Required,
-    subtype: FieldRequirement.Optional,
+    instrumentType: FieldRequirementLevel.Ignored,
+    symbol: FieldRequirementLevel.Ignored,
+    isin: FieldRequirementLevel.Ignored,
+    quantity: FieldRequirementLevel.Ignored,
+    unitPrice: FieldRequirementLevel.Ignored,
+    amount: FieldRequirementLevel.Required,
+    subtype: FieldRequirementLevel.Optional,
   },
   [ActivityType.Split]: {
     ...COMMON_FIELD_REQUIREMENTS,
-    instrumentType: FieldRequirement.Optional,
+    instrumentType: FieldRequirementLevel.Optional,
     symbol: requiredWhenNoIsinElseOptional,
     isin: requiredWhenNoSymbolElseOptional,
-    quantity: FieldRequirement.Ignored,
-    unitPrice: FieldRequirement.Ignored,
-    currency: FieldRequirement.Ignored,
-    fee: FieldRequirement.Ignored,
-    amount: FieldRequirement.Required,
+    quantity: FieldRequirementLevel.Ignored,
+    unitPrice: FieldRequirementLevel.Ignored,
+    currency: FieldRequirementLevel.Ignored,
+    fee: FieldRequirementLevel.Ignored,
+    amount: FieldRequirementLevel.Required,
   },
   [ActivityType.Credit]: {
     ...COMMON_FIELD_REQUIREMENTS,
-    instrumentType: FieldRequirement.Ignored,
-    symbol: FieldRequirement.Ignored,
-    isin: FieldRequirement.Ignored,
-    quantity: FieldRequirement.Ignored,
-    unitPrice: FieldRequirement.Ignored,
-    amount: FieldRequirement.Required,
-    subtype: FieldRequirement.Optional,
+    instrumentType: FieldRequirementLevel.Ignored,
+    symbol: FieldRequirementLevel.Ignored,
+    isin: FieldRequirementLevel.Ignored,
+    quantity: FieldRequirementLevel.Ignored,
+    unitPrice: FieldRequirementLevel.Ignored,
+    amount: FieldRequirementLevel.Required,
+    subtype: FieldRequirementLevel.Optional,
   },
   // Documentation just states that field requirement "Varies by use case"
   [ActivityType.Adjustment]: {
     ...COMMON_FIELD_REQUIREMENTS,
     instrumentType: optionalWhenAssetTransactionElseIgnored,
-    symbol: FieldRequirement.Optional,
-    isin: FieldRequirement.Optional,
-    quantity: FieldRequirement.Optional,
-    unitPrice: FieldRequirement.Optional,
-    currency: FieldRequirement.Optional,
-    amount: FieldRequirement.Optional,
-    subtype: FieldRequirement.Optional,
+    symbol: FieldRequirementLevel.Optional,
+    isin: FieldRequirementLevel.Optional,
+    quantity: FieldRequirementLevel.Optional,
+    unitPrice: FieldRequirementLevel.Optional,
+    currency: FieldRequirementLevel.Optional,
+    amount: FieldRequirementLevel.Optional,
+    subtype: FieldRequirementLevel.Optional,
   },
   // Documentation states: "Activities imported with unrecognized types are marked as UNKNOWN and
   // flagged for review". Either ignore the whole activity or simply pass all fields through?
   [ActivityType.Unknown]: {
     ...COMMON_FIELD_REQUIREMENTS,
     instrumentType: optionalWhenAssetTransactionElseIgnored,
-    symbol: FieldRequirement.Optional,
-    isin: FieldRequirement.Optional,
-    quantity: FieldRequirement.Optional,
-    unitPrice: FieldRequirement.Optional,
-    currency: FieldRequirement.Optional,
-    amount: FieldRequirement.Optional,
-    subtype: FieldRequirement.Optional,
+    symbol: FieldRequirementLevel.Optional,
+    isin: FieldRequirementLevel.Optional,
+    quantity: FieldRequirementLevel.Optional,
+    unitPrice: FieldRequirementLevel.Optional,
+    currency: FieldRequirementLevel.Optional,
+    amount: FieldRequirementLevel.Optional,
+    subtype: FieldRequirementLevel.Optional,
   },
 };

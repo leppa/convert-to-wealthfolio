@@ -426,7 +426,7 @@ describe("Logger", () => {
       logger.info("Values:", null, undefined);
 
       expect(stderrSpy).toHaveBeenCalledTimes(1);
-      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Values: null undefined"));
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("Values: <null> <undefined>"));
     });
   });
 

@@ -226,6 +226,8 @@ Volkswagen AG Preferred = VOW3.DE
 
 ISIN lookups are performed before symbol lookups, which means that symbol lookups are performed with an already resolved ISIN.
 
+**Note:** Values in the `[ISIN.*]` sections are validated against the ISIN format, including calculation of the check digit. Invalid ISIN values are ignored with a warning and will not be applied during conversion. Keys in the `[*.ISIN]` sections are not validated to allow fixing invalid ISINs in the input data.
+
 This option is useful for:
 
 - Correcting ticker symbol and ISIN changes after mergers or rebranding.

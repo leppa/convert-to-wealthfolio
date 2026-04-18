@@ -8,9 +8,11 @@ import { bold } from "colorette";
 import {
   formatLoggedValue,
   formatPair,
+  isCUSIP,
   parseNumber,
   roundToPrecision,
   sanitizeName,
+  stringifyForLogging,
 } from "../../src/core/Utils";
 
 describe("Utils", () => {
@@ -212,6 +214,81 @@ describe("Utils", () => {
 
     it("should return empty string when both values are absent", () => {
       expect(formatPair([undefined, undefined], ["Symbol ", "ISIN "])).toBe("");
+    });
+  });
+
+  describe("isCUSIP", () => {
+    it("should return `true` for valid CUSIPs", () => {
+      expect(isCUSIP("037833100")).toBe(true);
+      expect(isCUSIP("38259P508")).toBe(true);
+    });
+
+    it("should be case-insensitive", () => {
+      expect(isCUSIP("30303M102")).toBe(true);
+      expect(isCUSIP("30303m102")).toBe(true);
+    });
+
+    it("should return `false` when the check digit is wrong", () => {
+      expect(isCUSIP("037833101")).toBe(false); // Apple with wrong check digit
+      expect(isCUSIP("594918100")).toBe(false); // Microsoft with wrong check digit
+    });
+
+    it("should return `false` for incorrect length", () => {
+      expect(isCUSIP("")).toBe(false);
+      expect(isCUSIP("03783310")).toBe(false); // 8 chars
+      expect(isCUSIP("0378331001")).toBe(false); // 10 chars
+    });
+
+    it("should return `false` for values with invalid characters", () => {
+      expect(isCUSIP("03783310!")).toBe(false);
+      expect(isCUSIP("03783310 ")).toBe(false);
+      expect(isCUSIP("037-33100")).toBe(false);
+      expect(isCUSIP("03783310Z")).toBe(false);
+    });
+
+    it("should accept special characters: *, @, #", () => {
+      expect(isCUSIP("000*@#008")).toBe(true);
+      expect(isCUSIP("000*@#000")).toBe(false);
+    });
+  });
+
+  describe("stringifyForLogging", () => {
+    it("should return '<undefined>' for undefined", () => {
+      expect(stringifyForLogging(undefined)).toBe("<undefined>");
+    });
+
+    it("should return '<null>' for null", () => {
+      expect(stringifyForLogging(null)).toBe("<null>");
+    });
+
+    it("should return the string as-is for strings", () => {
+      expect(stringifyForLogging("hello")).toBe("hello");
+      expect(stringifyForLogging("")).toBe("");
+    });
+
+    it("should return ISO string for valid dates", () => {
+      const d = new Date("2024-01-15T00:00:00.000Z");
+      expect(stringifyForLogging(d)).toBe(d.toISOString());
+    });
+
+    it("should return '<invalid date>' for invalid dates", () => {
+      expect(stringifyForLogging(new Date(Number.NaN))).toBe("<invalid date>");
+    });
+
+    it("should return JSON string for plain objects", () => {
+      expect(stringifyForLogging({ a: 1 })).toBe('{"a":1}');
+    });
+
+    it("should fall back to String() for non-object primitives", () => {
+      expect(stringifyForLogging(42)).toBe("42");
+      expect(stringifyForLogging(true)).toBe("true");
+    });
+
+    it("should not throw for objects with circular references", () => {
+      const obj: Record<string, unknown> = {};
+      obj.self = obj; // Circular reference
+      const result = stringifyForLogging(obj);
+      expect(result).toBe("[object Object]");
     });
   });
 });

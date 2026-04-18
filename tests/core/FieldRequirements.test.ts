@@ -10,8 +10,9 @@ import {
   WealthfolioRecord,
 } from "../../src/core/BaseFormat";
 import {
+  FieldRequirementViolationKind,
+  validateFieldValue,
   validateRecordFieldRequirements,
-  validateRequiredFieldValue,
 } from "../../src/core/FieldRequirements";
 
 // Silence logging during tests
@@ -41,35 +42,56 @@ const createRecord = (overrides: Partial<WealthfolioRecord> = {}): WealthfolioRe
 };
 
 describe("FieldRequirements", () => {
-  describe("validateRequiredFieldValue", () => {
+  describe("validateFieldValue", () => {
     it("should validate string values", () => {
-      expect(validateRequiredFieldValue("symbol", "AAPL")).toBe(true);
-      expect(validateRequiredFieldValue("symbol", "")).toBe(false);
-      expect(validateRequiredFieldValue("subtype", ActivitySubtype.None)).toBe(false);
-      expect(validateRequiredFieldValue("subtype", ActivitySubtype.DRIP)).toBe(true);
+      expect(validateFieldValue("symbol", "AAPL")).toBe(FieldRequirementViolationKind.Valid);
+      expect(validateFieldValue("symbol", "")).toBe(FieldRequirementViolationKind.Unset);
+      expect(validateFieldValue("subtype", ActivitySubtype.None)).toBe(
+        FieldRequirementViolationKind.Unset,
+      );
+      expect(validateFieldValue("subtype", ActivitySubtype.DRIP)).toBe(
+        FieldRequirementViolationKind.Valid,
+      );
+      expect(validateFieldValue("isin", "US0378331005")).toBe(FieldRequirementViolationKind.Valid);
+      expect(validateFieldValue("isin", "NOTANISIN")).toBe(FieldRequirementViolationKind.Invalid);
+      expect(validateFieldValue("isin", "")).toBe(FieldRequirementViolationKind.Unset);
+      expect(validateFieldValue("currency", "USD")).toBe(FieldRequirementViolationKind.Valid);
+      expect(validateFieldValue("currency", "NOTACURRENCY")).toBe(
+        FieldRequirementViolationKind.Invalid,
+      );
     });
 
     it("should validate number values", () => {
-      expect(validateRequiredFieldValue("amount", 1)).toBe(true);
-      expect(validateRequiredFieldValue("amount", Number.NaN)).toBe(false);
-      expect(validateRequiredFieldValue("amount", Infinity)).toBe(false);
+      expect(validateFieldValue("amount", 1)).toBe(FieldRequirementViolationKind.Valid);
+      expect(validateFieldValue("amount", Number.NaN)).toBe(FieldRequirementViolationKind.Unset);
+      expect(validateFieldValue("amount", Infinity)).toBe(FieldRequirementViolationKind.Invalid);
+    });
+
+    it("should return Invalid for undefined values", () => {
+      expect(validateFieldValue("amount", undefined)).toBe(FieldRequirementViolationKind.Invalid);
     });
 
     it("should validate object values", () => {
-      expect(validateRequiredFieldValue("date", new Date("2024-01-15"))).toBe(true);
-      expect(validateRequiredFieldValue("date", new Date(Number.NaN))).toBe(false);
-      expect(validateRequiredFieldValue("metadata", null)).toBe(false);
-      expect(validateRequiredFieldValue("metadata", {})).toBe(false);
-      expect(validateRequiredFieldValue("metadata", { source: { broker: "Schwab" } })).toBe(true);
+      expect(validateFieldValue("date", new Date("2024-01-15"))).toBe(
+        FieldRequirementViolationKind.Valid,
+      );
+      expect(validateFieldValue("date", new Date(Number.NaN))).toBe(
+        FieldRequirementViolationKind.Invalid,
+      );
+      expect(validateFieldValue("metadata", null)).toBe(FieldRequirementViolationKind.Invalid);
+      expect(validateFieldValue("metadata", {})).toBe(FieldRequirementViolationKind.Unset);
+      expect(validateFieldValue("metadata", { source: { broker: "Schwab" } })).toBe(
+        FieldRequirementViolationKind.Valid,
+      );
     });
 
     it("should warn on unexpected types", () => {
       const warnSpy = jest.spyOn(Logger.getInstance(), "warn").mockImplementation(() => undefined);
 
       try {
-        expect(validateRequiredFieldValue("amount", true)).toBe(false);
-        expect(validateRequiredFieldValue("amount", undefined)).toBe(false);
-        expect(warnSpy).toHaveBeenCalled();
+        expect(validateFieldValue("amount", true)).toBe(FieldRequirementViolationKind.Invalid);
+        expect(validateFieldValue("amount", () => {})).toBe(FieldRequirementViolationKind.Invalid);
+        expect(warnSpy).toHaveBeenCalledTimes(2);
       } finally {
         warnSpy.mockRestore();
       }
@@ -150,19 +172,12 @@ describe("FieldRequirements", () => {
         amount: 2,
       });
 
-      const warnSpy = jest.spyOn(Logger.getInstance(), "warn").mockImplementation(() => undefined);
+      const result = validateRecordFieldRequirements(record);
 
-      try {
-        const result = validateRecordFieldRequirements(record);
-
-        expect(result.valid).toBe(false);
-        expect(result.invalidFields.map((field) => field.name)).toEqual(
-          expect.arrayContaining(["unitPrice", "metadata"]),
-        );
-        expect(warnSpy).toHaveBeenCalled();
-      } finally {
-        warnSpy.mockRestore();
-      }
+      expect(result.valid).toBe(false);
+      expect(result.invalidFields.map((field) => field.name)).toEqual(
+        expect.arrayContaining(["unitPrice", "metadata"]),
+      );
     });
 
     it("should require symbol or ISIN for asset transactions", () => {

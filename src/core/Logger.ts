@@ -5,6 +5,8 @@
 
 import { bgRed, bold, gray, green, italic, red, reset, yellow } from "colorette";
 
+import { stringifyForLogging } from "./Utils";
+
 /**
  * Log levels enumeration
  */
@@ -24,21 +26,7 @@ function formatMessageWithArgs(message: string, args: unknown[]): string {
     return message;
   }
 
-  const argStr = args
-    .map((arg) => {
-      if (arg instanceof Date) {
-        return arg.toISOString();
-      } else if (typeof arg === "object") {
-        try {
-          return JSON.stringify(arg);
-        } catch {
-          // No-op - fallback to string coercion below
-        }
-      }
-
-      return String(arg);
-    })
-    .join(" ");
+  const argStr = args.map(stringifyForLogging).join(" ");
   return `${message} ${argStr}`;
 }
 

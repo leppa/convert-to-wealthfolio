@@ -7,6 +7,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { bold, green, italic, red } from "colorette";
+
 import {
   ActivitySubtype,
   ActivityType,
@@ -15,7 +17,12 @@ import {
   InstrumentType,
   WealthfolioRecord,
 } from "../../src/core/BaseFormat";
-import { Converter } from "../../src/core/Converter";
+import { Converter, formatFieldValidationResult } from "../../src/core/Converter";
+import {
+  FieldRequirementLevel,
+  FieldRequirementViolationKind,
+  FieldValidationResult,
+} from "../../src/core/FieldRequirements";
 import { GenericFormat } from "../../src/formats/GenericFormat";
 
 // Silence logging during tests
@@ -208,11 +215,8 @@ describe("Converter", () => {
         const content = fs.readFileSync(outputFile, "utf-8");
         const lines = content.trim().split("\n");
         expect(lines).toHaveLength(2); // header + 1 valid record
-        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Skipping record"));
-        expect(warnSpy).toHaveBeenCalledWith(
-          expect.stringMatching(/symbol.+Invalid value/),
-          expect.stringMatching(""),
-        );
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining(`${bold("Skipping")} record`));
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/symbol.+Empty value/));
       } finally {
         warnSpy.mockRestore();
       }
@@ -357,7 +361,7 @@ describe("Converter", () => {
       ];
 
       // Create an overrides file with ISIN.ISIN section only
-      fs.writeFileSync(overridesFile, "[ISIN.ISIN]\nUS0378331005=US9999999999\n", "utf-8");
+      fs.writeFileSync(overridesFile, "[ISIN.ISIN]\nUS0378331005=US5949181045\n", "utf-8");
 
       const testFormat = new TestFormat(records);
       const customConverter = new Converter([testFormat]);
@@ -368,7 +372,7 @@ describe("Converter", () => {
       await customConverter.convert(inputFile, outputFile, "EUR", undefined, overridesFile);
 
       const content = fs.readFileSync(outputFile, "utf-8");
-      expect(content).toContain("US9999999999");
+      expect(content).toContain("US5949181045");
       expect(content).not.toContain("US0378331005");
     });
 
@@ -522,6 +526,95 @@ describe("Converter", () => {
 
       expect(formats).toBeInstanceOf(Array);
       expect(formats).toContain("Generic");
+    });
+  });
+
+  describe("formatFieldValidationResult", () => {
+    const baseResult: FieldValidationResult = {
+      name: "symbol",
+      value: "AAPL",
+      requirementLevel: FieldRequirementLevel.Required,
+      violationKind: FieldRequirementViolationKind.Valid,
+    };
+
+    it("should follow the pattern 'name (level) - message'", () => {
+      const result = formatFieldValidationResult({
+        ...baseResult,
+        requirementLevel: FieldRequirementLevel.Required,
+        violationKind: FieldRequirementViolationKind.Valid,
+      });
+      expect(result).toBe(`${bold("symbol")} (${italic("required")}) - ${green("Valid")}`);
+    });
+
+    describe("requirementLevel label", () => {
+      it("should label Required fields as 'required'", () => {
+        const result = formatFieldValidationResult({
+          ...baseResult,
+          requirementLevel: FieldRequirementLevel.Required,
+        });
+        expect(result).toContain(italic("required"));
+      });
+
+      it("should label Optional fields as 'optional'", () => {
+        const result = formatFieldValidationResult({
+          ...baseResult,
+          requirementLevel: FieldRequirementLevel.Optional,
+        });
+        expect(result).toContain(italic("optional"));
+      });
+
+      it("should label Ignored fields as 'ignored'", () => {
+        const result = formatFieldValidationResult({
+          ...baseResult,
+          requirementLevel: FieldRequirementLevel.Ignored,
+        });
+        expect(result).toContain(italic("ignored"));
+      });
+
+      it("should throw error for unknown requirement level", () => {
+        expect(() =>
+          formatFieldValidationResult({
+            ...baseResult,
+            requirementLevel: 999 as FieldRequirementLevel,
+          }),
+        ).toThrow();
+      });
+    });
+
+    describe("violationKind message", () => {
+      it("should return green 'Valid' for Valid", () => {
+        const result = formatFieldValidationResult({
+          ...baseResult,
+          violationKind: FieldRequirementViolationKind.Valid,
+        });
+        expect(result).toContain(green("Valid"));
+      });
+
+      it("should return red 'Empty value' for Unset", () => {
+        const result = formatFieldValidationResult({
+          ...baseResult,
+          violationKind: FieldRequirementViolationKind.Unset,
+        });
+        expect(result).toContain(red("Empty value"));
+      });
+
+      it("should return red 'Invalid value' with bold value for Invalid", () => {
+        const result = formatFieldValidationResult({
+          ...baseResult,
+          value: "bad-value",
+          violationKind: FieldRequirementViolationKind.Invalid,
+        });
+        expect(result).toContain(red(`Invalid value: ${bold("bad-value")}`));
+      });
+
+      it("should throw error for unknown violation kind", () => {
+        expect(() =>
+          formatFieldValidationResult({
+            ...baseResult,
+            violationKind: 999 as FieldRequirementViolationKind,
+          }),
+        ).toThrow();
+      });
     });
   });
 });
