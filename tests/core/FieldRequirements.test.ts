@@ -25,7 +25,7 @@ const createRecord = (overrides: Partial<WealthfolioRecord> = {}): WealthfolioRe
   return {
     date: new Date("2024-01-15"),
     instrumentType: instrumentType ?? InstrumentType.Unknown,
-    symbol: "AAPL",
+    symbol: "",
     isin: "",
     quantity: 1,
     activityType: ActivityType.Buy,
@@ -100,7 +100,7 @@ describe("FieldRequirements", () => {
 
   describe("validateRecordFieldRequirements", () => {
     it("should flag missing required fields", () => {
-      const record = createRecord({ symbol: "" });
+      const record = createRecord();
 
       const result = validateRecordFieldRequirements(record);
 
@@ -111,10 +111,26 @@ describe("FieldRequirements", () => {
     it("should clear ignored fields when requested", () => {
       const record = createRecord({
         activityType: ActivityType.Deposit,
-        symbol: "CASH",
-        quantity: new Date("2024-01-01") as unknown as number,
-        unitPrice: { note: "ignored" } as unknown as number,
-        subtype: ActivitySubtype.DRIP,
+        // There are no ignored date and object fields, so we need to force invalid values through
+        // type assertions to test that they are cleared properly if they ever appear in the future
+        symbol: new Date("2024-01-01") as unknown as string,
+        isin: { note: "ignored" } as unknown as string,
+      });
+
+      const result = validateRecordFieldRequirements(record, true);
+
+      expect(result.valid).toBe(true);
+      expect(record.symbol).toBeInstanceOf(Date);
+      expect((record.symbol as unknown as Date).getTime()).toBeNaN();
+      expect(record.isin).toEqual({});
+    });
+
+    it("should clear ignored numeric fields", () => {
+      const record = createRecord({
+        activityType: ActivityType.Deposit,
+        symbol: "",
+        quantity: 5,
+        unitPrice: 2,
         amount: 100,
       });
 
@@ -122,45 +138,27 @@ describe("FieldRequirements", () => {
 
       expect(result.valid).toBe(true);
       expect(record.symbol).toBe("");
-      expect(record.quantity).toBeInstanceOf(Date);
-      expect(Number.isNaN((record.quantity as unknown as Date).getTime())).toBe(true);
-      expect(record.unitPrice).toEqual({});
-      expect(record.subtype).toBe("");
-    });
-
-    it("should clear ignored numeric fields", () => {
-      const record = createRecord({
-        activityType: ActivityType.Deposit,
-        symbol: "CASH",
-        quantity: 5,
-        unitPrice: 2,
-        amount: 100,
-      });
-
-      const result = validateRecordFieldRequirements(record, true);
-
-      expect(result.valid).toBe(true);
-      expect(Number.isNaN(record.quantity)).toBe(true);
-      expect(Number.isNaN(record.unitPrice)).toBe(true);
+      expect(record.quantity).toBeNaN();
+      expect(record.unitPrice).toBeNaN();
+      expect(record.amount).toBe(100);
     });
 
     it("should keep ignored fields when not requested", () => {
       const record = createRecord({
         activityType: ActivityType.Deposit,
-        symbol: "CASH",
+        symbol: "",
         quantity: 5,
         unitPrice: 2,
-        subtype: ActivitySubtype.DRIP,
         amount: 100,
       });
 
       const result = validateRecordFieldRequirements(record, false);
 
       expect(result.valid).toBe(true);
-      expect(record.symbol).toBe("CASH");
+      expect(record.symbol).toBe("");
       expect(record.quantity).toBe(5);
       expect(record.unitPrice).toBe(2);
-      expect(record.subtype).toBe(ActivitySubtype.DRIP);
+      expect(record.amount).toBe(100);
     });
 
     it("should enforce conditional requirements", () => {
@@ -251,6 +249,7 @@ describe("FieldRequirements", () => {
     it("should allow ignored dividend unit price when subtype is not DRIP", () => {
       const record = createRecord({
         activityType: ActivityType.Dividend,
+        symbol: "AAPL",
         subtype: ActivitySubtype.OrdinaryDividend,
         unitPrice: Number.NaN,
         metadata: {},
@@ -305,6 +304,7 @@ describe("FieldRequirements", () => {
       for (const { activityType, subtype } of cases) {
         const record = createRecord({
           activityType,
+          symbol: "AAPL",
           subtype,
           amount: 100,
         });
@@ -330,6 +330,7 @@ describe("FieldRequirements", () => {
       for (const activityType of cases) {
         const record = createRecord({
           activityType,
+          symbol: "AAPL",
           subtype: ActivitySubtype.DRIP,
           amount: 100,
         });

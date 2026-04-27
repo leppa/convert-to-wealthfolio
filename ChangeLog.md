@@ -95,8 +95,8 @@ Upcoming release.
   `" us0378331005 "` and `"US0378331005"`) are treated the same and share a
   single cache entry.
 
-- As a consequence of the symbol resolution caching and normalization, there are
-  also changes to the way symbol resolution is logged:
+- **Symbol resolution logging** - As a consequence of the symbol resolution
+  caching and normalization, the symbol resolution logging has also changed:
   - When symbol is queried for the first time and resolution _succeeds_, it will
     be logged with the `INFO` level.
   - When symbol is queried for the first time and resolution _fails_, it will be

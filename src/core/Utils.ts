@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import validator from "validator";
+import { trim } from "validator";
 
 import { bold } from "colorette";
 
@@ -72,7 +72,7 @@ export function sanitizeName(name?: string, fallbackSymbol: string = ""): string
     // with a single dash)
     .replaceAll(/[\W_]+/g, "-");
 
-  return validator.trim(sanitized, "-").toUpperCase();
+  return trim(sanitized, "-").toUpperCase();
 }
 
 /**

@@ -35,6 +35,7 @@ This format supports standard transaction types such as buys, sells, dividends, 
   - [Stock Split](#stock-split)
   - [Credit](#credit)
   - [Adjustment](#adjustment)
+  - [Empty or Not Listed](#empty-or-not-listed)
 - [Instrument Types](#instrument-types)
 - [Value Formatting](#value-formatting)
   - [Date and Time](#date-and-time)
@@ -83,13 +84,13 @@ These columns enhance your data, but can be omitted:
 
 | Column | Description | Default |
 | --- | --- | --- |
-| `InstrumentType` | Instrument category (see [Instrument Types](#instrument-types) below) | Empty (`UNKNOWN`) |
+| `InstrumentType` | Instrument category (see [Instrument Types](#instrument-types) below) | Not set |
 | `Fee` | Transaction fee or commission (see [Quantities and Prices](#quantities-and-prices) below) | Not set |
 | `Total` | Total transaction amount (see [Quantities and Prices](#quantities-and-prices) below) | Calculated from `Quantity` × `UnitPrice` |
 | `Currency` | 3-letter currency code (see [Currency Codes](#currency-codes) below) | Either `EUR`, or `--default-currency` command-line option |
 | `TransactionSubtype` | More specific transaction classification, varies by transaction type (see [Transaction Types](#transaction-types) below) | Not set |
 | `FXRate` | Foreign exchange rate | Not set |
-| `Comment` | Notes or description | Empty |
+| `Comment` | Notes or description | Not set |
 
 ### Column Ordering
 
@@ -319,9 +320,13 @@ Date,TransactionType,Symbol,Quantity,UnitPrice,Total,Currency,Comment
 2024-05-05,ADJUSTMENT,AAPL,-50,,,,Share amount adjustment
 ```
 
+### Empty or Not Listed
+
+Transaction types that are empty or not listed among the supported values will be skipped with a warning.
+
 ## Instrument Types
 
-The `InstrumentType` column is optional and case-insensitive. If omitted or unrecognized, it is treated as `UNKNOWN`.
+The `InstrumentType` column is optional and case-insensitive. If omitted or unrecognized, it will be set to an empty value in the output CSV.
 
 Supported normalized values and accepted aliases:
 

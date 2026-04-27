@@ -22,9 +22,9 @@ SPDX-License-Identifier: BSD-3-Clause
 - [Building and Running From Source](#building-and-running-from-source)
 - [Future Plans](#future-plans)
   - [What's Planned](#whats-planned)
-  - [Adding CSV Formats](#adding-csv-formats)
-  - [Adding Data Providers](#adding-data-providers)
-  - [Adding Features and Improvements](#adding-features-and-improvements)
+  - [CSV Formats](#csv-formats)
+  - [Data Providers](#data-providers)
+  - [Features and Improvements](#features-and-improvements)
 - [Getting Support](#getting-support)
   - [Reporting Issues](#reporting-issues)
   - [General Support](#general-support)
@@ -75,7 +75,9 @@ See the [Roadmap](./ROADMAP.md#format-plugins) for a list of formats that are pl
 
 ## Installing and Using the Converter
 
-Install the converter globally using `npm`:
+**Convert to Wealthfolio** is published on npmjs.com: <https://www.npmjs.com/package/@leppa/convert-to-wealthfolio>.
+
+Install it globally using `npm`:
 
 ```bash
 npm install --global @leppa/convert-to-wealthfolio
@@ -121,19 +123,19 @@ See the [User Manual](./docs/user-manual.md#install-from-source) for complete in
 
 See the [Roadmap](./ROADMAP.md) for a list of planned features and improvements.
 
-### Adding CSV Formats
+### CSV Formats
 
 If your CSV format is not supported, you can create a new format plugin by extending the `BaseFormat` class. See the [Format Plugin Development Guide](./docs/format-plugin-development-guide.md) for instructions on how to create and integrate your own format into the converter.
 
 If you don't know how to create a format plugin but want to see your format supported, you can open a new format request with a sample CSV file and the expected output. See [Requesting a New Format Plugin](./CONTRIBUTING.md#requesting-a-new-format-plugin) for guidelines on how to request a new format effectively.
 
-### Adding Data Providers
+### Data Providers
 
 If you want to add a new way of resolving symbols from ISINs, CUSIPs, or company names, you can create a new data provider by extending the `DataProvider` class. See the [Data Provider Development Guide](./docs/data-provider-development-guide.md) for instructions on how to create and integrate a new data provider into the converter.
 
 Same as with format plugins, if you don't know how to create a data provider but want to see a new one supported, you can open a feature request with details about the data source. See [Requesting a New Feature](./CONTRIBUTING.md#requesting-a-new-feature) for guidelines on how to request new features effectively.
 
-### Adding Features and Improvements
+### Features and Improvements
 
 If you have an idea for a new feature or improvement, you can open a new feature request. See [Requesting a New Feature](./CONTRIBUTING.md#requesting-a-new-feature) for guidelines on how to request new features effectively.
 

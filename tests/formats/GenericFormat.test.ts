@@ -645,13 +645,13 @@ describe("Generic Format", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument,
       const feeValue = cast("1.25", { column: "fee" } as any) as number;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument,
-      const defaultValue = cast("  abc  ", { column: "symbol" } as any) as string;
+      const columnValue = cast("  abc  ", { column: "symbol" } as any) as string;
 
       expect(dateValue).toBeInstanceOf(Date);
       expect(dateValue.toISOString()).toContain("2024-02-10");
       expect(quantityValue).toBe(12.5);
       expect(feeValue).toBe(1.25);
-      expect(defaultValue).toBe("ABC");
+      expect(columnValue).toBe("ABC");
     });
 
     it("should return normalized ISIN for a valid ISIN value", () => {
@@ -730,7 +730,7 @@ describe("Generic Format", () => {
       }
     });
 
-    it("should warn and return empty string for invalid currency", () => {
+    it("should warn and return `undefined` for invalid currency", () => {
       const options = format.getParseOptions();
       expect(typeof options.cast).toBe("function");
       if (typeof options.cast !== "function") {
@@ -742,10 +742,13 @@ describe("Generic Format", () => {
 
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
-        expect(cast("INVALID", { column: "currency", lines: 2 } as any)).toBe("");
+        expect(cast("INVALID", { column: "currency", lines: 2 } as any)).toBeUndefined();
         // Three letters but not a valid currency code
         // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
-        expect(cast("ZZZ", { column: "currency", lines: 2 } as any)).toBe("");
+        expect(cast("ZZZ", { column: "currency", lines: 2 } as any)).toBeUndefined();
+        // Empty string means currency is not specified, so no warning and return empty string
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+        expect(cast("", { column: "currency", lines: 2 } as any)).toBe("");
         expect(warnSpy).toHaveBeenCalledTimes(2);
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid currency code"));
       } finally {

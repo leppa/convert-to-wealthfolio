@@ -70,8 +70,8 @@ describe("Logger", () => {
       expect(Logger.getLogLevelName(LogLevel.FATAL)).toBe("FATAL");
     });
 
-    it("should return UNKNOWN for invalid log level", () => {
-      expect(Logger.getLogLevelName(999 as LogLevel)).toBe("UNKNOWN");
+    it("should throw error for invalid log level", () => {
+      expect(() => Logger.getLogLevelName(999 as LogLevel)).toThrow();
     });
   });
 

@@ -170,6 +170,16 @@ export function canHaveActivitySubtype(activityType: ActivityType): boolean {
 }
 
 /**
+ * Checks if the given activity type requires a currency
+ *
+ * @param activityType - The activity type to check
+ * @returns `true` if the activity requires a currency, `false` otherwise
+ */
+export function requiresCurrency(activityType: ActivityType): boolean {
+  return RECORD_FIELD_REQUIREMENTS[activityType].currency === FieldRequirementLevel.Required;
+}
+
+/**
  * Clears the value of a field in a Wealthfolio record based on its type
  *
  * - For string fields, sets to an empty string (`""`).

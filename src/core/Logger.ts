@@ -5,7 +5,7 @@
 
 import { bgRed, bold, gray, green, italic, red, reset, yellow } from "colorette";
 
-import { stringifyForLogging } from "./Utils";
+import { assertUnreachable, stringifyForLogging } from "./Utils";
 
 /**
  * Log levels enumeration
@@ -138,7 +138,7 @@ export class Logger {
       case LogLevel.TRACE:
         return "TRACE";
       default:
-        return "UNKNOWN";
+        assertUnreachable(level);
     }
   }
 

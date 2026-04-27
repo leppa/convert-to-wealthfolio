@@ -162,11 +162,14 @@ Supported activity types:
 - **TRANSFER_OUT**: Asset or cash transfer out.
 - **FEE**: Account or transaction fee.
 - **TAX**: Tax withholding or payment.
-- **SPLIT**: Stock split or reverse split.
+- **SPLIT**: Stock forward or reverse split.
 - **CREDIT**: Credit or bonus (cash only).
-- **ADJUSTMENT**: Share or cash adjustment.
+- **ADJUSTMENT**: Share or cash adjustment; e.g., forfeiture of fractional shares.
+- **UNKNOWN**: Unrecognized activity type; according to the **Wealthfolio** documentation, this activity type will be ["flagged for review"][UNKNOWN type].
 
-**Note:** The information above was taken from the **Wealthfolio** documentation and may be subject to change as v3.x is still in beta. Always refer to the latest **Wealthfolio** documentation for the most up-to-date information on supported activity types and subtypes.
+**Note:** The information above was taken from the **Wealthfolio** documentation and may be subject to change. I'll try to keep **Convert to Wealthfolio** up to date with the latest changes.
+
+[UNKNOWN type]: https://github.com/afadil/wealthfolio/blob/main/docs/activities/activity-types.md#unknown
 
 ### Activity Subtypes
 

@@ -33,10 +33,6 @@ Ability to look up symbol from ISIN, CUSIP, company name, or other identifiers u
 
 ### Other Features
 
-#### NPM Package
-
-Ability to install the converter as an NPM package and use it as a command-line tool that is available globally. This will make it easier to integrate the converter into existing workflows or use it in custom scripts.
-
 #### Docker Container
 
 Ability to run the converter in a Docker container. This will make it easier to use for people who don't want to set up a Node.js environment on their machine.

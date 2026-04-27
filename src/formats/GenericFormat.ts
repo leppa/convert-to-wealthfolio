@@ -16,7 +16,7 @@ import {
   WealthfolioRecord,
   WealthfolioRecordMetadata,
 } from "../core/BaseFormat";
-import { canHaveActivitySubtype } from "../core/FieldRequirements";
+import { canHaveActivitySubtype, requiresCurrency } from "../core/FieldRequirements";
 import { Logger } from "../core/Logger";
 import { SymbolDataService } from "../core/SymbolDataService";
 import { isCUSIP } from "../core/Utils";
@@ -142,6 +142,14 @@ export class GenericFormat extends BaseFormat {
         }));
       }
 
+      let { currency } = record;
+      if (!currency && requiresCurrency(activityType)) {
+        Logger.getInstance().info(
+          `${bold("Missing currency")} in record ${bold(i + 1)}, using default: ${bold(defaultCurrency)}`,
+        );
+        currency = defaultCurrency;
+      }
+
       result.push({
         date: record.date,
         instrumentType: this.mapInstrumentType(record.instrumenttype),
@@ -150,8 +158,7 @@ export class GenericFormat extends BaseFormat {
         quantity,
         activityType,
         unitPrice,
-        // `||` here because we also want to replace empty strings with default currency
-        currency: record.currency || defaultCurrency,
+        currency: currency || "",
         fee,
         amount,
         fxRate: record.fxrate ?? Number.NaN,
@@ -462,7 +469,7 @@ export class GenericFormat extends BaseFormat {
               logger.warn(
                 `${red("Invalid currency code")} in line ${italic(context.lines)} of input file: ${bold(trimmedValue)} - will be replaced with the default currency`,
               );
-              return ""; // Don't set - will be replaced with the default currency later
+              return undefined; // Don't set - will be replaced with the default currency later
             }
             return currency;
           }

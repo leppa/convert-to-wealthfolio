@@ -40,7 +40,9 @@ SPDX-License-Identifier: BSD-3-Clause
 
 ### Install From npmjs.com
 
-**Convert to Wealthfolio** is [published on npmjs.com](https://www.npmjs.com/package/@leppa/convert-to-wealthfolio). You can install it globally using `npm`:
+**Convert to Wealthfolio** is published on npmjs.com: <https://www.npmjs.com/package/@leppa/convert-to-wealthfolio>.
+
+You can install it globally using `npm`:
 
 ```bash
 npm install --global @leppa/convert-to-wealthfolio
@@ -122,7 +124,7 @@ Convert a generic CSV with ISINs, CUSIPs, and company names:
 convert-to-wealthfolio convert examples/sample-generic-isin-cusip-name.csv output.csv
 ```
 
-When both no ticker symbol and no ISIN are present, the converter tries to synthesize a symbol from the following data (in the priority order): CUSIP → sanitized company name → empty symbol. When only ISIN is present, it will be copied to the `isin` column and the `symbol` column will be left empty. To get a proper symbol when it is missing, see [Override and Resolve Symbols and ISINs](#override-and-resolve-symbols-and-isins) section for information on how to resolve identifiers into symbols by using an INI file.
+When neither a ticker symbol nor an ISIN are present, the converter tries to synthesize a symbol from the following data (in the priority order): CUSIP → sanitized company name → empty symbol. When only ISIN is present, it will be copied to the `isin` column and the `symbol` column will be left empty. To get a proper symbol when it is missing, see [Override and Resolve Symbols and ISINs](#override-and-resolve-symbols-and-isins) section for information on how to resolve identifiers into symbols by using an INI file.
 
 #### Specify the Format Manually
 

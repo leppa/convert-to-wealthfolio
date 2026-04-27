@@ -24,7 +24,7 @@ describe("Lime.co Format", () => {
   });
 
   describe("validate", () => {
-    test("should validate correct Lime.co format", () => {
+    it("should validate correct Lime.co format", () => {
       const records = [
         {
           date: "2025-10-08 00:00:00",
@@ -41,7 +41,7 @@ describe("Lime.co Format", () => {
       expect(format.validate(records)).toBe(true);
     });
 
-    test("should reject invalid format", () => {
+    it("should reject invalid format", () => {
       const records = [
         {
           someother: "value",
@@ -52,11 +52,11 @@ describe("Lime.co Format", () => {
       expect(format.validate(records)).toBe(false);
     });
 
-    test("should reject empty records", () => {
+    it("should reject empty records", () => {
       expect(format.validate([])).toBe(false);
     });
 
-    test("should reject records with different column order", () => {
+    it("should reject records with different column order", () => {
       const records = [
         {
           description: "Buy 10 AAPL @100",
@@ -76,7 +76,7 @@ describe("Lime.co Format", () => {
 
   describe("convert", () => {
     describe("direction: buy / sell", () => {
-      test("should convert buy transaction", () => {
+      it("should convert buy transaction", () => {
         const records = [
           {
             date: new Date("2022-07-18T00:00:00"),
@@ -103,7 +103,7 @@ describe("Lime.co Format", () => {
         });
       });
 
-      test("should convert sell transaction", () => {
+      it("should convert sell transaction", () => {
         const records = [
           {
             date: new Date("2025-10-08T00:00:00"),
@@ -131,7 +131,7 @@ describe("Lime.co Format", () => {
     });
 
     describe("direction: deposit / withdrawal", () => {
-      test("should convert deposit", () => {
+      it("should convert deposit", () => {
         const records = [
           {
             date: new Date("2017-10-27T00:00:00"),
@@ -154,7 +154,7 @@ describe("Lime.co Format", () => {
         });
       });
 
-      test("should convert interest deposit", () => {
+      it("should convert interest deposit", () => {
         const records = [
           {
             date: new Date("2017-10-31T00:00:00"),
@@ -177,7 +177,7 @@ describe("Lime.co Format", () => {
         });
       });
 
-      test("should convert dividend deposit", () => {
+      it("should convert dividend deposit", () => {
         const records = [
           {
             date: new Date("2024-06-05T00:00:00"),
@@ -240,7 +240,7 @@ describe("Lime.co Format", () => {
         expect(result[2].unitPrice).toBeCloseTo(1 / 75, 5);
       });
 
-      test("should convert cash-in-lieu deposit", () => {
+      it("should convert cash-in-lieu deposit", () => {
         const records = [
           {
             date: new Date("2024-06-02T00:00:00"),
@@ -264,7 +264,7 @@ describe("Lime.co Format", () => {
         });
       });
 
-      test("should keep empty symbol for dividend when description has no quantity suffix", () => {
+      it("should keep empty symbol for dividend when description has no quantity suffix", () => {
         const records = [
           {
             date: new Date("2024-05-01T00:00:00"),
@@ -290,7 +290,7 @@ describe("Lime.co Format", () => {
         });
       });
 
-      test("should set unitPrice to NaN when dividend description has zero quantity", () => {
+      it("should set unitPrice to NaN when dividend description has zero quantity", () => {
         const records = [
           {
             date: new Date("2024-05-02T00:00:00"),
@@ -315,7 +315,7 @@ describe("Lime.co Format", () => {
         expect(result[0].unitPrice).toBeNaN();
       });
 
-      test("should convert withdrawal", () => {
+      it("should convert withdrawal", () => {
         const records = [
           {
             date: new Date("2023-11-06T00:00:00"),
@@ -338,7 +338,7 @@ describe("Lime.co Format", () => {
         });
       });
 
-      test("should convert fee withdrawal", () => {
+      it("should convert fee withdrawal", () => {
         const records = [
           {
             date: new Date("2023-11-06T00:00:00"),
@@ -361,7 +361,7 @@ describe("Lime.co Format", () => {
         });
       });
 
-      test("should convert tax withdrawal", () => {
+      it("should convert tax withdrawal", () => {
         const records = [
           {
             date: new Date("2021-03-01T00:00:00"),
@@ -384,7 +384,7 @@ describe("Lime.co Format", () => {
         });
       });
 
-      test("should map tax subtypes for withholding and fallback none", () => {
+      it("should map tax subtypes for withholding and fallback none", () => {
         const records = [
           {
             date: new Date("2024-06-07T00:00:00"),
@@ -415,7 +415,7 @@ describe("Lime.co Format", () => {
         expect(result[1].subtype).toBe(ActivitySubtype.Withholding);
       });
 
-      test("should convert withdrawal variants and deposit adjustment", () => {
+      it("should convert withdrawal variants and deposit adjustment", () => {
         const records = [
           {
             date: new Date("2024-02-04T00:00:00"),
@@ -470,7 +470,7 @@ describe("Lime.co Format", () => {
     });
 
     describe("direction: in / out", () => {
-      test("should convert transfer in/out and conversion directions", () => {
+      it("should convert transfer in/out and conversion directions", () => {
         const records = [
           {
             date: new Date("2024-01-12T00:00:00"),
@@ -537,7 +537,7 @@ describe("Lime.co Format", () => {
         expect(result[4].activityType).toBe(ActivityType.TransferOut);
       });
 
-      test("should combine forward and reverse split entries", () => {
+      it("should combine forward and reverse split entries", () => {
         const records = [
           {
             date: new Date("2017-04-10T00:00:00"),
@@ -604,7 +604,7 @@ describe("Lime.co Format", () => {
         });
       });
 
-      test("should ignore unmatched split transactions", () => {
+      it("should ignore unmatched split transactions", () => {
         const records = [
           {
             date: new Date("2024-04-01T00:00:00"),
@@ -622,7 +622,7 @@ describe("Lime.co Format", () => {
         expect(result).toEqual([]);
       });
 
-      test("should not match split transactions with different symbols", () => {
+      it("should not match split transactions with different symbols", () => {
         const records = [
           {
             date: new Date("2024-04-01T00:00:00"),
@@ -650,7 +650,7 @@ describe("Lime.co Format", () => {
         expect(result).toHaveLength(0);
       });
 
-      test("should skip zero and invalid quantities in split transactions", () => {
+      it("should skip zero and invalid quantities in split transactions", () => {
         const records = [
           {
             date: new Date("2024-04-02T00:00:00"),
@@ -679,7 +679,7 @@ describe("Lime.co Format", () => {
         expect(result).toHaveLength(0);
       });
 
-      test("should skip when two split records have the same direction", () => {
+      it("should skip when two split records have the same direction", () => {
         const records = [
           {
             date: new Date("2024-05-01T00:00:00"),
@@ -708,7 +708,7 @@ describe("Lime.co Format", () => {
         expect(result).toHaveLength(0);
       });
 
-      test("should skip symbol rename transfer entries", () => {
+      it("should skip symbol rename transfer entries", () => {
         const records = [
           {
             date: new Date("2024-06-01T00:00:00"),
@@ -737,7 +737,7 @@ describe("Lime.co Format", () => {
       });
     });
 
-    test("should ignore *FROM MARGIN*, *TO CASH*, and cash journal move entries", () => {
+    it("should ignore *FROM MARGIN*, *TO CASH*, and cash journal move entries", () => {
       const records = [
         {
           date: new Date("2024-03-01T00:00:00"),
@@ -787,7 +787,7 @@ describe("Lime.co Format", () => {
       expect(result[0].symbol).toBe("AAPL");
     });
 
-    test("should ignore unknown and empty directions", () => {
+    it("should ignore unknown and empty directions", () => {
       const records = [
         {
           date: new Date("2024-03-02T00:00:00"),
@@ -817,7 +817,7 @@ describe("Lime.co Format", () => {
   });
 
   describe("symbol resolution", () => {
-    test("should set ISIN from provider resolution", () => {
+    it("should set ISIN from provider resolution", () => {
       class ISINProvider extends DataProvider {
         constructor() {
           super("ISINProvider");
@@ -847,7 +847,7 @@ describe("Lime.co Format", () => {
       expect(result[0].isin).toBe("US0378331005");
     });
 
-    test("should set symbol and ISIN from provider resolution when symbol is empty", () => {
+    it("should set symbol and ISIN from provider resolution when symbol is empty", () => {
       class SymbolISINProvider extends DataProvider {
         constructor() {
           super("SymbolISINProvider");
@@ -879,14 +879,14 @@ describe("Lime.co Format", () => {
   });
 
   describe("getParseOptions", () => {
-    test("should have correct parse options", () => {
+    it("should have correct parse options", () => {
       const options = format.getParseOptions();
       expect(options.delimiter).toBe(";");
       expect(options.from_line).toBe(2);
       expect(options.trim).toBe(true);
     });
 
-    test("should expose parse options callbacks for cast and header normalization", () => {
+    it("should expose parse options callbacks for cast and header normalization", () => {
       const options = format.getParseOptions();
       const headerMapper = options.columns as (header: string[]) => string[];
       const caster = options.cast as (value: string, context: { column: string }) => unknown;
@@ -913,7 +913,7 @@ describe("Lime.co Format", () => {
   });
 
   describe("getExpectedSchema", () => {
-    test("should return correct schema", () => {
+    it("should return correct schema", () => {
       const schema = format.getExpectedSchema();
       const columnNames = schema.map((col) => col.name);
       expect(columnNames).toEqual([
