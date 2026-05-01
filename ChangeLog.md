@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Upcoming release.
+
 ## [0.3.0] - 2026-05-01
 
 This release adds support for the new ISIN field that was added to
@@ -214,6 +218,8 @@ Initial release.
   should be able to handle same formats without the need for a custom converter.
 - Project documentation and user guides.
 
+[Unreleased]:
+  https://github.com/leppa/convert-to-wealthfolio/compare/0.3.0...HEAD
 [0.3.0]: https://github.com/leppa/convert-to-wealthfolio/compare/0.2.0...0.3.0
 [0.2.0]: https://github.com/leppa/convert-to-wealthfolio/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/leppa/convert-to-wealthfolio/commits/0.1.0
