@@ -82,6 +82,13 @@ Upcoming release.
   | `[CUSIP]`   | `[Symbol.CUSIP]`  | Maps CUSIPs to symbols        |
   | `[Name]`    | `[Symbol.Name]`   | Maps company names to symbols |
 
+  One mnemonic way to remember the new section name meaning is that `.` means
+  _from_ (e.g., `[ISIN.CUSIP]` means "**ISIN** _from_ **CUSIP**").
+
+  To update your existing overrides file, you can simply rename the sections as
+  shown in the table above. The content of the sections remains the same, so you
+  don't need to change the key-value pairs.
+
 - **Fallback symbol resolution** - The fallback for symbol resolution will no
   longer copy ISIN value from the query into the symbol field when symbol cannot
   be resolved. Instead, it will return the ISIN and leave the symbol unset. The

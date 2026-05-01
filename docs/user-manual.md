@@ -193,38 +193,40 @@ You will get resolved identifiers, as long as they're present in the override fi
 The overrides file format:
 
 ```ini
-# Override ISIN
+# ISIN override
 [ISIN.ISIN]
 US38259P5089 = US02079K3059
 
-# Map symbol to ISIN
+# ISIN from symbol
 [ISIN.Symbol]
 AAPL = US0378331005
 
-# Map CUSIP to ISIN
+# ISIN from CUSIP
 [ISIN.CUSIP]
 38259P508 = US38259P5089
 
-# Map company name to ISIN
+# ISIN from company name
 [ISIN.Name]
 Alphabet Inc. = US02079K3059
 
-# Override symbol
+# Symbol override
 [Symbol.Symbol]
 FB = META
 
-# Map ISIN to symbol
+# Symbol from ISIN
 [Symbol.ISIN]
 US02079K3059 = GOOGL
 
-# Map CUSIP to symbol
+# Symbol from CUSIP
 [Symbol.CUSIP]
 594918104 = MSFT
 
-# Map company name to symbol
+# Symbol from company name
 [Symbol.Name]
 Volkswagen AG Preferred = VOW3.DE
 ```
+
+One mnemonic way to remember the section name meaning is that `.` means _from_ (e.g., `[ISIN.CUSIP]` means "**ISIN** _from_ **CUSIP**").
 
 ISIN lookups are performed before symbol lookups, which means that symbol lookups are performed with an already resolved ISIN.
 

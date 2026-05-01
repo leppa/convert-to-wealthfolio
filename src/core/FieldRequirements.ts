@@ -203,6 +203,7 @@ export function clearField(record: WealthfolioRecord, field: keyof WealthfolioRe
     case "object":
       if (record[field] instanceof Date) {
         // Set invalid date
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         (record[field] as Date) = new Date(Number.NaN);
       } else {
         (record[field] as unknown) = {};

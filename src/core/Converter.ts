@@ -172,7 +172,7 @@ export class Converter {
             );
           } else {
             logger.warn(
-              `Record ${italic(index + 1)} has invalid optional fields, they ${bold("will be cleared")}:`,
+              `Record ${italic(index + 1)} has invalid optional fields that ${bold("will be cleared")}:`,
             );
           }
           for (const field of result.invalidFields) {

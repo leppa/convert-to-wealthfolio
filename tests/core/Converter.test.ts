@@ -222,6 +222,47 @@ describe("Converter", () => {
       }
     });
 
+    it("should keep record but warn and clear invalid optional fields", async () => {
+      const recordWithInvalidOptionalField: WealthfolioRecord = {
+        date: new Date("2024-01-15"),
+        instrumentType: InstrumentType.Equity,
+        symbol: "AAPL",
+        isin: "INVALID-ISIN", // Optional when symbol is set, but invalid if provided
+        quantity: 1,
+        activityType: ActivityType.Buy,
+        unitPrice: 10,
+        currency: "USD",
+        fee: 0,
+        amount: 10,
+        fxRate: Number.NaN,
+        subtype: ActivitySubtype.None,
+        comment: "",
+        metadata: {},
+      };
+
+      const customConverter = new Converter([new TestFormat([recordWithInvalidOptionalField])]);
+      const warnSpy = jest.spyOn(Logger.getInstance(), "warn").mockImplementation(() => undefined);
+
+      try {
+        const inputFile = path.join(fixturesDir, "sample-generic.csv");
+        await customConverter.convert(inputFile, outputFile, "Test");
+
+        const content = fs.readFileSync(outputFile, "utf-8");
+        const lines = content.trim().split("\n");
+
+        // Optional invalid field should be cleared, but record should remain in output.
+        expect(lines).toHaveLength(2); // header + 1 record
+        expect(lines[1]).toContain(",AAPL,,1,BUY,10,USD,0,10,");
+
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining(`invalid optional fields that ${bold("will be cleared")}`),
+        );
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/isin.+Invalid value/));
+      } finally {
+        warnSpy.mockRestore();
+      }
+    });
+
     it("should convert using explicit format name", async () => {
       const inputFile = path.join(fixturesDir, "sample-generic.csv");
 
