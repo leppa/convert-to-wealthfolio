@@ -15,9 +15,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - 2026-05-01
 
-Upcoming release.
+This release adds support for the new ISIN field that was added to
+**Wealthfolio** in v3.2.0, as well as support for ISIN overrides and mapping in
+the overrides INI file. It also brings input and output data validation
+improvements, including validation of ISINs, CUSIPs, and currency codes.
+Additionally, it introduces symbol resolution caching to improve performance
+when processing large CSV files with many transactions. Finally, it adds
+environment variables to control their respective CLI options for easier
+configuration.
+
+The release also includes a fix for the Generic format plugin to no longer abort
+on unknown activity types, allowing the rest of transactions to be processed.
+
+**BREAKING**: The format of the overrides INI file has been changed and is not
+compatible with the previous format. This change was made to allow providing
+ISIN and symbol overrides and mapping in a consistent way. Please refer to the
+**Changed** section below for more details on how to update your existing
+overrides file.
 
 ### Added
 
@@ -198,7 +214,6 @@ Initial release.
   should be able to handle same formats without the need for a custom converter.
 - Project documentation and user guides.
 
-[Unreleased]:
-  https://github.com/leppa/convert-to-wealthfolio/compare/0.2.0...HEAD
+[0.3.0]: https://github.com/leppa/convert-to-wealthfolio/compare/0.2.0...0.3.0
 [0.2.0]: https://github.com/leppa/convert-to-wealthfolio/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/leppa/convert-to-wealthfolio/commits/0.1.0
