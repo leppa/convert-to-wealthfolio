@@ -33,6 +33,6 @@ jobs:
           path: test-results/
 
       - name: Run SonarQube scan
-        uses: SonarSource/sonarqube-scan-action@v7
+        uses: SonarSource/sonarqube-scan-action@v8
         env:
           SONAR_TOKEN: ${{ secrets.SONARQUBE_ACCESS_TOKEN }}
