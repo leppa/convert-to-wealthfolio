@@ -52,7 +52,7 @@
     "csv-parse": "^6.2.0",
     "csv-stringify": "^6.6.0",
     "dayjs": "^1.11.20",
-    "ini": "^6.0.0",
+    "ini": "^7.0.0",
     "validator": "^13.15.35"
   },
   "devDependencies": {
