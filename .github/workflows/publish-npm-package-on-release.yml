@@ -35,7 +35,7 @@ jobs:
 
       - name: Update npm and install dependencies
         run: |
-          npm install --ignore-scripts -g npm@latest
+          npm install --ignore-scripts -g npm@11.15.0
           npm ci --ignore-scripts
 
       - name: Build code
@@ -88,7 +88,7 @@ jobs:
           scope: "@leppa"
 
       - name: Update npm
-        run: npm install --ignore-scripts -g npm@latest
+        run: npm install --ignore-scripts -g npm@11.15.0
 
       - name: Publish package to npmjs.com
         run: npm publish "${{ needs.build-npm-package.outputs.package-file }}" --provenance --access public --tag latest
@@ -118,7 +118,7 @@ jobs:
           scope: "@${{ github.repository_owner }}"
 
       - name: Update npm
-        run: npm install --ignore-scripts -g npm@latest
+        run: npm install --ignore-scripts -g npm@11.15.0
 
       - name: Publish package to GitHub Packages
         env:

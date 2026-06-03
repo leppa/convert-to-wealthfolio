@@ -48,7 +48,7 @@ jobs:
           scope: "@${{ github.repository_owner }}"
 
       - name: Update npm
-        run: npm install --ignore-scripts -g npm@latest
+        run: npm install --ignore-scripts -g npm@11.15.0
 
       - name: Publish package to GitHub Packages
         env:

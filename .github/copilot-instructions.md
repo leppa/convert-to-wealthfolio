@@ -12,7 +12,7 @@ Trust these instructions and only search the codebase if the information here is
 **Convert to Wealthfolio** is a Node.js CLI tool (TypeScript, CommonJS) that converts CSV files from various brokerage formats into the import format for [Wealthfolio](https://wealthfolio.app) portfolio tracker (v3.x). It uses a plugin-based architecture for format support and pluggable data providers for symbol resolution.
 
 - **Language**: TypeScript 5.x, compiled to ES2020 CommonJS (`dist/`)
-- **Runtime**: Node.js 22+ (CI tests 22.x, 24.x, 25.x)
+- **Runtime**: Node.js 22+ (CI tests 22.x, 24.x, 26.x)
 - **Package manager**: npm (use `npm ci` for clean installs)
 - **Key runtime deps**: `commander`, `csv-parse`, `csv-stringify`, `colorette`, `ini`
 - **Key dev deps**: `jest`/`ts-jest`, `eslint` (v10 flat config), `prettier`
