@@ -32,6 +32,7 @@ const createRecord = (overrides: Partial<WealthfolioRecord> = {}): WealthfolioRe
     unitPrice: 10,
     currency: "USD",
     fee: 0,
+    tax: Number.NaN,
     amount: 10,
     fxRate: Number.NaN,
     subtype: ActivitySubtype.None,

@@ -81,7 +81,7 @@ describe("Converter", () => {
 
       // Check header
       const headers = lines[0].split(",");
-      expect(headers.length).toBe(14);
+      expect(headers).toHaveLength(15);
       expect(headers).toContain("date");
       expect(headers).toContain("symbol");
       expect(headers).toContain("isin");
@@ -90,6 +90,7 @@ describe("Converter", () => {
       expect(headers).toContain("unitPrice");
       expect(headers).toContain("currency");
       expect(headers).toContain("fee");
+      expect(headers).toContain("tax");
       expect(headers).toContain("amount");
       expect(headers).toContain("fxRate");
       expect(headers).toContain("subtype");
@@ -97,7 +98,7 @@ describe("Converter", () => {
       expect(headers).toContain("metadata");
 
       // Check we have the right number of records
-      expect(lines.length).toBe(30); // header + 29 data rows
+      expect(lines).toHaveLength(30); // header + 29 data rows
     });
 
     it("should round numeric values to 8 decimal places", async () => {
@@ -181,6 +182,7 @@ describe("Converter", () => {
         unitPrice: 10,
         currency: "USD",
         fee: 0,
+        tax: Number.NaN,
         amount: 10,
         fxRate: Number.NaN,
         subtype: ActivitySubtype.None,
@@ -197,6 +199,7 @@ describe("Converter", () => {
         unitPrice: 20,
         currency: "USD",
         fee: 0,
+        tax: Number.NaN,
         amount: 40,
         fxRate: Number.NaN,
         subtype: ActivitySubtype.None,
@@ -233,6 +236,7 @@ describe("Converter", () => {
         unitPrice: 10,
         currency: "USD",
         fee: 0,
+        tax: Number.NaN,
         amount: 10,
         fxRate: Number.NaN,
         subtype: ActivitySubtype.None,
@@ -252,7 +256,7 @@ describe("Converter", () => {
 
         // Optional invalid field should be cleared, but record should remain in output.
         expect(lines).toHaveLength(2); // header + 1 record
-        expect(lines[1]).toContain(",AAPL,,1,BUY,10,USD,0,10,");
+        expect(lines[1]).toContain(",AAPL,,1,BUY,10,USD,0,,10,");
 
         expect(warnSpy).toHaveBeenCalledWith(
           expect.stringContaining(`invalid optional fields that ${bold("will be cleared")}`),
@@ -354,6 +358,7 @@ describe("Converter", () => {
           unitPrice: 150.25,
           currency: "EUR",
           fee: 0,
+          tax: Number.NaN,
           amount: 15025,
           fxRate: Number.NaN,
           subtype: ActivitySubtype.None,
@@ -393,6 +398,7 @@ describe("Converter", () => {
           unitPrice: 150.25,
           currency: "EUR",
           fee: 0,
+          tax: Number.NaN,
           amount: 15025,
           fxRate: Number.NaN,
           subtype: ActivitySubtype.None,
@@ -480,6 +486,7 @@ describe("Converter", () => {
         unitPrice: 10.123456789,
         currency: DEFAULT_CURRENCY,
         fee: 0,
+        tax: Number.NaN,
         amount: 10.123456789,
         fxRate: 1.25,
         subtype: ActivitySubtype.None,
@@ -496,6 +503,7 @@ describe("Converter", () => {
         unitPrice: 20,
         currency: DEFAULT_CURRENCY,
         fee: 0,
+        tax: Number.NaN,
         amount: 40,
         fxRate: Number.NaN,
         subtype: ActivitySubtype.None,

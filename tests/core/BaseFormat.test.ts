@@ -34,6 +34,7 @@ class TestFormat extends BaseFormat {
       unitPrice: 150,
       currency: "EUR",
       fee: 0,
+      tax: Number.NaN,
       amount: 15000,
       fxRate: Number.NaN,
       subtype: ActivitySubtype.None,

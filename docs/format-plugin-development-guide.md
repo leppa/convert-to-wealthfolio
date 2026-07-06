@@ -78,6 +78,7 @@ export class MyCustomFormat extends BaseFormat {
         unitPrice: Math.abs(parseFloat(record.price)),
         currency: record.currency || defaultCurrency,
         fee: Math.abs(parseFloat(record.fee)),
+        tax: Math.abs(parseFloat(record.tax)),
         amount: Math.abs(parseFloat(record.total)),
         fxRate: Number.NaN,
         subtype: ActivitySubtype.None,
@@ -186,6 +187,7 @@ export class MyCustomFormat extends BaseFormat {
         description: "ISO currency code, defaults to EUR if not provided",
       },
       { name: "fee", optional: true, description: "Transaction fee" },
+      { name: "tax", optional: true, description: "Transaction tax" },
       { name: "notes", optional: true, description: "Additional notes" },
     ];
   }
@@ -251,6 +253,7 @@ interface WealthfolioRecord {
   unitPrice: number; // Unit price
   currency: string; // ISO currency code (e.g., "EUR")
   fee: number; // Transaction fee
+  tax: number; // Transaction tax
   amount: number; // Total transaction amount or split ratio for splits
   fxRate: number; // Currency exchange rate to base currency
   subtype: ActivitySubtype; // Optional activity subtype
@@ -378,6 +381,7 @@ export class MyCustomFormat extends BaseFormat {
         unitPrice: parseFloat(record.unitPrice),
         currency: record.currency || defaultCurrency,
         fee: parseFloat(record.fee),
+        tax: Number.NaN,
         amount: parseFloat(record.total),
         fxRate: Number.NaN,
         subtype: ActivitySubtype.None,

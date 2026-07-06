@@ -86,6 +86,7 @@ These columns enhance your data, but can be omitted:
 | --- | --- | --- |
 | `InstrumentType` | Instrument category (see [Instrument Types](#instrument-types) below) | Not set |
 | `Fee` | Transaction fee or commission (see [Quantities and Prices](#quantities-and-prices) below) | Not set |
+| `Tax` | Transaction tax (see [Quantities and Prices](#quantities-and-prices) below) | Not set |
 | `Total` | Total transaction amount (see [Quantities and Prices](#quantities-and-prices) below) | Calculated from `Quantity` × `UnitPrice` |
 | `Currency` | 3-letter currency code (see [Currency Codes](#currency-codes) below) | Either `EUR`, or `--default-currency` command-line option |
 | `TransactionSubtype` | More specific transaction classification, varies by transaction type (see [Transaction Types](#transaction-types) below) | Not set |

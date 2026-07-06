@@ -105,6 +105,9 @@ export class LimeCoFormat extends BaseFormat {
         unitPrice: this.maybeMakeAbsolute(record.price, activityType),
         currency: CURRENCY,
         fee: this.maybeMakeAbsolute(record.fees, activityType),
+        // It's not possible to reliably match tax transactions to their corresponding activity, so
+        // tax activites are recorded as standalone transactions
+        tax: Number.NaN,
         amount: this.maybeMakeAbsolute(record.amount, activityType),
         fxRate: Number.NaN, // Not applicable, as Lime.co only supports USD
         subtype: this.getActivitySubtype(record, activityType),

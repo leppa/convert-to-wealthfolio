@@ -19,6 +19,18 @@ and this project adheres to
 
 Upcoming release.
 
+### Added
+
+- **Support for transaction-level tax withholding** (was added to
+  **Wealthfolio** in v3.6.0):
+  - The converter now supports a `tax` field in the output CSV, which can be
+    used to provide the amount of tax that was withheld from a specific
+    transaction. This way, the tax amount will be linked to the security and
+    **Wealthfolio** should include it in the security-specific calculations.
+  - The Generic format plugin has been updated to support an optional `Tax`
+    column. If not present or empty, it will be converted to an empty `tax`
+    value.
+
 ## [0.3.0] - 2026-05-01
 
 This release adds support for the new ISIN field that was added to

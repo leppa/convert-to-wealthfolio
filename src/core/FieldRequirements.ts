@@ -319,11 +319,20 @@ type WealthfolioRecordFieldRequirements = {
 // Most common requirements to avoid repetition
 const COMMON_FIELD_REQUIREMENTS: Pick<
   WealthfolioRecordFieldRequirements,
-  "date" | "activityType" | "fee" | "fxRate" | "subtype" | "comment" | "metadata" | "currency"
+  | "date"
+  | "activityType"
+  | "fee"
+  | "tax"
+  | "fxRate"
+  | "subtype"
+  | "comment"
+  | "metadata"
+  | "currency"
 > = {
   date: FieldRequirementLevel.Required,
   activityType: FieldRequirementLevel.Required,
   fee: FieldRequirementLevel.Optional,
+  tax: FieldRequirementLevel.Optional,
   fxRate: FieldRequirementLevel.Optional,
   subtype: FieldRequirementLevel.Ignored, // Optional only for some activities
   comment: FieldRequirementLevel.Optional,
@@ -335,7 +344,7 @@ const COMMON_FIELD_REQUIREMENTS: Pick<
  * Field requirements for each activity type, based on Wealthfolio documentation
  *
  * Source: https://github.com/afadil/wealthfolio/blob/main/docs/activities/activity-types.md
- * Last update: 2026-04-06
+ * Last update: 2026-07-06
  */
 const RECORD_FIELD_REQUIREMENTS: {
   [key in ActivityType]: WealthfolioRecordFieldRequirements;
@@ -400,6 +409,7 @@ const RECORD_FIELD_REQUIREMENTS: {
     isin: FieldRequirementLevel.Ignored,
     quantity: FieldRequirementLevel.Ignored,
     unitPrice: FieldRequirementLevel.Ignored,
+    tax: FieldRequirementLevel.Ignored,
     amount: FieldRequirementLevel.Required,
   },
   [ActivityType.Withdrawal]: {
@@ -409,6 +419,7 @@ const RECORD_FIELD_REQUIREMENTS: {
     isin: FieldRequirementLevel.Ignored,
     quantity: FieldRequirementLevel.Ignored,
     unitPrice: FieldRequirementLevel.Ignored,
+    tax: FieldRequirementLevel.Ignored,
     amount: FieldRequirementLevel.Required,
   },
   [ActivityType.TransferIn]: {
@@ -418,6 +429,7 @@ const RECORD_FIELD_REQUIREMENTS: {
     isin: FieldRequirementLevel.Optional,
     quantity: requiredWhenAssetTransactionElseIgnored,
     unitPrice: requiredWhenAssetTransactionElseIgnored,
+    tax: FieldRequirementLevel.Ignored,
     amount: (record) =>
       record.symbol || record.isin ? FieldRequirementLevel.Ignored : FieldRequirementLevel.Required,
   },
@@ -428,6 +440,7 @@ const RECORD_FIELD_REQUIREMENTS: {
     isin: FieldRequirementLevel.Optional,
     quantity: requiredWhenAssetTransactionElseIgnored,
     unitPrice: requiredWhenAssetTransactionElseIgnored,
+    tax: FieldRequirementLevel.Ignored,
     amount: (record) =>
       record.symbol || record.isin ? FieldRequirementLevel.Ignored : FieldRequirementLevel.Required,
   },
@@ -450,6 +463,7 @@ const RECORD_FIELD_REQUIREMENTS: {
     isin: FieldRequirementLevel.Ignored,
     quantity: FieldRequirementLevel.Ignored,
     unitPrice: FieldRequirementLevel.Ignored,
+    tax: FieldRequirementLevel.Ignored,
     amount: FieldRequirementLevel.Required,
     subtype: FieldRequirementLevel.Optional,
   },
@@ -462,6 +476,7 @@ const RECORD_FIELD_REQUIREMENTS: {
     unitPrice: FieldRequirementLevel.Ignored,
     currency: FieldRequirementLevel.Ignored,
     fee: FieldRequirementLevel.Ignored,
+    tax: FieldRequirementLevel.Ignored,
     amount: FieldRequirementLevel.Required,
   },
   [ActivityType.Credit]: {
@@ -472,6 +487,7 @@ const RECORD_FIELD_REQUIREMENTS: {
     quantity: FieldRequirementLevel.Ignored,
     unitPrice: FieldRequirementLevel.Ignored,
     amount: FieldRequirementLevel.Required,
+    tax: FieldRequirementLevel.Ignored,
     subtype: FieldRequirementLevel.Optional,
   },
   // Documentation just states that field requirement "Varies by use case"

@@ -129,6 +129,7 @@ All converters produce CSV with these columns:
 - **unitPrice**: Price per unit.
 - **currency**: Currency code (e.g., EUR, GBP, USD).
 - **fee**: Transaction fee.
+- **tax**: Transaction tax.
 - **amount**: Total transaction amount.
 - **fxRate**: Currency exchange rate to base currency (if applicable).
 - **subtype**: Activity subtype (see [Activity Subtypes](#activity-subtypes) below).

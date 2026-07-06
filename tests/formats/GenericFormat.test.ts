@@ -474,7 +474,23 @@ describe("Generic Format", () => {
 
       const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
-      expect(result[0].fee).toBe(Number.NaN);
+      expect(result[0].fee).toBeNaN();
+    });
+
+    it("should handle missing tax with default `NaN`", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "BUY",
+          symbol: "AAPL",
+          quantity: 100,
+          unitprice: 150.25,
+        },
+      ];
+
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+
+      expect(result[0].tax).toBeNaN();
     });
 
     it("should preserve negative values for adjustment activity", () => {
@@ -516,6 +532,27 @@ describe("Generic Format", () => {
         activityType: ActivityType.Fee,
         amount: 10.5,
         fee: Number.NaN,
+      });
+    });
+
+    it("should use tax value as amount for Tax activity when total is not provided", () => {
+      const records = [
+        {
+          date: new Date("2024-01-15"),
+          transactiontype: "TAX",
+          symbol: "",
+          quantity: Number.NaN,
+          unitprice: Number.NaN,
+          tax: 12.35,
+        },
+      ];
+
+      const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
+
+      expect(result[0]).toMatchObject({
+        activityType: ActivityType.Tax,
+        amount: 12.35,
+        tax: Number.NaN,
       });
     });
 
@@ -861,6 +898,7 @@ describe("Generic Format", () => {
           "Quantity",
           "UnitPrice",
           "Fee",
+          "Tax",
           "Total",
           "Currency",
           "FXRate",

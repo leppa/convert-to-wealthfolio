@@ -33,6 +33,7 @@ interface ParsedRecord extends Record<string, unknown> {
   quantity: number;
   unitprice: number;
   fee?: number;
+  tax?: number;
   total?: number;
   currency?: string;
   fxrate?: number;
@@ -93,6 +94,7 @@ export class GenericFormat extends BaseFormat {
       let quantity = record.quantity;
       let unitPrice = record.unitprice;
       let fee = record.fee ?? Number.NaN;
+      let tax = record.tax ?? Number.NaN;
       let amount = record.total ?? Number.NaN;
       if (activityType !== ActivityType.Adjustment) {
         // Adjustment seems to be the only activity that can have negative quantity or amount and
@@ -101,9 +103,12 @@ export class GenericFormat extends BaseFormat {
         quantity = Math.abs(quantity);
         unitPrice = Math.abs(unitPrice);
         fee = Math.abs(fee);
+        tax = Math.abs(tax);
         amount = Math.abs(amount);
       }
       if (Number.isNaN(amount) && Number.isFinite(quantity) && Number.isFinite(unitPrice)) {
+        // Based on empirical observation, Wealthfolio does not include fees and taxes into the
+        // total amount
         amount = quantity * unitPrice;
       }
 
@@ -120,11 +125,11 @@ export class GenericFormat extends BaseFormat {
           continue;
         }
       } else if (activityType === ActivityType.Fee) {
-        // If fee amount is not provided, we can try to get the value from the fee field
-        if (!Number.isFinite(amount)) {
-          amount = fee;
-          fee = Number.NaN;
-        }
+        // If fee amount is not provided, we try to get the value from the fee field
+        [amount, fee] = this.getAmountWithFallback(amount, fee);
+      } else if (activityType === ActivityType.Tax) {
+        // If tax amount is not provided, we try to get the value from the tax field
+        [amount, tax] = this.getAmountWithFallback(amount, tax);
       }
 
       let symbol = record.symbol ?? "";
@@ -160,6 +165,7 @@ export class GenericFormat extends BaseFormat {
         unitPrice,
         currency: currency || "",
         fee,
+        tax,
         amount,
         fxRate: record.fxrate ?? Number.NaN,
         subtype,
@@ -345,6 +351,15 @@ export class GenericFormat extends BaseFormat {
     return ActivitySubtype.None;
   }
 
+  // If amount is not provided, but fallback is, return fallback as the amount and `NaN` as the
+  // fallback. Else, return the original amount and fallback as-is.
+  private getAmountWithFallback(amount: number, fallback: number): [number, number] {
+    if (!Number.isFinite(amount) && Number.isFinite(fallback)) {
+      return [fallback, Number.NaN];
+    }
+    return [amount, fallback];
+  }
+
   getExpectedSchema(): ColumnSchema[] {
     return [
       {
@@ -403,10 +418,15 @@ export class GenericFormat extends BaseFormat {
         description: "transaction fee, if applicable",
       },
       {
+        name: "Tax",
+        optional: true,
+        description: "transaction tax, if applicable",
+      },
+      {
         name: "Total",
         optional: true,
         description:
-          "transaction total, excluding fee; calculated from Quantity and UnitPrice if not provided",
+          "transaction total, excluding fee & tax; calculated from Quantity and UnitPrice if not provided",
       },
       {
         name: "Currency",
@@ -440,6 +460,7 @@ export class GenericFormat extends BaseFormat {
           case "quantity":
           case "unitprice":
           case "fee":
+          case "tax":
           case "total":
           case "fxrate":
             return Number.parseFloat(trimmedValue);

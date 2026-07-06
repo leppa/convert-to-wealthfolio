@@ -93,6 +93,7 @@ export interface WealthfolioRecord {
   unitPrice: number;
   currency: string;
   fee: number;
+  tax: number;
   amount: number;
   fxRate: number;
   subtype: ActivitySubtype;
