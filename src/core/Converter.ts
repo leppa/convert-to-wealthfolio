@@ -4,7 +4,6 @@
  */
 
 import fs from "node:fs";
-import path from "node:path";
 
 import { bold, green, italic, red } from "colorette";
 import { CsvError, OptionsWithColumns, parse } from "csv-parse";
@@ -20,7 +19,14 @@ import {
 } from "./FieldRequirements";
 import { Logger } from "./Logger";
 import { SymbolDataService } from "./SymbolDataService";
-import { assertUnreachable, parseNumber, roundToPrecision, stringifyForLogging } from "./Utils";
+import {
+  assertUnreachable,
+  parseNumber,
+  roundToPrecision,
+  sanitizeInputPath,
+  sanitizeOutputPath,
+  stringifyForLogging,
+} from "./Utils";
 
 import { OverridesByType, OverridesDataProvider, parseOverridesFile } from "../data-providers";
 
@@ -97,18 +103,24 @@ export class Converter {
    * @param defaultCurrency - Default currency code to use when not specified in records
    * @param formatName - Optional format name to use (skip autodetection)
    * @param overridesPath - Optional path to overrides INI file
+   * @param overwriteOutput - Whether to allow overwriting an existing output file
    */
   async convert(
     inputPath: string,
     outputPath: string,
+    // TODO: Move to an object to reduce the parameter list
     defaultCurrency: string,
     formatName?: string,
     overridesPath?: string,
+    overwriteOutput?: boolean,
   ): Promise<void> {
     const logger = Logger.getInstance();
 
+    const sanitizedInputPath = sanitizeInputPath(inputPath);
+    const sanitizedOutputPath = sanitizeOutputPath(outputPath, overwriteOutput);
+
     // Read input CSV content
-    const fileContent = fs.readFileSync(path.resolve(inputPath), "utf-8");
+    const fileContent = fs.readFileSync(sanitizedInputPath, "utf-8");
 
     if (fileContent.trim().length === 0) {
       throw new Error("Input CSV is empty");
@@ -212,7 +224,7 @@ export class Converter {
     }
 
     // Write output CSV
-    await this.writeCSV(outputPath, convertedRecords);
+    await this.writeCSV(sanitizedOutputPath, convertedRecords);
   }
 
   /**
@@ -273,7 +285,7 @@ export class Converter {
         const columns = Object.keys(records[0]) as (keyof WealthfolioRecord)[];
         const csvContent = stringify(records, {
           header: true,
-          columns: columns,
+          columns,
           cast: {
             date: (value) =>
               // Invalid dates can't reach this point because records with invalid dates fail
@@ -288,7 +300,7 @@ export class Converter {
           },
         });
 
-        fs.writeFileSync(path.resolve(filePath), csvContent, "utf-8");
+        fs.writeFileSync(filePath, csvContent, "utf-8");
         Logger.getInstance().info(`Wrote ${bold(records.length)} records to: ${bold(filePath)}`);
         resolve();
       } catch (error) {

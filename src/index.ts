@@ -86,11 +86,38 @@ program
       "Path to INI file with symbol overrides and ISIN, CUSIP, and company name mappings",
     ).env("CTW_OVERRIDES"),
   )
+  .addOption(
+    new Option(
+      "--overwrite-output [value]",
+      "Allow overwriting the output file if it already exists",
+    )
+      .argParser((value) => {
+        if (value === undefined) {
+          // Default to true if the value is not provided
+          return true;
+        }
+        const normalizedValue = value.toLowerCase();
+        if (normalizedValue === "false" || normalizedValue === "0") {
+          return false;
+        } else {
+          // `choices()` below will filter out all values except "true", "false", "0", and "1"
+          return true;
+        }
+      })
+      .env("CTW_OVERWRITE_OUTPUT")
+      .choices(["true", "false", "0", "1"])
+      .default(false),
+  )
   .action(
     async (
       input: string,
       output: string,
-      options: { format?: string; defaultCurrency: string; overrides?: string },
+      options: {
+        format?: string;
+        defaultCurrency: string;
+        overrides?: string;
+        overwriteOutput?: boolean;
+      },
     ) => {
       configureLogger();
 
@@ -102,6 +129,7 @@ program
           options.defaultCurrency,
           options.format,
           options.overrides,
+          options.overwriteOutput,
         );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);

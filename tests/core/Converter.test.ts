@@ -136,7 +136,25 @@ describe("Converter", () => {
 
       await expect(
         converter.convert(nonExistentFile, outputFile, DEFAULT_CURRENCY),
-      ).rejects.toThrow();
+      ).rejects.toThrow("Input file does not exist");
+    });
+
+    it("should throw error for non-existent output directory", async () => {
+      const inputFile = path.join(fixturesDir, "sample-generic.csv");
+      const outputInMissingDir = path.join(tmpDir, "missing-dir", "test-output.csv");
+
+      await expect(
+        converter.convert(inputFile, outputInMissingDir, DEFAULT_CURRENCY),
+      ).rejects.toThrow("Output directory does not exist");
+    });
+
+    it("should throw error when output file exists and overwrite is disabled", async () => {
+      const inputFile = path.join(fixturesDir, "sample-generic.csv");
+      fs.writeFileSync(outputFile, "already-exists.csv", "utf-8");
+
+      await expect(converter.convert(inputFile, outputFile, DEFAULT_CURRENCY)).rejects.toThrow(
+        "Output file already exists",
+      );
     });
 
     it("should throw error when no format matches", async () => {
@@ -440,15 +458,6 @@ describe("Converter", () => {
       ).rejects.toThrow("Input CSV does not match the 'Generic' format");
     });
 
-    it("should handle errors during CSV write", async () => {
-      const inputFile = path.join(fixturesDir, "sample-generic.csv");
-      const invalidOutputPath = path.join(tmpDir, "missing-dir", "output.csv");
-
-      await expect(
-        converter.convert(inputFile, invalidOutputPath, DEFAULT_CURRENCY),
-      ).rejects.toThrow();
-    });
-
     it("should rethrow when Error is caught", async () => {
       const inputFile = path.join(fixturesDir, "sample-generic.csv");
       const writeSpy = jest.spyOn(fs, "writeFileSync").mockImplementation(() => {
@@ -458,6 +467,22 @@ describe("Converter", () => {
       try {
         await expect(converter.convert(inputFile, outputFile, DEFAULT_CURRENCY)).rejects.toThrow(
           "Disk full",
+        );
+      } finally {
+        writeSpy.mockRestore();
+      }
+    });
+
+    it("should wrap non-Error throws in as Error", async () => {
+      const inputFile = path.join(fixturesDir, "sample-generic.csv");
+      const writeSpy = jest.spyOn(fs, "writeFileSync").mockImplementation(() => {
+        // eslint-disable-next-line @typescript-eslint/only-throw-error
+        throw "String error";
+      });
+
+      try {
+        await expect(converter.convert(inputFile, outputFile, DEFAULT_CURRENCY)).rejects.toThrow(
+          "String error",
         );
       } finally {
         writeSpy.mockRestore();

@@ -17,6 +17,7 @@ SPDX-License-Identifier: BSD-3-Clause
     - [Specify the Format Manually](#specify-the-format-manually)
     - [Specify the Default Currency](#specify-the-default-currency)
     - [Override and Resolve Symbols and ISINs](#override-and-resolve-symbols-and-isins)
+    - [Allow Overwriting the Output File](#allow-overwriting-the-output-file)
   - [List Supported Formats](#list-supported-formats)
   - [Get Format Information](#get-format-information)
   - [Get Help](#get-help)
@@ -253,6 +254,28 @@ CTW_OVERRIDES="examples/overrides.ini" convert-to-wealthfolio convert examples/s
 ```
 
 **Note:** The CLI option takes precedence over the environment variable if both are set.
+
+#### Allow Overwriting the Output File
+
+By default, the converter will refuse to overwrite the output file if it already exists. You can allow overwriting by using the `--overwrite-output true` option:
+
+```bash
+convert-to-wealthfolio convert --overwrite-output true <input.csv> <output.csv>
+```
+
+Alternatively, you can omit `true` and use `--overwrite-output` without a value to enable overwriting:
+
+```bash
+convert-to-wealthfolio convert --overwrite-output <input.csv> <output.csv>
+```
+
+You can also set the `CTW_OVERWRITE_OUTPUT` environment variable to allow overwriting:
+
+```bash
+CTW_OVERWRITE_OUTPUT=1 convert-to-wealthfolio convert <input.csv> <output.csv>
+```
+
+**Note:** Use `true`, `1`, or option with no value to enable overwriting. Use `false`, `0`, or omit the option to disable it.
 
 ### List Supported Formats
 

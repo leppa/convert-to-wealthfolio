@@ -30,6 +30,20 @@ Upcoming release.
   - The Generic format plugin has been updated to support an optional `Tax`
     column. If not present or empty, it will be converted to an empty `tax`
     value.
+- **New `--overwrite-output` CLI option** - to allow overwriting the output file
+  if it already exists. See the breaking change below.
+
+### Changed
+
+- **BREAKING**: **Output file overwrite protection** - The converter will now
+  refuse to overwrite the output file if it already exists. You can allow
+  overwriting by using the `--overwrite-output` CLI option or setting the
+  `CTW_OVERWRITE_OUTPUT` environment variable. The default behavior has been
+  changed to prevent accidental data loss.
+- **Input and output path validation** - Input and output paths are now
+  validated to ensure that the input file exists and is readable, and that the
+  output file can be created or overwritten (if allowed). If any of these checks
+  fail, the converter will abort with an error message.
 
 ### Fixed
 

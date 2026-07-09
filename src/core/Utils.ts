@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import { trim } from "validator";
+import fs from "node:fs";
+import path from "node:path";
 
 import { bold } from "colorette";
+import { trim } from "validator";
 
 /**
  * Utility functions for CSV conversion
@@ -210,12 +212,68 @@ export function formatPair(
 }
 
 /**
+ * Verifies that the input path exists and is a file
+ *
+ * @param inputPath - The input file path to verify
+ * @returns The resolved absolute path to the input file
+ */
+export function sanitizeInputPath(inputPath: string): string {
+  const resolvedPath = path.resolve(inputPath);
+  if (!fs.existsSync(resolvedPath)) {
+    throw new Error(`Input file does not exist: ${inputPath}`);
+  }
+
+  const fileStat = fs.statSync(resolvedPath);
+  if (!fileStat.isFile()) {
+    throw new Error(`Input path is not a file: ${inputPath}`);
+  }
+
+  return resolvedPath;
+}
+
+/**
+ * Verifies that the output path is valid
+ *
+ * Checks that the output path's parent exists and is a directory, and that the output path will be
+ * a file. Validation will also fail if the output file already exists and `overwrite` is disabled.
+ *
+ * @param outputPath - The output file path to verify
+ * @param overwrite - Whether to allow overwriting an existing file at the output path
+ * @returns The resolved absolute path to the output file
+ */
+export function sanitizeOutputPath(outputPath: string, overwrite: boolean = false): string {
+  const resolvedPath = path.resolve(outputPath);
+  const dir = path.dirname(resolvedPath);
+
+  if (!fs.existsSync(dir)) {
+    throw new Error(`Output directory does not exist: ${dir}`);
+  }
+
+  const dirStat = fs.statSync(dir);
+  if (!dirStat.isDirectory()) {
+    throw new Error(`Output path's parent is not a directory: ${dir}`);
+  }
+
+  if (fs.existsSync(resolvedPath)) {
+    const fileStat = fs.statSync(resolvedPath);
+    if (!fileStat.isFile()) {
+      throw new Error(`Output path is not a file: ${outputPath}`);
+    } else if (!overwrite) {
+      throw new Error(`Output file already exists: ${outputPath}`);
+    }
+  }
+
+  return resolvedPath;
+}
+
+/**
  * Assert that a value is of type `never`, indicating that it should be unreachable
  *
  * This function is used as a type guard to ensure that all possible cases have been handled in
  * control flow, such as in a `switch` statement. If the function is called, it will throw an error
  * indicating that an unreachable code path has been executed.
  */
+/* istanbul ignore next */
 export function assertUnreachable(_: never): never {
   throw new Error("Value is expected to be unreachable");
 }

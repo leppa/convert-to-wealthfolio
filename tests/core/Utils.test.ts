@@ -3,6 +3,10 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
 import { bold } from "colorette";
 
 import {
@@ -11,7 +15,9 @@ import {
   isCUSIP,
   parseNumber,
   roundToPrecision,
+  sanitizeInputPath,
   sanitizeName,
+  sanitizeOutputPath,
   stringifyForLogging,
 } from "../../src/core/Utils";
 
@@ -289,6 +295,114 @@ describe("Utils", () => {
       obj.self = obj; // Circular reference
       const result = stringifyForLogging(obj);
       expect(result).toBe("[object Object]");
+    });
+  });
+
+  describe("path sanitizers", () => {
+    let tmpDir: string;
+
+    beforeEach(() => {
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "utils-path-test-"));
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+
+    describe("sanitizeInputPath", () => {
+      it("should resolve valid paths without throwing", () => {
+        const validInput = path.join(tmpDir, "valid-input.csv");
+        fs.writeFileSync(validInput, "test", "utf-8");
+
+        expect(() => sanitizeInputPath(validInput)).not.toThrow();
+      });
+
+      it("should throw when input file does not exist", () => {
+        const missingInput = path.join(tmpDir, "missing-input.csv");
+
+        expect(() => sanitizeInputPath(missingInput)).toThrow("Input file does not exist");
+      });
+
+      it("should throw when input path points to a directory", () => {
+        expect(() => sanitizeInputPath(tmpDir)).toThrow("Input path is not a file");
+      });
+    });
+
+    describe("sanitizeOutputPath", () => {
+      it("should resolve when output file's directory exists while it doesn't", () => {
+        // Non-existing file in the existing directory
+        expect(() => sanitizeOutputPath(path.join(tmpDir, "valid-output.csv"))).not.toThrow();
+      });
+
+      it("should resolve when output file already exists and overwrite is enabled", () => {
+        const validOutput = path.join(tmpDir, "valid-output.csv");
+        fs.writeFileSync(validOutput, "test", "utf-8");
+
+        expect(() => sanitizeOutputPath(validOutput, true)).not.toThrow();
+      });
+
+      it("should throw when output file already exists and overwrite is disabled", () => {
+        const outputPath = path.join(tmpDir, "output.csv");
+        fs.writeFileSync(outputPath, "existing", "utf-8");
+
+        expect(() => sanitizeOutputPath(outputPath)).toThrow("Output file already exists");
+      });
+
+      it("should throw when output directory does not exist", () => {
+        const missingParentOutput = path.join(tmpDir, "missing-parent", "output.csv");
+
+        expect(() => sanitizeOutputPath(missingParentOutput)).toThrow(
+          "Output directory does not exist",
+        );
+      });
+
+      it("should throw when parent path is not a directory", () => {
+        const outputPath = path.join(tmpDir, "output.csv");
+
+        const existsSpy = jest.spyOn(fs, "existsSync").mockImplementation(() => true);
+        const statSpy = jest.spyOn(fs, "statSync").mockImplementation(() => {
+          return {
+            isDirectory: () => false,
+            isFile: () => false,
+          } as fs.Stats;
+        });
+
+        try {
+          expect(() => sanitizeOutputPath(outputPath)).toThrow(
+            "Output path's parent is not a directory",
+          );
+
+          expect(existsSpy).toHaveBeenCalledTimes(1);
+          expect(statSpy).toHaveBeenCalledTimes(1);
+        } finally {
+          existsSpy.mockRestore();
+          statSpy.mockRestore();
+        }
+      });
+
+      it("should throw when output path exists but is not a file", () => {
+        const outputPath = path.join(tmpDir, "output.csv");
+
+        const existsSpy = jest.spyOn(fs, "existsSync").mockImplementation(() => true);
+        const statSpy = jest.spyOn(fs, "statSync").mockImplementation(() => {
+          return {
+            isDirectory: () => true,
+            isFile: () => false,
+          } as fs.Stats;
+        });
+
+        try {
+          expect(() => sanitizeOutputPath(outputPath)).toThrow("Output path is not a file");
+
+          // Once for the parent directory and once for the output file
+          expect(existsSpy).toHaveBeenCalledTimes(2);
+          expect(statSpy).toHaveBeenCalledTimes(2);
+        } finally {
+          existsSpy.mockRestore();
+          statSpy.mockRestore();
+        }
+      });
     });
   });
 });
