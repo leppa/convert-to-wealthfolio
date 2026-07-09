@@ -392,14 +392,22 @@ const RECORD_FIELD_REQUIREMENTS: {
     instrumentType: optionalWhenAssetTransactionElseIgnored,
     symbol: FieldRequirementLevel.Optional,
     isin: FieldRequirementLevel.Optional,
-    quantity: FieldRequirementLevel.Ignored,
+    quantity: (record) =>
+      // Staking reward subtype requires quantity for cost basis calculation
+      record.subtype === ActivitySubtype.StakingReward
+        ? FieldRequirementLevel.Required
+        : FieldRequirementLevel.Ignored,
     unitPrice: (record) =>
       // Staking reward subtype requires unit price (fair market value at the time of reward) for
       // cost basis calculation
       record.subtype === ActivitySubtype.StakingReward
         ? FieldRequirementLevel.Required
         : FieldRequirementLevel.Ignored,
-    amount: FieldRequirementLevel.Required,
+    amount: (record) =>
+      // Staking reward requires quantity and unit price instead of amount
+      record.subtype === ActivitySubtype.StakingReward
+        ? FieldRequirementLevel.Optional
+        : FieldRequirementLevel.Required,
     subtype: FieldRequirementLevel.Optional,
   },
   [ActivityType.Deposit]: {

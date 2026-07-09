@@ -31,6 +31,15 @@ Upcoming release.
     column. If not present or empty, it will be converted to an empty `tax`
     value.
 
+### Fixed
+
+- **Mark `quantity` field as required for staking rewards** - **Wealthfolio**
+  requires both `quantity` and `unitPrice` fields to be set for staking reward
+  interest transactions. However, this field was marked as ignored and caused it
+  to be cleared in the output CSV. As a consequence, the `amount` field is now
+  marked as optional for staking rewards, while it's still required for other
+  interest transactions.
+
 ## [0.3.0] - 2026-05-01
 
 This release adds support for the new ISIN field that was added to
