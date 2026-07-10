@@ -494,9 +494,9 @@ describe("Converter", () => {
       fs.writeFileSync(malformedFile, 'Date,Symbol\n"unclosed quote,value');
 
       // This should trigger the catch block in detectFormat
-      await expect(
-        converter.convert(malformedFile, outputFile, DEFAULT_CURRENCY),
-      ).rejects.toThrow();
+      await expect(converter.convert(malformedFile, outputFile, DEFAULT_CURRENCY)).rejects.toThrow(
+        "Cannot detect input format",
+      );
     });
 
     it("should serialize metadata and invalid dates in output CSV", async () => {
@@ -651,7 +651,7 @@ describe("Converter", () => {
             ...baseResult,
             requirementLevel: 999 as FieldRequirementLevel,
           }),
-        ).toThrow();
+        ).toThrow("Value is expected to be unreachable");
       });
     });
 
@@ -687,7 +687,7 @@ describe("Converter", () => {
             ...baseResult,
             violationKind: 999 as FieldRequirementViolationKind,
           }),
-        ).toThrow();
+        ).toThrow("Value is expected to be unreachable");
       });
     });
   });

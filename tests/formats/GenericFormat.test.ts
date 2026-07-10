@@ -251,11 +251,40 @@ describe("Generic Format", () => {
           quantity: 100,
           unitprice: 150.25,
         },
+        {
+          date: new Date("2024-01-20"),
+          transactiontype: "SELL",
+          symbol: "AAPL",
+          quantity: 50,
+          unitprice: 152.5,
+          fee: 5,
+        },
+        {
+          date: new Date("2024-02-01"),
+          transactiontype: "BUY",
+          symbol: "MSFT",
+          quantity: 200,
+          unitprice: 250.75,
+          tax: 10,
+        },
+        {
+          date: new Date("2024-02-10"),
+          transactiontype: "SELL",
+          symbol: "MSFT",
+          quantity: 100,
+          unitprice: 255.5,
+          fee: 2.5,
+          tax: 50,
+        },
       ];
 
       const result = format.convert(records, DEFAULT_CURRENCY, symbolDataService);
 
+      // Amount should not include fee or tax
       expect(result[0].amount).toBe(100 * 150.25);
+      expect(result[1].amount).toBe(50 * 152.5);
+      expect(result[2].amount).toBe(200 * 250.75);
+      expect(result[3].amount).toBe(100 * 255.5);
     });
 
     it("should map activity types correctly", () => {

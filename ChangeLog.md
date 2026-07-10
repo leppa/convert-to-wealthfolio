@@ -90,7 +90,7 @@ overrides file.
     part of the symbol resolution result. ISIN can be returned together with the
     symbol or on its own if the symbol cannot be resolved.
 
-- **ISIN overrides and mapping** - the overrides INI file can now also contain
+- **ISIN overrides and mapping** - The overrides INI file can now also contain
   ISIN overrides and mapping sections, which allow you to override ISIN values
   and map symbols, CUSIPs, and company names to ISINs. This allows you to
   provide a custom ISIN for a transaction that has an incorrect or missing ISIN
@@ -107,7 +107,7 @@ overrides file.
   consistent with ISIN section naming, see the breaking change in the
   **Changed** section below for more details.
 
-- **Symbol resolution caching** - once a symbol is resolved, it will be cached
+- **Symbol resolution caching** - Once a symbol is resolved, it will be cached
   in-memory for the duration of the converter's execution. This means that if
   the same symbol appears multiple times in the input CSV, it will only be
   resolved once, and all subsequent occurrences will use the cached value. The
@@ -153,7 +153,7 @@ overrides file.
   output CSV will then contain the ISIN value in the `isin` column and an empty
   value in the `symbol` column.
 
-- **Symbol normalization** - before querying providers or looking up the cache,
+- **Symbol normalization** - Before querying providers or looking up the cache,
   the converter now normalizes query fields: symbol, ISIN, and CUSIP are trimmed
   and converted to uppercase; company name is only trimmed. As a result,
   identifier values that differ only in whitespace or casing (e.g.,
