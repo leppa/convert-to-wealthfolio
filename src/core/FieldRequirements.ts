@@ -49,18 +49,16 @@ export interface FieldValidationResult {
 export interface RecordValidationResult {
   valid: boolean;
   invalidFields: FieldValidationResult[];
+  ignoredFields: FieldValidationResult[];
 }
 
 /**
  * Validates a Wealthfolio record against the field requirements
  */
-export function validateRecordFieldRequirements(
-  record: WealthfolioRecord,
-  clearIgnoredFields: boolean = true,
-): RecordValidationResult {
+export function validateRecordFieldRequirements(record: WealthfolioRecord): RecordValidationResult {
   const fieldRequirements = RECORD_FIELD_REQUIREMENTS[record.activityType];
   const invalidFields: FieldValidationResult[] = [];
-  const ignoredFields: (keyof WealthfolioRecord)[] = [];
+  const ignoredFields: FieldValidationResult[] = [];
 
   for (const field in fieldRequirements) {
     const fieldKey = field as keyof WealthfolioRecord;
@@ -83,20 +81,21 @@ export function validateRecordFieldRequirements(
         requirementLevel,
         violationKind,
       });
-    }
-
-    if (requirementLevel === FieldRequirementLevel.Ignored && clearIgnoredFields) {
-      ignoredFields.push(fieldKey);
+    } else if (
+      // Set fields (both valid and invalid) are marked
+      requirementLevel === FieldRequirementLevel.Ignored &&
+      violationKind !== FieldRequirementViolationKind.Unset
+    ) {
+      ignoredFields.push({
+        name: fieldKey,
+        value,
+        requirementLevel: FieldRequirementLevel.Ignored,
+        violationKind,
+      });
     }
   }
 
-  // Clear ignored fields after all validations so that requirement functions (which may also depend
-  // on ignored fields) still function correctly.
-  for (const field of ignoredFields) {
-    clearField(record, field);
-  }
-
-  return { valid: invalidFields.length === 0, invalidFields };
+  return { valid: invalidFields.length === 0, invalidFields, ignoredFields };
 }
 
 /**

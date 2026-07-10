@@ -195,9 +195,9 @@ export interface WealthfolioRecordMetadata {
   // Common field
   source?: {
     /// Original broker name
-    broker?: "Schwab";
+    broker?: string;
     /// Raw activity type from provider
-    original_type?: "REI";
+    original_type?: string;
   };
 }
 

@@ -196,6 +196,14 @@ export class Converter {
             }
           }
         }
+        if (result.ignoredFields.length > 0) {
+          logger.debug(`${bold("Clearing")} ignored fields for record ${italic(index + 1)}:`);
+          for (const field of result.ignoredFields) {
+            logger.debug(`  - ${field.name}: ${bold(stringifyForLogging(field.value))}`);
+            // WARNING: Modifies original records in-place
+            clearField(record, field.name);
+          }
+        }
         return !skip;
       });
 

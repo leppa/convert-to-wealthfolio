@@ -10,6 +10,7 @@ import {
   WealthfolioRecord,
 } from "../../src/core/BaseFormat";
 import {
+  clearField,
   FieldRequirementViolationKind,
   validateFieldValue,
   validateRecordFieldRequirements,
@@ -109,24 +110,27 @@ describe("FieldRequirements", () => {
       expect(result.invalidFields.map((field) => field.name)).toContain("symbol");
     });
 
-    it("should clear ignored fields when requested", () => {
+    it("should report ignored fields", () => {
       const record = createRecord({
         activityType: ActivityType.Deposit,
-        // There are no ignored date and object fields, so we need to force invalid values through
-        // type assertions to test that they are cleared properly if they ever appear in the future
+        // There are no ignored date and object fields, so force these values through type
+        // assertions to verify that they are reported if they ever appear in the future
         symbol: new Date("2024-01-01") as unknown as string,
         isin: { note: "ignored" } as unknown as string,
       });
 
-      const result = validateRecordFieldRequirements(record, true);
+      const result = validateRecordFieldRequirements(record);
 
       expect(result.valid).toBe(true);
       expect(record.symbol).toBeInstanceOf(Date);
-      expect((record.symbol as unknown as Date).getTime()).toBeNaN();
-      expect(record.isin).toEqual({});
+      expect((record.symbol as unknown as Date).getTime()).toBe(new Date("2024-01-01").getTime());
+      expect(record.isin).toEqual({ note: "ignored" });
+      expect(result.ignoredFields.map((field) => field.name)).toEqual(
+        expect.arrayContaining(["symbol", "isin", "quantity", "unitPrice"]),
+      );
     });
 
-    it("should clear ignored numeric fields", () => {
+    it("should report ignored numeric fields", () => {
       const record = createRecord({
         activityType: ActivityType.Deposit,
         symbol: "",
@@ -135,31 +139,40 @@ describe("FieldRequirements", () => {
         amount: 100,
       });
 
-      const result = validateRecordFieldRequirements(record, true);
-
-      expect(result.valid).toBe(true);
-      expect(record.symbol).toBe("");
-      expect(record.quantity).toBeNaN();
-      expect(record.unitPrice).toBeNaN();
-      expect(record.amount).toBe(100);
-    });
-
-    it("should keep ignored fields when not requested", () => {
-      const record = createRecord({
-        activityType: ActivityType.Deposit,
-        symbol: "",
-        quantity: 5,
-        unitPrice: 2,
-        amount: 100,
-      });
-
-      const result = validateRecordFieldRequirements(record, false);
+      const result = validateRecordFieldRequirements(record);
 
       expect(result.valid).toBe(true);
       expect(record.symbol).toBe("");
       expect(record.quantity).toBe(5);
       expect(record.unitPrice).toBe(2);
       expect(record.amount).toBe(100);
+      expect(result.ignoredFields.map((field) => field.name)).toEqual(
+        expect.arrayContaining(["quantity", "unitPrice"]),
+      );
+    });
+
+    it("should not report unset ignored fields", () => {
+      const record = createRecord({
+        activityType: ActivityType.Deposit,
+        symbol: "",
+        quantity: 5,
+        unitPrice: 2,
+        amount: 100,
+      });
+
+      const result = validateRecordFieldRequirements(record);
+
+      expect(result.valid).toBe(true);
+      expect(record.symbol).toBe("");
+      expect(record.quantity).toBe(5);
+      expect(record.unitPrice).toBe(2);
+      expect(record.amount).toBe(100);
+
+      const ignoredFieldNames = result.ignoredFields.map((field) => field.name);
+      expect(ignoredFieldNames).toEqual(expect.arrayContaining(["quantity", "unitPrice"]));
+      expect(ignoredFieldNames).not.toContain("symbol");
+      expect(ignoredFieldNames).not.toContain("isin");
+      expect(ignoredFieldNames).not.toContain("tax");
     });
 
     it("should enforce conditional requirements", () => {
@@ -310,14 +323,14 @@ describe("FieldRequirements", () => {
           amount: 100,
         });
 
-        const result = validateRecordFieldRequirements(record, true);
+        const result = validateRecordFieldRequirements(record);
 
         expect(result.valid).toBe(true);
         expect(record.subtype).toBe(subtype);
       }
     });
 
-    it("should clear subtype for activities where subtype is ignored", () => {
+    it("should report ignored subtype for activities where subtype is ignored", () => {
       const cases: ActivityType[] = [
         ActivityType.Buy,
         ActivityType.Sell,
@@ -336,10 +349,11 @@ describe("FieldRequirements", () => {
           amount: 100,
         });
 
-        const result = validateRecordFieldRequirements(record, true);
+        const result = validateRecordFieldRequirements(record);
 
         expect(result.valid).toBe(true);
-        expect(record.subtype).toBe("");
+        expect(record.subtype).toBe(ActivitySubtype.DRIP);
+        expect(result.ignoredFields.map((field) => field.name)).toContain("subtype");
       }
     });
 
@@ -405,8 +419,8 @@ describe("FieldRequirements", () => {
         isin: "US0378331005",
       });
 
-      const resultSymbol = validateRecordFieldRequirements(recordSymbol, true);
-      const resultISIN = validateRecordFieldRequirements(recordISIN, true);
+      const resultSymbol = validateRecordFieldRequirements(recordSymbol);
+      const resultISIN = validateRecordFieldRequirements(recordISIN);
 
       expect(resultSymbol.valid).toBe(true);
       expect(resultISIN.valid).toBe(true);
@@ -414,7 +428,7 @@ describe("FieldRequirements", () => {
       expect(recordISIN.instrumentType).toBe(InstrumentType.Equity);
     });
 
-    it("should ignore instrument type for adjustment activity when symbol and ISIN are missing", () => {
+    it("should report ignored instrument type for adjustment activity when symbol and ISIN are missing", () => {
       const record = createRecord({
         activityType: ActivityType.Adjustment,
         instrumentType: InstrumentType.Equity,
@@ -422,10 +436,11 @@ describe("FieldRequirements", () => {
         isin: "",
       });
 
-      const result = validateRecordFieldRequirements(record, true);
+      const result = validateRecordFieldRequirements(record);
 
       expect(result.valid).toBe(true);
-      expect(record.instrumentType).toBe(InstrumentType.Unknown);
+      expect(record.instrumentType).toBe(InstrumentType.Equity);
+      expect(result.ignoredFields.map((field) => field.name)).toContain("instrumentType");
     });
 
     it("should keep instrument type for unknown activity when symbol or ISIN is present", () => {
@@ -440,8 +455,8 @@ describe("FieldRequirements", () => {
         isin: "US0378331005",
       });
 
-      const resultSymbol = validateRecordFieldRequirements(recordSymbol, true);
-      const resultISIN = validateRecordFieldRequirements(recordISIN, true);
+      const resultSymbol = validateRecordFieldRequirements(recordSymbol);
+      const resultISIN = validateRecordFieldRequirements(recordISIN);
 
       expect(resultSymbol.valid).toBe(true);
       expect(resultISIN.valid).toBe(true);
@@ -449,7 +464,7 @@ describe("FieldRequirements", () => {
       expect(recordISIN.instrumentType).toBe(InstrumentType.Equity);
     });
 
-    it("should ignore instrument type for unknown activity when symbol and ISIN are missing", () => {
+    it("should report ignored instrument type for unknown activity when symbol and ISIN are missing", () => {
       const record = createRecord({
         activityType: ActivityType.Unknown,
         instrumentType: InstrumentType.Equity,
@@ -457,10 +472,33 @@ describe("FieldRequirements", () => {
         isin: "",
       });
 
-      const result = validateRecordFieldRequirements(record, true);
+      const result = validateRecordFieldRequirements(record);
 
       expect(result.valid).toBe(true);
-      expect(record.instrumentType).toBe(InstrumentType.Unknown);
+      expect(record.instrumentType).toBe(InstrumentType.Equity);
+      expect(result.ignoredFields.map((field) => field.name)).toContain("instrumentType");
+    });
+  });
+
+  describe("clearField", () => {
+    it("should clear a field in a record", () => {
+      const record = createRecord({
+        symbol: "AAPL",
+        quantity: 10,
+        unitPrice: 150,
+        metadata: { source: { broker: "Foobar" } },
+      });
+
+      clearField(record, "symbol"); // string
+      clearField(record, "quantity"); // number
+      clearField(record, "date"); // Date object
+      clearField(record, "metadata"); // generic object
+
+      expect(record.symbol).toBe("");
+      expect(record.quantity).toBeNaN();
+      expect(record.date).toBeInstanceOf(Date);
+      expect(record.date.getTime()).toBeNaN();
+      expect(record.metadata).toEqual({});
     });
   });
 });

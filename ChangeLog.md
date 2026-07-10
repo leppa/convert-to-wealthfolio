@@ -44,6 +44,9 @@ Upcoming release.
   validated to ensure that the input file exists and is readable, and that the
   output file can be created or overwritten (if allowed). If any of these checks
   fail, the converter will abort with an error message.
+- **Ignored fields that are non-empty are now logged** - Previously, the
+  converter would silently clear non-empty ignored fields. Now, it will log them
+  with a debug message.
 
 ### Fixed
 
