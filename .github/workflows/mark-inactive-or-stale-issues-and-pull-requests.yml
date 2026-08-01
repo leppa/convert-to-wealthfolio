@@ -26,7 +26,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Mark inactive issues and PRs as needing attention
-        uses: actions/stale@v10
+        uses: actions/stale@v11
         with:
           days-before-stale: 30
           stale-issue-label: needs attention
@@ -66,7 +66,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Close issues and PR where author didn't respond in time
-        uses: actions/stale@v10
+        uses: actions/stale@v11
         with:
           days-before-stale: 30
           # Give 7 days for the author to respond after marking as stale
